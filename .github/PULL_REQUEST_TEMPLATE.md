@@ -1,7 +1,3 @@
----
-name: Pull Request
----
-
 ## Related Issue
 
 <!-- 관련 이슈를 링크해 주세요. -->
