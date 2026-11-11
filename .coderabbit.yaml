@@ -1,0 +1,61 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: ko-KR
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  changed_files_summary: true
+
+  auto_review:
+    enabled: true
+    drafts: false
+    auto_pause_after_reviewed_commits: 0
+    base_branches:
+      - main
+      - develop
+
+  path_filters:
+    - '!dist/**'
+    - '!node_modules/**'
+    - '!package-lock.json'
+
+  path_instructions:
+    - path: 'src/**/*.{ts,tsx}'
+      instructions: |
+        React 19 + TypeScript + Tailwind CSS v4 기반 프론트엔드 프로젝트입니다.
+        타입 안정성, 코드 품질, 성능 및 유지보수성을 중점적으로 리뷰하세요.
+        불필요한 리렌더링, 잘못된 상태 관리 및 실제 오류 가능성을 우선 확인하세요.
+
+    - path: 'src/apis/**/*.{ts,tsx}'
+      instructions: |
+        API 요청 및 응답 타입, 에러 처리, 비동기 처리, 중복 요청 및 데이터 처리의 안정성을 검토하세요.
+
+    - path: 'src/components/**/*.{ts,tsx}'
+      instructions: |
+        컴포넌트 재사용성, Props 타입, 불필요한 리렌더링, 접근성 및 UI 일관성을 중점적으로 검토하세요.
+
+    - path: 'src/hooks/**/*.{ts,tsx}'
+      instructions: |
+        Hook 사용 규칙, 의존성 배열, 상태 관리 및 메모리 누수 여부를 검토하세요.
+
+    - path: 'src/pages/**/*.{ts,tsx}'
+      instructions: |
+        페이지별 책임 분리, 데이터 처리, 컴포넌트 구성 및 사용자 흐름을 검토하세요.
+
+    - path: 'src/routes/**/*.{ts,tsx}'
+      instructions: |
+        라우팅 구조, 경로 설정, 중첩 라우팅 및 페이지 접근 제어를 검토하세요.
+
+    - path: 'src/layouts/**/*.{ts,tsx}'
+      instructions: |
+        공통 레이아웃 구조, 페이지 간 UI 일관성 및 컴포넌트 책임 분리를 검토하세요.
+
+    - path: 'src/utils/**/*.{ts,tsx}'
+      instructions: |
+        함수의 재사용성, 예외 처리, 입력값 검증 및 불필요한 중복 로직을 검토하세요.
+
+chat:
+  auto_reply: true
