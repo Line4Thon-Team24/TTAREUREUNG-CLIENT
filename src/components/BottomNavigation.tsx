@@ -26,8 +26,9 @@ const TABS: Tab[] = [
   { label: '프로필', to: '/profile', Icon: CircleUserRound },
 ];
 
+// 색 전환 + 누를 때 살짝 줄어드는 효과 (모션 줄이기 설정 시 비활성화)
 const tabClassName = ({ isActive }: { isActive: boolean }) =>
-  `flex flex-col items-center gap-1 ${isActive ? 'text-[#01A16A]' : 'text-[#191F28]'}`;
+  `flex flex-col items-center gap-1 transition-[color,scale] duration-200 ease-out active:scale-95 motion-reduce:transition-none ${isActive ? 'text-[#01A16A]' : 'text-[#191F28]'}`;
 
 export default function BottomNavigation() {
   return (
@@ -38,7 +39,11 @@ export default function BottomNavigation() {
       {TABS.map(({ label, to, Icon }) => (
         <NavLink key={to} to={to} className={tabClassName}>
           {/* 아이콘 색은 currentColor라 활성/비활성 글자색을 그대로 따라감 */}
-          <Icon size={20} aria-hidden />
+          <Icon
+            size={20}
+            aria-hidden
+            className="transition-[scale] duration-200 ease-out in-aria-[current=page]:scale-110 motion-reduce:transition-none"
+          />
           <span className="text-[12px] leading-3.75 font-medium tracking-[-0.25px] whitespace-nowrap">
             {label}
           </span>
