@@ -69,16 +69,16 @@ const SeniorRegisterPage = () => {
   const handleSubmit = () => {
     if (!isValid) return;
 
-    addSenior({
+    const senior = addSenior({
       name: name.trim(),
       birthDate: `${birthDate.year}-${pad(birthDate.month)}-${pad(birthDate.day)}`,
       gender,
       phoneNumber,
     });
-    // 완료 화면은 등록을 거쳐 온 경우에만 보이도록 state 전달
+    // 완료 화면은 등록을 거쳐 온 경우에만 보이도록 state 전달 (약 등록에 시니어 id 사용)
     navigate('/seniors/register/complete', {
       replace: true,
-      state: { registered: true },
+      state: { seniorId: senior.id },
     });
   };
 

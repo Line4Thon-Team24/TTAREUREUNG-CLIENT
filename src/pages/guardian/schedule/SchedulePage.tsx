@@ -29,11 +29,14 @@ const SchedulePage = () => {
 
       <div className="flex flex-1 items-center justify-center">
         {hasSenior ? (
-          // TODO: 약 등록 화면 작업 시 이동 연결
           <EmptyState
             message="등록된 약 정보가 없어요!"
             actionLabel="약 정보 등록하기"
-            onAction={() => {}}
+            onAction={() =>
+              navigate('/medicines/register', {
+                state: { seniorId: selectedSeniorId },
+              })
+            }
           />
         ) : (
           <EmptyState

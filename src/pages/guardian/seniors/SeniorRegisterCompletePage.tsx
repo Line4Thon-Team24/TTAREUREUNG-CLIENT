@@ -7,8 +7,10 @@ const SeniorRegisterCompletePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const seniorId = (location.state as { seniorId?: number } | null)?.seniorId;
+
   // 등록을 거치지 않고 주소로 바로 들어온 경우 복용 일정으로 이동
-  if (!(location.state as { registered?: boolean } | null)?.registered) {
+  if (seniorId === undefined) {
     return <Navigate to="/schedule" replace />;
   }
 
@@ -37,8 +39,16 @@ const SeniorRegisterCompletePage = () => {
       </main>
 
       <div className="flex flex-col items-center gap-3 px-5 pt-4 pb-10">
-        {/* TODO: 약 등록 화면 작업 시 이동 연결 */}
-        <Button onClick={() => {}}>약 등록하러 가기</Button>
+        <Button
+          onClick={() =>
+            navigate('/medicines/register', {
+              replace: true,
+              state: { seniorId },
+            })
+          }
+        >
+          약 등록하러 가기
+        </Button>
         <button
           type="button"
           onClick={() => navigate('/schedule', { replace: true })}
