@@ -1,16 +1,18 @@
 import type { ButtonHTMLAttributes } from 'react';
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'secondary' | 'danger';
 };
+
+const DISABLED_CLASS = 'disabled:bg-[#E5E8EB] disabled:text-[#B0B8C1]';
 
 const VARIANT_CLASS = {
-  primary:
-    'bg-[#01A16A] text-white active:bg-[#138A4B] disabled:bg-[#E5E8EB] disabled:text-[#B0B8C1]',
+  primary: `bg-[#01A16A] text-white active:bg-[#138A4B] ${DISABLED_CLASS}`,
   secondary: 'bg-[#F2F4F6] text-[#333D4B] active:bg-[#E5E8EB]',
+  danger: `bg-[#E5484D] text-white active:bg-[#C93C40] ${DISABLED_CLASS}`,
 };
 
-// 화면 하단 큰 버튼 (primary: 초록 / secondary: 회색 보조 버튼)
+// 화면 하단 큰 버튼 (primary: 초록 / secondary: 회색 보조 / danger: 빨강 삭제 버튼)
 export default function Button({
   type = 'button',
   variant = 'primary',
