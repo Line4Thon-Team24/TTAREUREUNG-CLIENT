@@ -1,13 +1,13 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import RootLayout from '@/layouts/RootLayout';
 import GuardianLayout from '@/layouts/GuardianLayout';
-import SchedulePage from '@/pages/guardian/SchedulePage';
-import MedicineListPage from '@/pages/guardian/MedicineListPage';
-import SeniorListPage from '@/pages/guardian/SeniorListPage';
-import GuardianListPage from '@/pages/guardian/GuardianListPage';
-import ProfilePage from '@/pages/guardian/ProfilePage';
-import SeniorRegisterPage from '@/pages/guardian/SeniorRegisterPage';
-import SeniorRegisterCompletePage from '@/pages/guardian/SeniorRegisterCompletePage';
+import SchedulePage from '@/pages/guardian/schedule/SchedulePage';
+import MedicineListPage from '@/pages/guardian/medicines/MedicineListPage';
+import SeniorListPage from '@/pages/guardian/seniors/SeniorListPage';
+import GuardianListPage from '@/pages/guardian/guardians/GuardianListPage';
+import ProfilePage from '@/pages/guardian/profile/ProfilePage';
+import SeniorRegisterPage from '@/pages/guardian/seniors/SeniorRegisterPage';
+import SeniorRegisterCompletePage from '@/pages/guardian/seniors/SeniorRegisterCompletePage';
 
 export const router = createBrowserRouter([
   {
