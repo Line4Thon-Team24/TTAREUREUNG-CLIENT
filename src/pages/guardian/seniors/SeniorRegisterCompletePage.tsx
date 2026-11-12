@@ -1,10 +1,16 @@
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import Button from '@/components/common/Button';
 import SeniorTargetBadge from '@/components/seniors/SeniorTargetBadge';
 
 const SeniorRegisterCompletePage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // 등록을 거치지 않고 주소로 바로 들어온 경우 복용 일정으로 이동
+  if (!(location.state as { registered?: boolean } | null)?.registered) {
+    return <Navigate to="/schedule" replace />;
+  }
 
   return (
     <div className="flex min-h-dvh flex-col">

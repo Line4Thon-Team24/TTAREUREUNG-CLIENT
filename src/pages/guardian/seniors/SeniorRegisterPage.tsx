@@ -11,6 +11,7 @@ import TextField from '@/components/common/TextField';
 import SeniorTargetBadge from '@/components/seniors/SeniorTargetBadge';
 import { addSenior } from '@/mocks/seniors';
 import type { Gender } from '@/types/senior';
+import { isValidBirthDate } from '@/utils/birthDate';
 import {
   formatPhoneNumber,
   isValidPhoneNumber,
@@ -59,12 +60,9 @@ const SeniorRegisterPage = () => {
     setStep((prev) => (prev === from ? from + 1 : prev));
   };
 
-  const isBirthDateFilled = Boolean(
-    birthDate.year && birthDate.month && birthDate.day
-  );
   const isValid =
     name.trim() !== '' &&
-    isBirthDateFilled &&
+    isValidBirthDate(birthDate) &&
     gender !== '' &&
     isValidPhoneNumber(phoneNumber);
 
@@ -77,7 +75,11 @@ const SeniorRegisterPage = () => {
       gender,
       phoneNumber,
     });
-    navigate('/seniors/register/complete', { replace: true });
+    // 완료 화면은 등록을 거쳐 온 경우에만 보이도록 state 전달
+    navigate('/seniors/register/complete', {
+      replace: true,
+      state: { registered: true },
+    });
   };
 
   // 단계 순서대로 정의하고, 화면에는 최신 입력칸이 위로 오도록 역순 표시
@@ -94,7 +96,10 @@ const SeniorRegisterPage = () => {
             enterKeyHint="next"
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && name.trim()) goNext(STEP.NAME);
+              // 한글 조합 중 Enter는 무시
+              if (e.key !== 'Enter' || e.nativeEvent.isComposing) return;
+              e.preventDefault();
+              if (name.trim()) goNext(STEP.NAME);
             }}
             onBlur={() => name.trim() && goNext(STEP.NAME)}
           />
@@ -150,6 +155,12 @@ const SeniorRegisterPage = () => {
             placeholder="전화번호를 입력해주세요."
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(formatPhoneNumber(e.target.value))}
+            onKeyDown={(e) => {
+              // 마지막 입력칸에서 Enter 시 등록 (한글 조합 중 제외)
+              if (e.key !== 'Enter' || e.nativeEvent.isComposing) return;
+              e.preventDefault();
+              handleSubmit();
+            }}
           />
         </FormField>
       ),
@@ -158,7 +169,8 @@ const SeniorRegisterPage = () => {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <BackHeader />
+      {/* 주소로 바로 들어온 경우에도 안전하게 복용 일정으로 이동 */}
+      <BackHeader onBack={() => navigate('/schedule', { replace: true })} />
 
       <div className="flex flex-1 flex-col gap-8 pt-8">
         <section className="flex flex-col items-start gap-2 px-5">

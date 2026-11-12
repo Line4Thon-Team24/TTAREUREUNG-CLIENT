@@ -39,14 +39,17 @@ export default function DateNavigator({
           <ChevronRight size={24} strokeWidth={2.5} aria-hidden />
         </button>
       </div>
-      <button
-        type="button"
-        aria-label="달력 보기"
-        onClick={onCalendarClick}
-        className="flex size-10 items-center justify-center rounded-full bg-[#F3F4F6] text-[#374151]"
-      >
-        <CalendarDays size={20} strokeWidth={1.5} aria-hidden />
-      </button>
+      {/* 달력 화면이 연결된 경우에만 버튼 노출 */}
+      {onCalendarClick && (
+        <button
+          type="button"
+          aria-label="달력 보기"
+          onClick={onCalendarClick}
+          className="flex size-10 items-center justify-center rounded-full bg-[#F3F4F6] text-[#374151]"
+        >
+          <CalendarDays size={20} strokeWidth={1.5} aria-hidden />
+        </button>
+      )}
     </header>
   );
 }

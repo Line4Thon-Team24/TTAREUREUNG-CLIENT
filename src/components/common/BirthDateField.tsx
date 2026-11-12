@@ -1,7 +1,8 @@
 import type { Ref } from 'react';
 import SelectField from '@/components/common/SelectField';
+import { getMaxDay, getMaxMonth, type BirthDate } from '@/utils/birthDate';
 
-export type BirthDate = { year: string; month: string; day: string };
+export type { BirthDate };
 
 type BirthDateFieldProps = {
   value: BirthDate;
@@ -21,31 +22,30 @@ const YEAR_OPTIONS = Array.from(
   }
 );
 
-const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => ({
-  label: `${i + 1}월`,
-  value: String(i + 1),
-}));
+const createOptions = (count: number, unit: string) =>
+  Array.from({ length: count }, (_, i) => ({
+    label: `${i + 1}${unit}`,
+    value: String(i + 1),
+  }));
 
-// 선택한 년/월의 마지막 날짜 (년/월 미선택 시 31일)
-const getDaysInMonth = (year: string, month: string) =>
-  year && month ? new Date(Number(year), Number(month), 0).getDate() : 31;
-
-// 생년월일 년/월/일 선택창
+// 생년월일 년/월/일 선택창 (오늘 이후 날짜는 선택 불가)
 export default function BirthDateField({
   value,
   onChange,
   id,
   ref,
 }: BirthDateFieldProps) {
-  const dayOptions = Array.from(
-    { length: getDaysInMonth(value.year, value.month) },
-    (_, i) => ({ label: `${i + 1}일`, value: String(i + 1) })
-  );
+  const monthOptions = createOptions(getMaxMonth(value.year), '월');
+  const dayOptions = createOptions(getMaxDay(value.year, value.month), '일');
 
-  // 년/월이 바뀌어 기존 일이 범위를 벗어나면 일 선택을 초기화
+  // 년/월이 바뀌어 기존 월/일이 선택 범위를 벗어나면 초기화
   const update = (next: Partial<BirthDate>) => {
     const merged = { ...value, ...next };
-    if (Number(merged.day) > getDaysInMonth(merged.year, merged.month)) {
+    if (Number(merged.month) > getMaxMonth(merged.year)) {
+      merged.month = '';
+      merged.day = '';
+    }
+    if (Number(merged.day) > getMaxDay(merged.year, merged.month)) {
       merged.day = '';
     }
     onChange(merged);
@@ -65,7 +65,7 @@ export default function BirthDateField({
       <SelectField
         aria-label="출생 월"
         placeholder="월"
-        options={MONTH_OPTIONS}
+        options={monthOptions}
         value={value.month}
         onChange={(e) => update({ month: e.target.value })}
       />
