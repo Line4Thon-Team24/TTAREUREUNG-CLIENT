@@ -10,6 +10,7 @@ import SeniorRegisterPage from '@/pages/guardian/seniors/SeniorRegisterPage';
 import SeniorRegisterCompletePage from '@/pages/guardian/seniors/SeniorRegisterCompletePage';
 import MedicineRegisterMethodPage from '@/pages/guardian/medicines/MedicineRegisterMethodPage';
 import MedicineRecognitionPage from '@/pages/guardian/medicines/MedicineRecognitionPage';
+import MedicineInfoFormPage from '@/pages/guardian/medicines/MedicineInfoFormPage';
 
 export const router = createBrowserRouter([
   {
@@ -44,6 +45,7 @@ export const router = createBrowserRouter([
         path: '/medicines/register/recognition',
         element: <MedicineRecognitionPage />,
       },
+      { path: '/medicines/register/form', element: <MedicineInfoFormPage /> },
     ],
   },
 ]);
