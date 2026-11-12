@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import EmptyState from '@/components/common/EmptyState';
 import DateNavigator from '@/components/schedule/DateNavigator';
-import SeniorChips from '@/components/schedule/SeniorChips';
+import SeniorChips from '@/components/common/SeniorChips';
 import { getSeniors } from '@/mocks/seniors';
 
 const SchedulePage = () => {

@@ -7,7 +7,7 @@ import MedicineInfoCard from '@/components/medicines/MedicineInfoCard';
 import { addMedicines, createEmptyMedicineForm } from '@/mocks/medicines';
 import type { MedicineForm, MedicineFormState } from '@/types/medicine';
 import { formatDateTime } from '@/utils/date';
-import { isMedicineFormValid } from '@/utils/medicineForm';
+import { isMedicineFormValid, trimMedicineForm } from '@/utils/medicineForm';
 
 // 입력 중인 약 (인식 결과의 고유 ID 기준으로 관리)
 type MedicineDraft = { id: string; form: MedicineForm };
@@ -54,12 +54,8 @@ const MedicineInfoFormPage = () => {
     // 선택한 약만 등록 요청에 포함
     addMedicines(
       state.seniorId,
-      drafts.map(({ form }) => ({
-        ...form,
-        name: form.name.trim(),
-        displayName: form.displayName.trim(),
-        storageLocation: form.storageLocation.trim(),
-      }))
+      drafts.map(({ form }) => trimMedicineForm(form)),
+      state.mode === 'recognized' ? state.prescription : null
     );
     // 이동하기 전에 완료 표시 (등록 처리 중 다시 렌더링되어도 이동과 엇갈리지 않도록 state를 바꾸지 않음)
     completedKeys.add(location.key);

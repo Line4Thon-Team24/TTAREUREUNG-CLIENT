@@ -11,6 +11,8 @@ import SeniorRegisterCompletePage from '@/pages/guardian/seniors/SeniorRegisterC
 import MedicineRegisterMethodPage from '@/pages/guardian/medicines/MedicineRegisterMethodPage';
 import MedicineRecognitionPage from '@/pages/guardian/medicines/MedicineRecognitionPage';
 import MedicineInfoFormPage from '@/pages/guardian/medicines/MedicineInfoFormPage';
+import MedicineManagePage from '@/pages/guardian/medicines/MedicineManagePage';
+import MedicineEditPage from '@/pages/guardian/medicines/MedicineEditPage';
 
 export const router = createBrowserRouter([
   {
@@ -46,6 +48,10 @@ export const router = createBrowserRouter([
         element: <MedicineRecognitionPage />,
       },
       { path: '/medicines/register/form', element: <MedicineInfoFormPage /> },
+      // 약 목록 편집 (선택 삭제)
+      { path: '/medicines/manage', element: <MedicineManagePage /> },
+      // 약 세부 정보 수정
+      { path: '/medicines/:medicineId/edit', element: <MedicineEditPage /> },
     ],
   },
 ]);

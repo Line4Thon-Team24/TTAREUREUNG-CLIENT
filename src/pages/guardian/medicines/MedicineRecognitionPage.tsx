@@ -9,6 +9,7 @@ import UploadErrorMessage from '@/components/medicines/UploadErrorMessage';
 import useLatestRequest from '@/hooks/useLatestRequest';
 import {
   getRecognizedMedicines,
+  isPrescriptionImageInUse,
   RECOGNITION_CONFIDENCE,
   RECOGNIZED_AREAS,
 } from '@/mocks/medicines';
@@ -73,7 +74,10 @@ const MedicineRecognitionPage = () => {
     if (errorMessage) return;
 
     // 교체되어 더 이상 쓰지 않는 이전 사진의 미리보기 주소 해제
-    revokePreviewUrl(state);
+    // (이미 등록된 약이 쓰고 있는 주소는 유지)
+    if (state.imageUrl && !isPrescriptionImageInUse(state.imageUrl)) {
+      revokePreviewUrl(state);
+    }
     navigate(location.pathname, {
       replace: true,
       state: toRecognitionState(state.seniorId, state.source, file),
@@ -144,6 +148,11 @@ const MedicineRecognitionPage = () => {
                   seniorId: state.seniorId,
                   mode: 'recognized',
                   medicines: selectedMedicines,
+                  // 약 목록에서 보여줄 처방전 정보
+                  prescription: {
+                    fileName: state.fileName,
+                    imageUrl: state.imageUrl,
+                  },
                 } satisfies MedicineFormState,
               })
             }

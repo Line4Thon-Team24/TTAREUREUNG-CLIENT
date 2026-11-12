@@ -25,7 +25,8 @@ export const validatePrescriptionFile = async (
   file: File
 ): Promise<string | null> => {
   if (file.type === 'application/pdf') return null;
-  if (!file.type.startsWith('image/')) {
+  // SVG는 처방전 사진이 아니고 스크립트를 담을 수 있어 제외
+  if (!file.type.startsWith('image/') || file.type === 'image/svg+xml') {
     return '사진 또는 PDF 파일만 올릴 수 있어요.';
   }
 

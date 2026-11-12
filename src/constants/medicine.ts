@@ -28,3 +28,10 @@ export const NOTIFICATION_TIMES: Record<number, (typeof MORNING)[]> = {
   2: [MORNING, DINNER],
   3: [MORNING, LUNCH, DINNER],
 };
+
+// 저장된 값 → 화면 표시 문구 (예: 'daily' → '매일')
+export const getIntervalLabel = (value: DoseInterval) =>
+  INTERVAL_OPTIONS.find((option) => option.value === value)?.label ?? '';
+
+export const getTimingLabel = (value: DoseTiming) =>
+  TIMING_OPTIONS.find((option) => option.value === value)?.label ?? '';

@@ -17,6 +17,7 @@ type MedicineInfoCardProps = {
   onChange: (value: MedicineForm) => void;
   registeredAt: string;
   isManual: boolean; // 직접 입력이면 약 이름을 직접 작성
+  numbered?: boolean; // 제목 앞 번호 표시 (여러 개 등록할 때)
 };
 
 const AiVoiceTag = () => (
@@ -97,6 +98,7 @@ export default function MedicineInfoCard({
   onChange,
   registeredAt,
   isManual,
+  numbered = true,
 }: MedicineInfoCardProps) {
   const id = `medicine-${index}`;
   const update = (next: Partial<MedicineForm>) =>
@@ -106,7 +108,8 @@ export default function MedicineInfoCard({
     <article className="flex w-full flex-col gap-6">
       <header className="flex items-center justify-between">
         <h2 className="text-[16px] font-bold text-[#191F28]">
-          {index + 1}. {value.name || '새로운 약'}
+          {numbered && `${index + 1}. `}
+          {value.name || '새로운 약'}
         </h2>
         <p className="text-[11px] text-[#6B7684]">등록 일시: {registeredAt}</p>
       </header>
