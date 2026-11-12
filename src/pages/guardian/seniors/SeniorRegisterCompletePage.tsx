@@ -1,7 +1,7 @@
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import Button from '@/components/common/Button';
-import SeniorTargetBadge from '@/components/seniors/SeniorTargetBadge';
+import BrandBadge from '@/components/common/BrandBadge';
 
 const SeniorRegisterCompletePage = () => {
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ const SeniorRegisterCompletePage = () => {
     <div className="flex min-h-dvh flex-col">
       <main className="flex flex-1 flex-col items-center justify-center gap-23 px-5 py-10">
         <div className="flex flex-col items-center gap-4.5">
-          <SeniorTargetBadge />
+          <BrandBadge label="따르릉 약 챙김 대상자" />
           <h1 className="text-[22px] font-bold text-[#191F28]">
             시니어 등록 완료!
           </h1>

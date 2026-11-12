@@ -8,7 +8,7 @@ import Button from '@/components/common/Button';
 import FormField from '@/components/common/FormField';
 import SelectField from '@/components/common/SelectField';
 import TextField from '@/components/common/TextField';
-import SeniorTargetBadge from '@/components/seniors/SeniorTargetBadge';
+import BrandBadge from '@/components/common/BrandBadge';
 import { addSenior } from '@/mocks/seniors';
 import type { Gender } from '@/types/senior';
 import { isValidBirthDate } from '@/utils/birthDate';
@@ -174,7 +174,7 @@ const SeniorRegisterPage = () => {
 
       <div className="flex flex-1 flex-col gap-8 pt-8">
         <section className="flex flex-col items-start gap-2 px-5">
-          <SeniorTargetBadge />
+          <BrandBadge label="따르릉 약 챙김 대상자" />
           <h1 className="text-[22px] font-bold text-[#191F28]">
             시니어의 정보를
             <br />
