@@ -16,6 +16,13 @@ export const formatKoreanDate = (value: string) => {
   return `${year}년 ${month}월 ${day}일`;
 };
 
+// Date → '2026.11.05' (기기 시간대 기준)
+export const formatDate = (date: Date) =>
+  `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())}`;
+
 // Date → '2026.11.05 19:23'
 export const formatDateTime = (date: Date) =>
-  `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  `${formatDate(date)} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+
+// 'YYYY-MM-DD' → '2026.08.12'
+export const formatDotDate = (value: string) => value.replaceAll('-', '.');
