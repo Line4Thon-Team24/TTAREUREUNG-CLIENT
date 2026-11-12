@@ -56,7 +56,10 @@ const MedicineInfoFormPage = () => {
         storageLocation: form.storageLocation.trim(),
       }))
     );
-    navigate('/schedule', { replace: true });
+    // 약 등록 흐름(방법 선택 → AI 인식 결과 → 입력)을 기록에서 되돌려 시작 화면으로 이동
+    // → 등록 후 뒤로가기로 입력 화면에 다시 들어가 중복 등록하는 것을 방지
+    // (인식 결과 다시 올리기·약 선택은 replace라 기록이 늘지 않음)
+    navigate(isManual ? -2 : -3);
   };
 
   return (
