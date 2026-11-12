@@ -21,22 +21,22 @@ const ICON_TABS: IconTab[] = [
   {
     label: '복용 일정',
     to: ROUTES.SCHEDULE,
-    icon: { src: scheduleIcon, width: 16.6667, height: 18.3332 },
+    icon: { src: scheduleIcon, width: 16, height: 18 },
   },
   {
     label: '약 목록',
     to: ROUTES.MEDICINES,
-    icon: { src: medicineIcon, width: 18.3092, height: 18.3092 },
+    icon: { src: medicineIcon, width: 18, height: 18 },
   },
   {
     label: '시니어 목록',
     to: ROUTES.SENIORS,
-    icon: { src: seniorIcon, width: 20.0007, height: 16.6667 },
+    icon: { src: seniorIcon, width: 20, height: 16 },
   },
   {
     label: '보호자 목록',
     to: ROUTES.GUARDIANS,
-    icon: { src: guardianIcon, width: 15.75, height: 18.75 },
+    icon: { src: guardianIcon, width: 15, height: 18 },
   },
 ];
 
@@ -70,7 +70,7 @@ function TabIcon({ src, width, height }: IconTab['icon']) {
 export default function BottomNavigation() {
   return (
     <nav
-      className="fixed bottom-0 left-1/2 z-50 flex w-full max-w-[402px] -translate-x-1/2 items-center justify-between border-t border-[#E5E8EB] bg-white px-5 pb-[env(safe-area-inset-bottom)]"
+      className="fixed bottom-0 left-1/2 z-50 flex w-full max-w-100.5 -translate-x-1/2 items-center justify-between border-t border-[#E5E8EB] bg-white px-5 pb-[env(safe-area-inset-bottom)]"
       style={{ height: BOTTOM_NAVIGATION_HEIGHT }}
     >
       {ICON_TABS.map(({ label, to, icon }) => (
@@ -90,7 +90,7 @@ export default function BottomNavigation() {
                 alt=""
                 width={18}
                 height={18}
-                className="size-[18px] rounded-full"
+                className="size-4.5 rounded-full"
               />
             </span>
             <span className={labelClassName}>프로필</span>
