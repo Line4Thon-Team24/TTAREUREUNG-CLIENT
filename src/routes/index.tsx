@@ -3,11 +3,11 @@ import RootLayout from '@/layouts/RootLayout';
 import GuardianLayout from '@/layouts/GuardianLayout';
 import { ROUTES } from '@/constants/routes';
 import HomePage from '@/pages/HomePage';
-import SchedulePage from '@/pages/SchedulePage';
-import MedicineListPage from '@/pages/MedicineListPage';
-import SeniorListPage from '@/pages/SeniorListPage';
-import GuardianListPage from '@/pages/GuardianListPage';
-import ProfilePage from '@/pages/ProfilePage';
+import SchedulePage from '@/pages/guardian/SchedulePage';
+import MedicineListPage from '@/pages/guardian/MedicineListPage';
+import SeniorListPage from '@/pages/guardian/SeniorListPage';
+import GuardianListPage from '@/pages/guardian/GuardianListPage';
+import ProfilePage from '@/pages/guardian/ProfilePage';
 
 export const router = createBrowserRouter([
   {
