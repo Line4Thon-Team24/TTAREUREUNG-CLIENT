@@ -19,7 +19,7 @@ export default function DateNavigator({
   onCalendarClick,
 }: DateNavigatorProps) {
   return (
-    <header className="flex items-center justify-between px-5 pt-6">
+    <header className="flex items-center justify-between px-5 pt-10">
       <div className="flex items-center gap-2 text-[#191F28]">
         <button
           type="button"
