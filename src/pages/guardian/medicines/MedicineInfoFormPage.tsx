@@ -59,7 +59,8 @@ const MedicineInfoFormPage = () => {
         name: form.name.trim(),
         displayName: form.displayName.trim(),
         storageLocation: form.storageLocation.trim(),
-      }))
+      })),
+      state.mode === 'recognized' ? state.prescription : null
     );
     // 이동하기 전에 완료 표시 (등록 처리 중 다시 렌더링되어도 이동과 엇갈리지 않도록 state를 바꾸지 않음)
     completedKeys.add(location.key);

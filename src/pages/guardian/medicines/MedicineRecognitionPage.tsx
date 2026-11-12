@@ -144,6 +144,11 @@ const MedicineRecognitionPage = () => {
                   seniorId: state.seniorId,
                   mode: 'recognized',
                   medicines: selectedMedicines,
+                  // 약 목록에서 보여줄 처방전 정보
+                  prescription: {
+                    fileName: state.fileName,
+                    imageUrl: state.imageUrl,
+                  },
                 } satisfies MedicineFormState,
               })
             }
