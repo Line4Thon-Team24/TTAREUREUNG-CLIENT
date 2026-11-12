@@ -1,7 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import RootLayout from '@/layouts/RootLayout';
 import GuardianLayout from '@/layouts/GuardianLayout';
-import { ROUTES } from '@/constants/routes';
 import HomePage from '@/pages/HomePage';
 import SchedulePage from '@/pages/guardian/SchedulePage';
 import MedicineListPage from '@/pages/guardian/MedicineListPage';
@@ -11,7 +10,7 @@ import ProfilePage from '@/pages/guardian/ProfilePage';
 
 export const router = createBrowserRouter([
   {
-    path: ROUTES.HOME,
+    path: '/',
     element: <RootLayout />,
     children: [
       {
@@ -22,11 +21,11 @@ export const router = createBrowserRouter([
         // 보호자 탭 화면 (하단 네비게이션 노출)
         element: <GuardianLayout />,
         children: [
-          { path: ROUTES.SCHEDULE, element: <SchedulePage /> },
-          { path: ROUTES.MEDICINES, element: <MedicineListPage /> },
-          { path: ROUTES.SENIORS, element: <SeniorListPage /> },
-          { path: ROUTES.GUARDIANS, element: <GuardianListPage /> },
-          { path: ROUTES.PROFILE, element: <ProfilePage /> },
+          { path: '/schedule', element: <SchedulePage /> },
+          { path: '/medicines', element: <MedicineListPage /> },
+          { path: '/seniors', element: <SeniorListPage /> },
+          { path: '/guardians', element: <GuardianListPage /> },
+          { path: '/profile', element: <ProfilePage /> },
         ],
       },
     ],

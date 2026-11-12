@@ -1,5 +1,4 @@
 import { NavLink } from 'react-router-dom';
-import { ROUTES } from '@/constants/routes';
 import scheduleIcon from '@/assets/icons/tab-schedule.svg';
 import medicineIcon from '@/assets/icons/tab-medicine.svg';
 import seniorIcon from '@/assets/icons/tab-senior.svg';
@@ -20,22 +19,22 @@ type IconTab = {
 const ICON_TABS: IconTab[] = [
   {
     label: '복용 일정',
-    to: ROUTES.SCHEDULE,
+    to: '/schedule',
     icon: { src: scheduleIcon, width: 16, height: 18 },
   },
   {
     label: '약 목록',
-    to: ROUTES.MEDICINES,
+    to: '/medicines',
     icon: { src: medicineIcon, width: 18, height: 18 },
   },
   {
     label: '시니어 목록',
-    to: ROUTES.SENIORS,
+    to: '/seniors',
     icon: { src: seniorIcon, width: 20, height: 16 },
   },
   {
     label: '보호자 목록',
-    to: ROUTES.GUARDIANS,
+    to: '/guardians',
     icon: { src: guardianIcon, width: 15, height: 18 },
   },
 ];
@@ -79,7 +78,7 @@ export default function BottomNavigation() {
           <span className={labelClassName}>{label}</span>
         </NavLink>
       ))}
-      <NavLink to={ROUTES.PROFILE} className={tabClassName}>
+      <NavLink to="/profile" className={tabClassName}>
         {({ isActive }) => (
           <>
             <span
