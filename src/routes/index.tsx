@@ -6,6 +6,8 @@ import MedicineListPage from '@/pages/guardian/MedicineListPage';
 import SeniorListPage from '@/pages/guardian/SeniorListPage';
 import GuardianListPage from '@/pages/guardian/GuardianListPage';
 import ProfilePage from '@/pages/guardian/ProfilePage';
+import SeniorRegisterPage from '@/pages/guardian/SeniorRegisterPage';
+import SeniorRegisterCompletePage from '@/pages/guardian/SeniorRegisterCompletePage';
 
 export const router = createBrowserRouter([
   {
@@ -27,6 +29,12 @@ export const router = createBrowserRouter([
           { path: '/guardians', element: <GuardianListPage /> },
           { path: '/profile', element: <ProfilePage /> },
         ],
+      },
+      // 시니어 등록 흐름 (하단 네비게이션 미노출)
+      { path: '/seniors/register', element: <SeniorRegisterPage /> },
+      {
+        path: '/seniors/register/complete',
+        element: <SeniorRegisterCompletePage />,
       },
     ],
   },
