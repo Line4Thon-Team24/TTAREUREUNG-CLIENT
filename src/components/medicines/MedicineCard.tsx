@@ -103,9 +103,9 @@ export default function MedicineCard({
             <Value>{medicine.effect || '-'}</Value>
           </InfoRow>
           <InfoRow label="복용 주기" tone="green">
+            {/* 예: 매일 하루 3회 / 식후 30분 */}
             <Value>
-              {getIntervalLabel(medicine.interval)} /{' '}
-              {getTimingLabel(medicine.timing)}
+              {`${getIntervalLabel(medicine.interval)} 하루 ${medicine.timesPerDay}회 / ${getTimingLabel(medicine.timing)}`}
             </Value>
           </InfoRow>
         </div>

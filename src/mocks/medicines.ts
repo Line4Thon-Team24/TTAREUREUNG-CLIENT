@@ -43,6 +43,11 @@ export const updateMedicine = (id: number, form: MedicineForm) => {
   medicines[index] = { ...medicines[index], ...form };
 };
 
+// 등록된 약이 처방전 사진으로 쓰고 있는 미리보기 주소인지 확인
+// → 쓰고 있는 주소를 해제하면 약 목록·수정 화면에서 사진이 깨짐
+export const isPrescriptionImageInUse = (imageUrl: string) =>
+  medicines.some((medicine) => medicine.prescription?.imageUrl === imageUrl);
+
 export const deleteMedicines = (ids: number[]) => {
   for (const id of ids) {
     const index = medicines.findIndex((medicine) => medicine.id === id);

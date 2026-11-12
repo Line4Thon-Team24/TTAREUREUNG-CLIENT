@@ -17,6 +17,9 @@ import {
 // 팝업 단계: 수정 전 의사 확인 → 수정 확인 / 변경 내용 버리기 확인
 type ModalStep = 'doctor' | 'confirm' | 'discard' | null;
 
+// 변경 내용을 버리고 이동할 곳: 이전 화면 / 약 다시 등록하기
+type LeaveTarget = 'back' | 'reRegister';
+
 const MedicineEditPage = () => {
   const navigate = useNavigate();
   const { medicineId } = useParams();
@@ -26,6 +29,7 @@ const MedicineEditPage = () => {
     medicine ? toMedicineForm(medicine) : null
   );
   const [modalStep, setModalStep] = useState<ModalStep>(null);
+  const [leaveTarget, setLeaveTarget] = useState<LeaveTarget>('back');
 
   // 없는 약이면 약 목록으로 이동
   if (!medicine || !form) {
@@ -36,14 +40,27 @@ const MedicineEditPage = () => {
   const isChanged = isMedicineFormChanged(toMedicineForm(medicine), form);
   const canSubmit = isChanged && isMedicineFormValid(form, isManual);
 
-  // 바꾼 내용이 있으면 버릴지 먼저 확인
-  const handleCancel = () => {
-    if (isChanged) {
-      setModalStep('discard');
-    } else {
+  const leave = (target: LeaveTarget) => {
+    if (target === 'back') {
       navigate(-1);
+    } else {
+      navigate('/medicines/register', {
+        state: { seniorId: medicine.seniorId },
+      });
     }
   };
+
+  // 바꾼 내용이 있으면 버릴지 먼저 확인하고, 확인했을 때만 이동
+  const requestLeave = (target: LeaveTarget) => {
+    if (isChanged) {
+      setLeaveTarget(target);
+      setModalStep('discard');
+    } else {
+      leave(target);
+    }
+  };
+
+  const handleCancel = () => requestLeave('back');
 
   const handleSubmit = () => {
     updateMedicine(medicine.id, trimMedicineForm(form));
@@ -59,11 +76,7 @@ const MedicineEditPage = () => {
       <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pt-8 pb-12">
         <PrescriptionSummary
           prescription={medicine.prescription}
-          onReRegister={() =>
-            navigate('/medicines/register', {
-              state: { seniorId: medicine.seniorId },
-            })
-          }
+          onReRegister={() => requestLeave('reRegister')}
         />
 
         <div className="relative flex items-center justify-center py-2">
@@ -120,7 +133,7 @@ const MedicineEditPage = () => {
         onCancel={() => setModalStep(null)}
         onConfirm={() => {
           setModalStep(null);
-          navigate(-1);
+          leave(leaveTarget);
         }}
       />
     </div>
