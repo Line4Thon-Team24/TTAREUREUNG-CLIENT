@@ -54,6 +54,7 @@ export const getRecognizedMedicines = (): RecognizedMedicine[] => {
   const base = createEmptyMedicineForm();
   return [
     {
+      id: 'rx-1',
       accuracy: 99,
       form: {
         ...base,
@@ -64,6 +65,7 @@ export const getRecognizedMedicines = (): RecognizedMedicine[] => {
       },
     },
     {
+      id: 'rx-2',
       accuracy: 98,
       form: {
         ...base,
@@ -74,6 +76,7 @@ export const getRecognizedMedicines = (): RecognizedMedicine[] => {
       },
     },
     {
+      id: 'rx-3',
       accuracy: 97,
       form: {
         ...base,
@@ -84,6 +87,7 @@ export const getRecognizedMedicines = (): RecognizedMedicine[] => {
       },
     },
     {
+      id: 'rx-4',
       accuracy: 96,
       form: {
         ...base,

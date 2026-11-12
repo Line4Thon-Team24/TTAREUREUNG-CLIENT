@@ -4,48 +4,52 @@ import { Sparkles } from 'lucide-react';
 import Button from '@/components/common/Button';
 import StepHeader from '@/components/common/StepHeader';
 import MedicineInfoCard from '@/components/medicines/MedicineInfoCard';
-import {
-  addMedicines,
-  createEmptyMedicineForm,
-  getRecognizedMedicines,
-} from '@/mocks/medicines';
-import type { MedicineForm } from '@/types/medicine';
+import { addMedicines, createEmptyMedicineForm } from '@/mocks/medicines';
+import type { MedicineForm, MedicineFormState } from '@/types/medicine';
 import { formatDateTime } from '@/utils/date';
 import { isMedicineFormValid } from '@/utils/medicineForm';
 
-// recognized: AI 인식 결과로 자동 입력 / manual: 직접 입력
-type FormState = { seniorId: number; mode: 'recognized' | 'manual' };
+// 입력 중인 약 (인식 결과의 고유 ID 기준으로 관리)
+type MedicineDraft = { id: string; form: MedicineForm };
 
 const MedicineInfoFormPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const state = location.state as FormState | null;
+  const state = location.state as MedicineFormState | null;
   const isManual = state?.mode === 'manual';
 
-  const [forms, setForms] = useState<MedicineForm[]>(() =>
-    isManual
-      ? [createEmptyMedicineForm()]
-      : getRecognizedMedicines().map(({ form }) => form)
-  );
+  // 인식 결과는 이전 화면에서 선택한 약만, 직접 입력은 빈 약 1개
+  const [drafts, setDrafts] = useState<MedicineDraft[]>(() => {
+    if (state?.mode === 'recognized') {
+      return state.medicines.map(({ id, form }) => ({ id, form }));
+    }
+    return [{ id: 'manual-1', form: createEmptyMedicineForm() }];
+  });
   const [registeredAt] = useState(() => formatDateTime(new Date()));
 
-  // 이전 단계를 거치지 않고 주소로 바로 들어온 경우 복용 일정으로 이동
-  if (!state) {
+  // 이전 단계를 거치지 않았거나 선택한 약이 없으면 복용 일정으로 이동
+  if (!state || drafts.length === 0) {
     return <Navigate to="/schedule" replace />;
   }
 
-  const isValid = forms.every((form) => isMedicineFormValid(form, isManual));
+  const count = drafts.length;
+  const isValid = drafts.every(({ form }) =>
+    isMedicineFormValid(form, isManual)
+  );
 
-  const updateForm = (index: number, next: MedicineForm) => {
-    setForms((prev) => prev.map((form, i) => (i === index ? next : form)));
+  const updateForm = (id: string, next: MedicineForm) => {
+    setDrafts((prev) =>
+      prev.map((draft) => (draft.id === id ? { id, form: next } : draft))
+    );
   };
 
   const handleSubmit = () => {
     if (!isValid) return;
 
+    // 선택한 약만 등록 요청에 포함
     addMedicines(
       state.seniorId,
-      forms.map((form) => ({
+      drafts.map(({ form }) => ({
         ...form,
         name: form.name.trim(),
         displayName: form.displayName.trim(),
@@ -62,7 +66,7 @@ const MedicineInfoFormPage = () => {
         subtitle={
           isManual
             ? '약 정보를 직접 입력해주세요'
-            : `총 ${forms.length}개 감지 및 자동 변환 완료`
+            : `총 ${count}개 선택 및 자동 변환 완료`
         }
         status={isManual ? undefined : '변환 완료'}
       />
@@ -85,13 +89,13 @@ const MedicineInfoFormPage = () => {
         )}
 
         <div className="flex flex-col gap-6">
-          {forms.map((form, index) => (
-            <Fragment key={index}>
+          {drafts.map(({ id, form }, index) => (
+            <Fragment key={id}>
               {index > 0 && <hr className="border-[#E5E8EB]" />}
               <MedicineInfoCard
                 index={index}
                 value={form}
-                onChange={(next) => updateForm(index, next)}
+                onChange={(next) => updateForm(id, next)}
                 registeredAt={registeredAt}
                 isManual={isManual}
               />
@@ -108,7 +112,7 @@ const MedicineInfoFormPage = () => {
         </div>
         <div className="min-w-0 flex-1">
           <Button disabled={!isValid} onClick={handleSubmit}>
-            {forms.length}개 등록하기
+            {count}개 등록하기
           </Button>
         </div>
       </div>

@@ -2,15 +2,15 @@ import type { RecognizedMedicine } from '@/types/medicine';
 
 type RecognizedMedicineListProps = {
   medicines: RecognizedMedicine[];
-  selectedIndex: number;
-  onSelect: (index: number) => void;
+  selectedIds: string[];
+  onToggle: (id: string) => void;
 };
 
-// AI가 감지한 약 목록 (선택한 항목은 초록색으로 강조)
+// AI가 감지한 약 목록 (여러 개 선택 가능, 선택한 항목은 초록색으로 강조)
 export default function RecognizedMedicineList({
   medicines,
-  selectedIndex,
-  onSelect,
+  selectedIds,
+  onToggle,
 }: RecognizedMedicineListProps) {
   return (
     <section className="flex w-full flex-col items-center gap-3 rounded-2xl border border-[#E5E8EB] bg-white p-4 drop-shadow-[0_1px_1px_rgba(0,0,0,0.05)]">
@@ -23,14 +23,14 @@ export default function RecognizedMedicineList({
         </h2>
 
         <ul className="flex flex-col gap-2">
-          {medicines.map(({ form, accuracy }, index) => {
-            const selected = index === selectedIndex;
+          {medicines.map(({ id, form, accuracy }, index) => {
+            const selected = selectedIds.includes(id);
             return (
-              <li key={index}>
+              <li key={id}>
                 <button
                   type="button"
                   aria-pressed={selected}
-                  onClick={() => onSelect(index)}
+                  onClick={() => onToggle(id)}
                   className={`flex w-full items-center justify-between rounded-xl border p-2.75 text-left transition-colors ${selected ? 'border-[#CDEBD8] bg-[#F5FEF8]' : 'border-[#E5E8EB] bg-[#FAFAFA]'}`}
                 >
                   <span className="flex items-center gap-2.5">

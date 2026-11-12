@@ -31,6 +31,13 @@ export type RecognizedArea = {
 
 // AI 인식 결과로 감지된 약
 export type RecognizedMedicine = {
+  id: string; // 인식 결과 내 고유 ID (선택 상태 관리용)
   form: MedicineForm;
   accuracy: number; // 정확도 (%)
 };
+
+// 약 정보 입력 화면으로 넘기는 값
+// recognized: AI 인식 결과 중 선택한 약만 전달 / manual: 직접 입력
+export type MedicineFormState =
+  | { seniorId: number; mode: 'recognized'; medicines: RecognizedMedicine[] }
+  | { seniorId: number; mode: 'manual' };

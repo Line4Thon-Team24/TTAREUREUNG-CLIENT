@@ -10,6 +10,7 @@ import {
   RECOGNITION_CONFIDENCE,
   RECOGNIZED_AREAS,
 } from '@/mocks/medicines';
+import type { MedicineFormState } from '@/types/medicine';
 import {
   toRecognitionState,
   UPLOAD_ACCEPT,
@@ -22,7 +23,6 @@ const MedicineRecognitionPage = () => {
   const state = location.state as RecognitionState | null;
 
   const [medicines] = useState(getRecognizedMedicines);
-  const [selectedIndex, setSelectedIndex] = useState(0);
   const reuploadRef = useRef<HTMLInputElement>(null);
 
   // 업로드를 거치지 않고 주소로 바로 들어온 경우 복용 일정으로 이동
@@ -31,6 +31,24 @@ const MedicineRecognitionPage = () => {
   }
 
   const isCamera = state.source === 'camera';
+
+  // 선택 상태를 현재 화면의 history state에 저장 → 다음 화면에서 뒤로 와도 유지
+  const selectedIds = state.selectedIds ?? [];
+  const selectedMedicines = medicines.filter(({ id }) =>
+    selectedIds.includes(id)
+  );
+
+  // 이미 선택된 약을 다시 누르면 선택 해제
+  const toggleMedicine = (id: string) => {
+    const nextIds = selectedIds.includes(id)
+      ? selectedIds.filter((selectedId) => selectedId !== id)
+      : [...selectedIds, id];
+
+    navigate(location.pathname, {
+      replace: true,
+      state: { ...state, selectedIds: nextIds },
+    });
+  };
 
   // 같은 방식으로 다시 올리면 현재 화면의 사진만 교체
   const handleReupload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -81,8 +99,8 @@ const MedicineRecognitionPage = () => {
 
         <RecognizedMedicineList
           medicines={medicines}
-          selectedIndex={selectedIndex}
-          onSelect={setSelectedIndex}
+          selectedIds={selectedIds}
+          onToggle={toggleMedicine}
         />
       </main>
 
@@ -97,10 +115,16 @@ const MedicineRecognitionPage = () => {
           </Button>
         </div>
         <div className="min-w-0 flex-1">
+          {/* 선택한 약이 없으면 비활성, 선택한 약만 다음 화면으로 전달 */}
           <Button
+            disabled={selectedMedicines.length === 0}
             onClick={() =>
               navigate('/medicines/register/form', {
-                state: { seniorId: state.seniorId, mode: 'recognized' },
+                state: {
+                  seniorId: state.seniorId,
+                  mode: 'recognized',
+                  medicines: selectedMedicines,
+                } satisfies MedicineFormState,
               })
             }
           >

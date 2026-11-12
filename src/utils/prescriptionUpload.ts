@@ -6,6 +6,7 @@ export type RecognitionState = {
   source: UploadSource;
   fileName: string;
   imageUrl: string | null; // PDF는 미리보기 없음
+  selectedIds?: string[]; // 선택한 약 ID (뒤로 돌아왔을 때 선택 유지)
 };
 
 // 업로드 방식별 파일 선택창 설정
