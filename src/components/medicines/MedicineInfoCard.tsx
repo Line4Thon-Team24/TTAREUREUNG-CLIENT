@@ -75,7 +75,8 @@ const EditableField = ({
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="pr-10 text-[#191F28]"
+        // TextField 기본 글자색(#333D4B)보다 우선 적용되도록 important(!) 사용
+        className="pr-10 text-[#191F28]!"
       />
       <button
         type="button"
