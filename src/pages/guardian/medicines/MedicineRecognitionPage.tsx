@@ -6,6 +6,7 @@ import StepHeader from '@/components/common/StepHeader';
 import PrescriptionViewer from '@/components/medicines/PrescriptionViewer';
 import RecognizedMedicineList from '@/components/medicines/RecognizedMedicineList';
 import UploadErrorMessage from '@/components/medicines/UploadErrorMessage';
+import useLatestRequest from '@/hooks/useLatestRequest';
 import {
   getRecognizedMedicines,
   RECOGNITION_CONFIDENCE,
@@ -28,6 +29,7 @@ const MedicineRecognitionPage = () => {
   const [medicines] = useState(getRecognizedMedicines);
   const reuploadRef = useRef<HTMLInputElement>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const startRequest = useLatestRequest();
 
   // 업로드를 거치지 않고 주소로 바로 들어온 경우 복용 일정으로 이동
   if (!state) {
@@ -61,7 +63,12 @@ const MedicineRecognitionPage = () => {
     if (!file) return;
 
     // 인식이 어려운 사진이면 기존 사진을 유지하고 다시 선택하도록 안내
+    const isLatest = startRequest();
     const errorMessage = await validatePrescriptionFile(file);
+    // 검사 중 화면을 떠났거나 다른 파일을 다시 골랐으면 이전 결과는 무시
+    // (주소 해제·화면 교체도 하지 않음)
+    if (!isLatest()) return;
+
     setUploadError(errorMessage);
     if (errorMessage) return;
 
