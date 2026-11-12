@@ -10,7 +10,7 @@ export default function BackHeader({ onBack }: BackHeaderProps) {
   const navigate = useNavigate();
 
   return (
-    <header className="flex h-12 items-center px-3">
+    <header className="flex items-center px-3 pt-10">
       <button
         type="button"
         aria-label="뒤로가기"
