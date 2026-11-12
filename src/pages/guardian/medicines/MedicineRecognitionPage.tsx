@@ -45,14 +45,15 @@ const MedicineRecognitionPage = () => {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex h-dvh flex-col">
       <StepHeader
         title="따르릉 AI 자동 인식"
         subtitle="AI 처방전 자동 분석 단계"
         status="인식 완료"
       />
 
-      <main className="flex flex-1 flex-col gap-4 bg-[#F6F8F7] p-5">
+      {/* 본문만 스크롤, 마지막 항목이 하단 버튼에 가리지 않도록 아래 여백 확보 */}
+      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-[#F6F8F7] px-5 pt-5 pb-8">
         <div className="flex items-start gap-3 rounded-2xl border border-[#E5E8EB] bg-white p-3.75 drop-shadow-[0_1px_1px_rgba(0,0,0,0.05)]">
           <span
             className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[#E7F6EC] text-[#01A16A]"
@@ -85,24 +86,27 @@ const MedicineRecognitionPage = () => {
         />
       </main>
 
-      <div className="sticky bottom-0 flex gap-3 border-t border-[#E5E8EB] bg-white px-5 pt-4 pb-10">
-        <Button
-          variant="secondary"
-          className="w-29.25 shrink-0"
-          onClick={() => reuploadRef.current?.click()}
-        >
-          <RefreshCw size={16} strokeWidth={2.5} aria-hidden />
-          {isCamera ? '재촬영' : '재업로드'}
-        </Button>
-        <Button
-          onClick={() =>
-            navigate('/medicines/register/form', {
-              state: { seniorId: state.seniorId, mode: 'recognized' },
-            })
-          }
-        >
-          다음
-        </Button>
+      <div className="z-10 flex shrink-0 gap-3 border-t border-[#E5E8EB] bg-white px-5 pt-4 pb-10">
+        <div className="w-29.25 shrink-0">
+          <Button
+            variant="secondary"
+            onClick={() => reuploadRef.current?.click()}
+          >
+            <RefreshCw size={16} strokeWidth={2.5} aria-hidden />
+            {isCamera ? '재촬영' : '재업로드'}
+          </Button>
+        </div>
+        <div className="min-w-0 flex-1">
+          <Button
+            onClick={() =>
+              navigate('/medicines/register/form', {
+                state: { seniorId: state.seniorId, mode: 'recognized' },
+              })
+            }
+          >
+            다음
+          </Button>
+        </div>
       </div>
 
       <input

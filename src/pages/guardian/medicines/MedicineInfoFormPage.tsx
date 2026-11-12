@@ -56,7 +56,7 @@ const MedicineInfoFormPage = () => {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex h-dvh flex-col">
       <StepHeader
         title="새로운 약 정보"
         subtitle={
@@ -67,7 +67,8 @@ const MedicineInfoFormPage = () => {
         status={isManual ? undefined : '변환 완료'}
       />
 
-      <main className="flex flex-1 flex-col gap-8 px-5 py-8">
+      {/* 입력 폼만 스크롤, 마지막 항목이 하단 버튼에 가리지 않도록 아래 여백 확보 */}
+      <main className="flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto px-5 pt-8 pb-12">
         {!isManual && (
           <div className="flex items-start gap-3 rounded-2xl border border-[#CDEBD8] bg-[#E7F6EC] p-3.75">
             <Sparkles
@@ -99,17 +100,17 @@ const MedicineInfoFormPage = () => {
         </div>
       </main>
 
-      <div className="sticky bottom-0 flex gap-3 border-t border-[#E5E8EB] bg-white px-5 pt-4 pb-10">
-        <Button
-          variant="secondary"
-          className="w-29.25 shrink-0"
-          onClick={() => navigate(-1)}
-        >
-          취소
-        </Button>
-        <Button disabled={!isValid} onClick={handleSubmit}>
-          {forms.length}개 등록하기
-        </Button>
+      <div className="z-10 flex shrink-0 gap-3 border-t border-[#E5E8EB] bg-white px-5 pt-4 pb-10">
+        <div className="w-29.25 shrink-0">
+          <Button variant="secondary" onClick={() => navigate(-1)}>
+            취소
+          </Button>
+        </div>
+        <div className="min-w-0 flex-1">
+          <Button disabled={!isValid} onClick={handleSubmit}>
+            {forms.length}개 등록하기
+          </Button>
+        </div>
       </div>
     </div>
   );

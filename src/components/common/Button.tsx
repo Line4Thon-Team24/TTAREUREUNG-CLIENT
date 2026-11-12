@@ -20,7 +20,7 @@ export default function Button({
   return (
     <button
       type={type}
-      className={`flex h-13 w-full items-center justify-center gap-1.5 rounded-2xl text-[16px] font-bold transition-colors ${VARIANT_CLASS[variant]} ${className}`}
+      className={`flex h-13 w-full items-center justify-center gap-1.5 rounded-2xl text-[16px] font-bold whitespace-nowrap transition-colors ${VARIANT_CLASS[variant]} ${className}`}
       {...props}
     />
   );
