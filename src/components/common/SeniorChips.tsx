@@ -6,7 +6,7 @@ type SeniorChipsProps = {
   onSelect: (id: number) => void;
 };
 
-// 복용 일정에서 볼 시니어 선택 칩 목록
+// 화면에서 볼 시니어 선택 칩 목록 (복용 일정, 약 목록)
 export default function SeniorChips({
   seniors,
   selectedId,
