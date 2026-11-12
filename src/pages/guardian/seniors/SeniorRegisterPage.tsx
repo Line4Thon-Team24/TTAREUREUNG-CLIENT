@@ -8,7 +8,7 @@ import Button from '@/components/common/Button';
 import FormField from '@/components/common/FormField';
 import SelectField from '@/components/common/SelectField';
 import TextField from '@/components/common/TextField';
-import SeniorTargetBadge from '@/components/seniors/SeniorTargetBadge';
+import BrandBadge from '@/components/common/BrandBadge';
 import { addSenior } from '@/mocks/seniors';
 import type { Gender } from '@/types/senior';
 import { isValidBirthDate } from '@/utils/birthDate';
@@ -69,16 +69,16 @@ const SeniorRegisterPage = () => {
   const handleSubmit = () => {
     if (!isValid) return;
 
-    addSenior({
+    const senior = addSenior({
       name: name.trim(),
       birthDate: `${birthDate.year}-${pad(birthDate.month)}-${pad(birthDate.day)}`,
       gender,
       phoneNumber,
     });
-    // 완료 화면은 등록을 거쳐 온 경우에만 보이도록 state 전달
+    // 완료 화면은 등록을 거쳐 온 경우에만 보이도록 state 전달 (약 등록에 시니어 id 사용)
     navigate('/seniors/register/complete', {
       replace: true,
-      state: { registered: true },
+      state: { seniorId: senior.id },
     });
   };
 
@@ -174,7 +174,7 @@ const SeniorRegisterPage = () => {
 
       <div className="flex flex-1 flex-col gap-8 pt-8">
         <section className="flex flex-col items-start gap-2 px-5">
-          <SeniorTargetBadge />
+          <BrandBadge label="따르릉 약 챙김 대상자" />
           <h1 className="text-[22px] font-bold text-[#191F28]">
             시니어의 정보를
             <br />
