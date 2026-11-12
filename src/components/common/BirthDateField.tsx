@@ -1,5 +1,5 @@
 import type { Ref } from 'react';
-import SelectField from '@/components/SelectField';
+import SelectField from '@/components/common/SelectField';
 
 export type BirthDate = { year: string; month: string; day: string };
 

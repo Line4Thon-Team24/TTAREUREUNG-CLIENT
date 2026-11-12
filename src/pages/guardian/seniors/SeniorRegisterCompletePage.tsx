@@ -1,14 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
-import Button from '@/components/Button';
-import SeniorTargetBadge from '@/components/senior/SeniorTargetBadge';
+import Button from '@/components/common/Button';
+import SeniorTargetBadge from '@/components/seniors/SeniorTargetBadge';
 
 const SeniorRegisterCompletePage = () => {
   const navigate = useNavigate();
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <main className="flex flex-1 flex-col items-center justify-center gap-[91px] px-5 py-10">
+      <main className="flex flex-1 flex-col items-center justify-center gap-23 px-5 py-10">
         <div className="flex flex-col items-center gap-4.5">
           <SeniorTargetBadge />
           <h1 className="text-[22px] font-bold text-[#191F28]">

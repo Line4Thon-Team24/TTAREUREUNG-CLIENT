@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BackHeader from '@/components/BackHeader';
-import BirthDateField, { type BirthDate } from '@/components/BirthDateField';
-import Button from '@/components/Button';
-import FormField from '@/components/FormField';
-import SelectField from '@/components/SelectField';
-import TextField from '@/components/TextField';
-import SeniorTargetBadge from '@/components/senior/SeniorTargetBadge';
+import BackHeader from '@/components/common/BackHeader';
+import BirthDateField, {
+  type BirthDate,
+} from '@/components/common/BirthDateField';
+import Button from '@/components/common/Button';
+import FormField from '@/components/common/FormField';
+import SelectField from '@/components/common/SelectField';
+import TextField from '@/components/common/TextField';
+import SeniorTargetBadge from '@/components/seniors/SeniorTargetBadge';
 import { addSenior } from '@/mocks/seniors';
 import type { Gender } from '@/types/senior';
 import {

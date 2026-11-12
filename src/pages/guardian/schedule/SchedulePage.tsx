@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BOTTOM_NAVIGATION_HEIGHT } from '@/components/BottomNavigation';
-import EmptyState from '@/components/EmptyState';
+import EmptyState from '@/components/common/EmptyState';
 import DateNavigator from '@/components/schedule/DateNavigator';
 import SeniorChips from '@/components/schedule/SeniorChips';
 import { getSeniors } from '@/mocks/seniors';
@@ -17,10 +16,7 @@ const SchedulePage = () => {
   const hasSenior = seniors.length > 0;
 
   return (
-    <div
-      className="flex flex-col"
-      style={{ minHeight: `calc(100dvh - ${BOTTOM_NAVIGATION_HEIGHT})` }}
-    >
+    <div className="flex flex-1 flex-col">
       <DateNavigator date={date} onChange={setDate} />
 
       {hasSenior && (
