@@ -16,6 +16,38 @@ export const UPLOAD_ACCEPT: Record<UploadSource, string> = {
   camera: 'image/*',
 };
 
+// 글씨 인식이 가능한 최소 사진 크기 (짧은 쪽 기준, px)
+const MIN_IMAGE_SIZE = 500;
+
+// 인식 화면으로 넘기기 전 파일 검사 (문제가 있으면 안내 문구, 없으면 null)
+// 파일 형식(MIME)만 믿지 않고 실제로 사진을 읽어서 크기까지 확인
+export const validatePrescriptionFile = async (
+  file: File
+): Promise<string | null> => {
+  if (file.type === 'application/pdf') return null;
+  if (!file.type.startsWith('image/')) {
+    return '사진 또는 PDF 파일만 올릴 수 있어요.';
+  }
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    const shortSide = Math.min(bitmap.width, bitmap.height);
+    bitmap.close();
+
+    if (shortSide < MIN_IMAGE_SIZE) {
+      return '사진이 너무 작아 글씨를 읽기 어려워요. 처방전이 잘 보이도록 다시 촬영하거나 다른 사진을 선택해주세요.';
+    }
+    return null;
+  } catch {
+    return '사진을 읽을 수 없어요. 다른 사진을 다시 선택해주세요.';
+  }
+};
+
+// 더 이상 쓰지 않는 미리보기 주소 해제 (메모리 정리)
+export const revokePreviewUrl = (state: RecognitionState) => {
+  if (state.imageUrl) URL.revokeObjectURL(state.imageUrl);
+};
+
 // 선택한 파일을 다음 화면으로 넘길 값으로 변환
 export const toRecognitionState = (
   seniorId: number,

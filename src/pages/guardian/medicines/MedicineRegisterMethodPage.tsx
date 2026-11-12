@@ -1,4 +1,4 @@
-import { useRef, type ChangeEvent } from 'react';
+import { useRef, useState, type ChangeEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import {
   Camera,
@@ -10,9 +10,11 @@ import {
 import BackHeader from '@/components/common/BackHeader';
 import BrandBadge from '@/components/common/BrandBadge';
 import MethodOptionCard from '@/components/medicines/MethodOptionCard';
+import UploadErrorMessage from '@/components/medicines/UploadErrorMessage';
 import {
   toRecognitionState,
   UPLOAD_ACCEPT,
+  validatePrescriptionFile,
   type UploadSource,
 } from '@/utils/prescriptionUpload';
 
@@ -24,6 +26,7 @@ const MedicineRegisterMethodPage = () => {
   const galleryRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // 어떤 시니어의 약인지 모르면 등록할 수 없으므로 복용 일정으로 이동
   if (seniorId === undefined) {
@@ -31,10 +34,15 @@ const MedicineRegisterMethodPage = () => {
   }
 
   const handleFile =
-    (source: UploadSource) => (e: ChangeEvent<HTMLInputElement>) => {
+    (source: UploadSource) => async (e: ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       e.target.value = ''; // 같은 파일을 다시 골라도 동작하도록 초기화
       if (!file) return;
+
+      // 인식이 어려운 사진이면 이동하지 않고 다시 선택하도록 안내
+      const errorMessage = await validatePrescriptionFile(file);
+      setUploadError(errorMessage);
+      if (errorMessage) return;
 
       navigate('/medicines/register/recognition', {
         state: toRecognitionState(seniorId, source, file),
@@ -83,6 +91,8 @@ const MedicineRegisterMethodPage = () => {
               onClick={() => cameraRef.current?.click()}
             />
           </div>
+
+          {uploadError && <UploadErrorMessage message={uploadError} />}
 
           <div className="flex items-start gap-2.5 rounded-xl border border-[#E5E8EB] bg-[#FAFAFA] p-3.75 text-[13px] leading-4.5 text-[#6B7684]">
             <Lightbulb

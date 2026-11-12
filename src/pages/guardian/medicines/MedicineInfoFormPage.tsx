@@ -12,6 +12,11 @@ import { isMedicineFormValid } from '@/utils/medicineForm';
 // 입력 중인 약 (인식 결과의 고유 ID 기준으로 관리)
 type MedicineDraft = { id: string; form: MedicineForm };
 
+// 등록을 마친 입력 화면의 기록 키
+// → 앞으로가기로 같은 입력 화면에 다시 들어와 중복 등록하는 것을 막음
+// (렌더링과 무관한 값이라 state가 아닌 모듈 변수로 관리)
+const completedKeys = new Set<string>();
+
 const MedicineInfoFormPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,8 +32,8 @@ const MedicineInfoFormPage = () => {
   });
   const [registeredAt] = useState(() => formatDateTime(new Date()));
 
-  // 이전 단계를 거치지 않았거나 선택한 약이 없으면 복용 일정으로 이동
-  if (!state || drafts.length === 0) {
+  // 이전 단계를 거치지 않았거나, 선택한 약이 없거나, 이미 등록을 마친 화면이면 복용 일정으로 이동
+  if (!state || drafts.length === 0 || completedKeys.has(location.key)) {
     return <Navigate to="/schedule" replace />;
   }
 
@@ -56,6 +61,8 @@ const MedicineInfoFormPage = () => {
         storageLocation: form.storageLocation.trim(),
       }))
     );
+    // 이동하기 전에 완료 표시 (등록 처리 중 다시 렌더링되어도 이동과 엇갈리지 않도록 state를 바꾸지 않음)
+    completedKeys.add(location.key);
     // 약 등록 흐름(방법 선택 → AI 인식 결과 → 입력)을 기록에서 되돌려 시작 화면으로 이동
     // → 등록 후 뒤로가기로 입력 화면에 다시 들어가 중복 등록하는 것을 방지
     // (인식 결과 다시 올리기·약 선택은 replace라 기록이 늘지 않음)

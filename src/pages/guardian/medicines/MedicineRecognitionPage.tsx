@@ -5,6 +5,7 @@ import Button from '@/components/common/Button';
 import StepHeader from '@/components/common/StepHeader';
 import PrescriptionViewer from '@/components/medicines/PrescriptionViewer';
 import RecognizedMedicineList from '@/components/medicines/RecognizedMedicineList';
+import UploadErrorMessage from '@/components/medicines/UploadErrorMessage';
 import {
   getRecognizedMedicines,
   RECOGNITION_CONFIDENCE,
@@ -12,8 +13,10 @@ import {
 } from '@/mocks/medicines';
 import type { MedicineFormState } from '@/types/medicine';
 import {
+  revokePreviewUrl,
   toRecognitionState,
   UPLOAD_ACCEPT,
+  validatePrescriptionFile,
   type RecognitionState,
 } from '@/utils/prescriptionUpload';
 
@@ -24,6 +27,7 @@ const MedicineRecognitionPage = () => {
 
   const [medicines] = useState(getRecognizedMedicines);
   const reuploadRef = useRef<HTMLInputElement>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // 업로드를 거치지 않고 주소로 바로 들어온 경우 복용 일정으로 이동
   if (!state) {
@@ -51,11 +55,18 @@ const MedicineRecognitionPage = () => {
   };
 
   // 같은 방식으로 다시 올리면 현재 화면의 사진만 교체
-  const handleReupload = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleReupload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
 
+    // 인식이 어려운 사진이면 기존 사진을 유지하고 다시 선택하도록 안내
+    const errorMessage = await validatePrescriptionFile(file);
+    setUploadError(errorMessage);
+    if (errorMessage) return;
+
+    // 교체되어 더 이상 쓰지 않는 이전 사진의 미리보기 주소 해제
+    revokePreviewUrl(state);
     navigate(location.pathname, {
       replace: true,
       state: toRecognitionState(state.seniorId, state.source, file),
@@ -89,6 +100,8 @@ const MedicineRecognitionPage = () => {
             </p>
           </div>
         </div>
+
+        {uploadError && <UploadErrorMessage message={uploadError} />}
 
         <PrescriptionViewer
           fileName={state.fileName}

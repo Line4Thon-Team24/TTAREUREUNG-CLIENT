@@ -134,7 +134,15 @@ export default function MedicineInfoCard({
       )}
 
       <div className="flex flex-col gap-3">
-        <FieldLabel htmlFor={`${id}-display-name`} extra={<AiVoiceTag />}>
+        <FieldLabel
+          htmlFor={`${id}-display-name`}
+          extra={
+            <>
+              <AiVoiceTag />
+              <RequiredDot />
+            </>
+          }
+        >
           시니어가 보는 약 이름
         </FieldLabel>
         <EditableField
