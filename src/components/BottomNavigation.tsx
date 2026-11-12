@@ -39,7 +39,7 @@ export default function BottomNavigation() {
         <NavLink key={to} to={to} className={tabClassName}>
           {/* 아이콘 색은 currentColor라 활성/비활성 글자색을 그대로 따라감 */}
           <Icon size={20} aria-hidden />
-          <span className="text-[12px] leading-[15px] font-medium tracking-[-0.25px] whitespace-nowrap">
+          <span className="text-[12px] leading-3.75 font-medium tracking-[-0.25px] whitespace-nowrap">
             {label}
           </span>
         </NavLink>
