@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import RootLayout from '@/layouts/RootLayout';
 import GuardianLayout from '@/layouts/GuardianLayout';
+import LoginPage from '@/pages/auth/LoginPage';
 import SchedulePage from '@/pages/guardian/schedule/SchedulePage';
 import MedicineListPage from '@/pages/guardian/medicines/MedicineListPage';
 import SeniorListPage from '@/pages/guardian/seniors/SeniorListPage';
@@ -24,6 +25,8 @@ export const router = createBrowserRouter([
         // 기본 경로는 복용 일정 화면으로 이동
         element: <Navigate to="/schedule" replace />,
       },
+      // 로그인 (하단 네비게이션 미노출)
+      { path: '/login', element: <LoginPage /> },
       {
         // 보호자 탭 화면 (하단 네비게이션 노출)
         element: <GuardianLayout />,
