@@ -2,6 +2,11 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import RootLayout from '@/layouts/RootLayout';
 import GuardianLayout from '@/layouts/GuardianLayout';
 import LoginPage from '@/pages/auth/LoginPage';
+import SignupLayout from '@/layouts/SignupLayout';
+import SignupEmailPage from '@/pages/auth/SignupEmailPage';
+import SignupPasswordPage from '@/pages/auth/SignupPasswordPage';
+import SignupGuardianPage from '@/pages/auth/SignupGuardianPage';
+import SignupCompletePage from '@/pages/auth/SignupCompletePage';
 import SchedulePage from '@/pages/guardian/schedule/SchedulePage';
 import MedicineListPage from '@/pages/guardian/medicines/MedicineListPage';
 import SeniorListPage from '@/pages/guardian/seniors/SeniorListPage';
@@ -27,6 +32,16 @@ export const router = createBrowserRouter([
       },
       // 로그인 (하단 네비게이션 미노출)
       { path: '/login', element: <LoginPage /> },
+      // 회원가입 흐름 (하단 네비게이션 미노출)
+      {
+        element: <SignupLayout />,
+        children: [
+          { path: '/signup', element: <SignupEmailPage /> },
+          { path: '/signup/password', element: <SignupPasswordPage /> },
+          { path: '/signup/guardian', element: <SignupGuardianPage /> },
+          { path: '/signup/complete', element: <SignupCompletePage /> },
+        ],
+      },
       {
         // 보호자 탭 화면 (하단 네비게이션 노출)
         element: <GuardianLayout />,
