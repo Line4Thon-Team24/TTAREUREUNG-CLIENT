@@ -1,7 +1,33 @@
 import type { Senior, SeniorForm } from '@/types/senior';
 
+// 미리 등록된 시니어 (Figma 복용 일정 화면과 같은 이름)
+// → 김순자만 약이 등록되어 있고, 나머지는 약 없음 화면 확인용
+const sampleSeniors: Senior[] = [
+  {
+    id: 1,
+    name: '김순자',
+    birthDate: '1948-03-15',
+    gender: 'female',
+    phoneNumber: '010-1234-5678',
+  },
+  {
+    id: 2,
+    name: '박종옥',
+    birthDate: '1951-07-22',
+    gender: 'female',
+    phoneNumber: '010-2345-6789',
+  },
+  {
+    id: 3,
+    name: '박태규',
+    birthDate: '1946-11-02',
+    gender: 'male',
+    phoneNumber: '010-3456-7890',
+  },
+];
+
 // API 연동 전 임시 저장소 (메모리에만 저장되어 새로고침 시 초기화)
-const seniors: Senior[] = [];
+const seniors: Senior[] = [...sampleSeniors];
 
 export const getSeniors = () => [...seniors];
 
