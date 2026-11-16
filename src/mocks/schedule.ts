@@ -71,6 +71,7 @@ const kimSlots: ScheduleSlot[] = [
     mealTime: 'morning',
     time: '11:00',
     timingLabel: '아침 식후',
+    callConfirmedAt: '11:08',
     medicines: [
       createMedicine('morning', 1, 'taken'),
       createMedicine('morning', 4, 'taken'),
@@ -107,6 +108,7 @@ const parkSlots: ScheduleSlot[] = [
     mealTime: 'morning',
     time: '08:00',
     timingLabel: '아침 식후',
+    callConfirmedAt: '08:12',
     medicines: [
       createMedicine('morning', 6, 'taken'),
       createMedicine('morning', 7, 'taken'),
