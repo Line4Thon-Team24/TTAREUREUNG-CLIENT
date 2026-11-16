@@ -39,7 +39,7 @@ export default function DateNavigator({
           <ChevronRight size={24} strokeWidth={2.5} aria-hidden />
         </button>
       </div>
-      {/* 달력 보기 (월 달력 연결 예정) */}
+      {/* 달력 보기 */}
       <button
         type="button"
         aria-label="달력 보기"

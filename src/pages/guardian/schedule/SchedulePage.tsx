@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import EmptyState from '@/components/common/EmptyState';
 import DateNavigator from '@/components/schedule/DateNavigator';
 import MedicineDetailModal from '@/components/schedule/MedicineDetailModal';
 import ScheduleTimeline from '@/components/schedule/ScheduleTimeline';
 import SeniorChips from '@/components/common/SeniorChips';
+import useDateParam from '@/hooks/useDateParam';
+import useSelectedSeniorParam from '@/hooks/useSelectedSeniorParam';
 import { getSeniors } from '@/mocks/seniors';
 import { getMedicine, getMedicines } from '@/mocks/medicines';
 import { getDailySchedule } from '@/mocks/schedule';
@@ -12,11 +14,11 @@ import type { Medicine } from '@/types/medicine';
 
 const SchedulePage = () => {
   const navigate = useNavigate();
-  const [date, setDate] = useState(() => new Date());
+  const location = useLocation();
   const [seniors] = useState(getSeniors);
-  const [selectedSeniorId, setSelectedSeniorId] = useState(
-    seniors[0]?.id ?? null
-  );
+  // 월 달력과 시니어·날짜 공유 (주소에 저장)
+  const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(seniors);
+  const [date, setDate] = useDateParam();
   const [detailMedicine, setDetailMedicine] = useState<Medicine | null>(null);
 
   const hasSenior = seniors.length > 0;
@@ -66,7 +68,11 @@ const SchedulePage = () => {
 
   return (
     <div className="flex flex-1 flex-col">
-      <DateNavigator date={date} onChange={setDate} />
+      <DateNavigator
+        date={date}
+        onChange={setDate}
+        onCalendarClick={() => navigate(`/schedule/month${location.search}`)}
+      />
 
       {hasSenior && (
         // 일정 있을 때만 구분선
@@ -76,7 +82,7 @@ const SchedulePage = () => {
           <SeniorChips
             seniors={seniors}
             selectedId={selectedSeniorId}
-            onSelect={setSelectedSeniorId}
+            onSelect={selectSenior}
             onAdd={() => navigate('/seniors/register')}
           />
         </div>
