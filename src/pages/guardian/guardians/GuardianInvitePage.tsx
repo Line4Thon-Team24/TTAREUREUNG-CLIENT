@@ -22,22 +22,23 @@ const GuardianInvitePage = () => {
   const count = phoneNumbers.length;
   const isChanged = count > 0 || phoneInput !== '';
 
-  // 번호가 완성되면 자동으로 목록에 추가 (이미 있는 번호는 안내만)
+  // 번호가 완성되면 자동으로 목록에 추가 (이미 있는 번호는 입력창만 비우고 안내)
   const handlePhoneChange = (value: string) => {
     const formatted = formatPhoneNumber(value);
-    const isDup = phoneNumbers.includes(formatted);
-    setIsDuplicate(isValidPhoneNumber(formatted) && isDup);
+    const isComplete = isValidPhoneNumber(formatted);
+    const isDup = isComplete && phoneNumbers.includes(formatted);
 
-    if (isValidPhoneNumber(formatted) && !isDup) {
+    setIsDuplicate(isDup);
+    if (isComplete && !isDup) {
       setPhoneNumbers((prev) => [...prev, formatted]);
-      setPhoneInput('');
-    } else {
-      setPhoneInput(formatted);
     }
+    setPhoneInput(isComplete ? '' : formatted);
   };
 
-  const removePhoneNumber = (target: string) =>
+  const removePhoneNumber = (target: string) => {
     setPhoneNumbers((prev) => prev.filter((phone) => phone !== target));
+    setIsDuplicate(false);
+  };
 
   // 입력한 내용이 있으면 버릴지 먼저 확인
   const handleCancel = () => {
