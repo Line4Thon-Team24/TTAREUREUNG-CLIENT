@@ -95,5 +95,4 @@ export const MEAL_TIME_LABELS = {
   morning: '아침',
   lunch: '점심',
   dinner: '저녁',
-  night: '밤',
 } as const;

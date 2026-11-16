@@ -5,7 +5,7 @@ export type DoseStatus = 'taken' | 'missed' | 'taking' | 'scheduled';
 export type SlotStatus = DoseStatus | 'partial';
 
 // 복용 시간대
-export type MealTime = 'morning' | 'lunch' | 'dinner' | 'night';
+export type MealTime = 'morning' | 'lunch' | 'dinner';
 
 // 약 모양 (카드 왼쪽 위 아이콘)
 export type MedicineShape = 'capsule' | 'tablet' | 'powder';

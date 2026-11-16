@@ -60,6 +60,7 @@ const createMedicine = (
   status,
 });
 
+// 아침·점심·저녁 3개 시간대 (점심은 카드가 3개를 넘어 가로로 넘겨 보는 경우)
 const sampleSlots: ScheduleSlot[] = [
   {
     id: 'morning',
@@ -72,24 +73,15 @@ const sampleSlots: ScheduleSlot[] = [
     ],
   },
   {
-    id: 'lunch-1',
+    id: 'lunch',
     mealTime: 'lunch',
     time: '14:00',
     timingLabel: '점심 식후',
     medicines: [
-      createMedicine('lunch-1', 2, 'missed'),
-      createMedicine('lunch-1', 3, 'taken'),
-      createMedicine('lunch-1', 1, 'taken'),
-    ],
-  },
-  {
-    id: 'lunch-2',
-    mealTime: 'lunch',
-    time: '15:00',
-    timingLabel: '점심 식후',
-    medicines: [
-      createMedicine('lunch-2', 2, 'missed'),
-      createMedicine('lunch-2', 5, 'missed'),
+      createMedicine('lunch', 2, 'missed'),
+      createMedicine('lunch', 3, 'taken'),
+      createMedicine('lunch', 1, 'taken'),
+      createMedicine('lunch', 5, 'missed'),
     ],
   },
   {
@@ -101,13 +93,6 @@ const sampleSlots: ScheduleSlot[] = [
       createMedicine('dinner', 4, 'taking'),
       createMedicine('dinner', 1, 'taking'),
     ],
-  },
-  {
-    id: 'night',
-    mealTime: 'night',
-    time: '22:00',
-    timingLabel: '취침 전',
-    medicines: [createMedicine('night', 5, 'scheduled')],
   },
 ];
 
