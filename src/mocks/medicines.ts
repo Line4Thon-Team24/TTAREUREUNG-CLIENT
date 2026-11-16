@@ -109,8 +109,13 @@ const sampleMedicines: Medicine[] = [
   },
 ];
 
+// 박종옥 시니어에게 미리 등록된 약 (김순자의 혈압약·당뇨약·콜레스테롤 약과 같은 약, ID 6~8)
+const sampleMedicinesOfSenior2: Medicine[] = sampleMedicines
+  .filter((medicine) => [1, 4, 5].includes(medicine.id))
+  .map((medicine, index) => ({ ...medicine, id: 6 + index, seniorId: 2 }));
+
 // API 연동 전 임시 저장소 (메모리에만 저장되어 새로고침 시 초기화)
-const medicines: Medicine[] = [...sampleMedicines];
+const medicines: Medicine[] = [...sampleMedicines, ...sampleMedicinesOfSenior2];
 
 // 최근 등록한 약이 위로 오도록 정렬
 export const getMedicines = (seniorId: number) =>
