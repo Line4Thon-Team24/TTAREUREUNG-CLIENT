@@ -1,8 +1,10 @@
+import type { Medicine } from '@/types/medicine';
 import type {
   DoseStatus,
   ScheduleMedicine,
   SlotStatus,
 } from '@/types/schedule';
+import { diffDays } from '@/utils/date';
 
 // 약 상태들로 시간대 상태 계산
 export const getSlotStatus = (statuses: DoseStatus[]): SlotStatus => {
@@ -28,3 +30,14 @@ export const sortMissedFirst = (medicines: ScheduleMedicine[]) => [
   ...medicines.filter((medicine) => medicine.status === 'missed'),
   ...medicines.filter((medicine) => medicine.status !== 'missed'),
 ];
+
+// 복용 간격별 주기 (일)
+const INTERVAL_DAYS = { daily: 1, everyOtherDay: 2, weekly: 7 } as const;
+
+// 해당 날짜(YYYY-MM-DD)에 먹는 약인지
+export const isMedicineOnDate = (medicine: Medicine, date: string) => {
+  if (date < medicine.startDate || date > medicine.endDate) return false;
+  return (
+    diffDays(medicine.startDate, date) % INTERVAL_DAYS[medicine.interval] === 0
+  );
+};
