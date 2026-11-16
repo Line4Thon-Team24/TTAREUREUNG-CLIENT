@@ -92,7 +92,9 @@ const SchedulePage = () => {
             seniors={seniors}
             selectedId={selectedSeniorId}
             onSelect={selectSenior}
-            onAdd={() => navigate('/seniors/register')}
+            onAdd={() =>
+              navigate('/seniors/add', { state: { returnTo: '/schedule' } })
+            }
           />
         </div>
       )}
