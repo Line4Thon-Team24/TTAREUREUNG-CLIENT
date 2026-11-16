@@ -28,3 +28,13 @@ export const isValidBirthDate = ({ year, month, day }: BirthDate) => {
   today.setHours(0, 0, 0, 0);
   return date <= today;
 };
+
+// 'YYYY-MM-DD' → 만 나이
+export const getAge = (birthDate: string) => {
+  const [year, month, day] = birthDate.split('-').map(Number);
+  const today = new Date();
+  const hadBirthday =
+    today.getMonth() + 1 > month ||
+    (today.getMonth() + 1 === month && today.getDate() >= day);
+  return today.getFullYear() - year - (hadBirthday ? 0 : 1);
+};
