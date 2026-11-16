@@ -3,7 +3,9 @@ import type {
   ScheduleMedicine,
   ScheduleSlot,
 } from '@/types/schedule';
+import { getMedicine } from '@/mocks/medicines';
 import { toDateString } from '@/utils/date';
+import { isMedicineOnDate } from '@/utils/schedule';
 import pillBlisterImage from '@/assets/images/pill-blister.jpg';
 import pillAssortedImage from '@/assets/images/pill-assorted.jpg';
 
@@ -142,17 +144,29 @@ export const getDailySchedule = (
   seniorId: number,
   date: Date
 ): ScheduleSlot[] => {
-  const slots = sampleSchedules[seniorId] ?? [];
-  const isFuture = toDateString(date) > toDateString(new Date());
-  if (!isFuture) return slots;
-  return slots.map((slot) => ({
-    ...slot,
-    medicines: slot.medicines.map((medicine) => ({
-      ...medicine,
-      imageUrl: pillBlisterImage,
-      status: 'scheduled',
-    })),
-  }));
+  const day = toDateString(date);
+  const isFuture = day > toDateString(new Date());
+
+  // 삭제됐거나 그날 먹지 않는 약은 빼기 (월 달력과 같은 기준)
+  return (sampleSchedules[seniorId] ?? [])
+    .map((slot) => ({
+      ...slot,
+      medicines: slot.medicines
+        .filter(({ medicineId }) => {
+          const medicine = getMedicine(medicineId);
+          return !!medicine && isMedicineOnDate(medicine, day);
+        })
+        .map((medicine) =>
+          isFuture
+            ? {
+                ...medicine,
+                imageUrl: pillBlisterImage,
+                status: 'scheduled' as const,
+              }
+            : medicine
+        ),
+    }))
+    .filter((slot) => slot.medicines.length > 0);
 };
 
 // 이번 달 복용률 (API 연동 전 고정값)
