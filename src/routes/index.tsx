@@ -26,6 +26,7 @@ import MedicineRecognitionPage from '@/pages/guardian/medicines/MedicineRecognit
 import MedicineInfoFormPage from '@/pages/guardian/medicines/MedicineInfoFormPage';
 import MedicineManagePage from '@/pages/guardian/medicines/MedicineManagePage';
 import MedicineEditPage from '@/pages/guardian/medicines/MedicineEditPage';
+import SeniorIncomingCallPage from '@/pages/senior/SeniorIncomingCallPage';
 
 export const router = createBrowserRouter([
   {
@@ -83,6 +84,8 @@ export const router = createBrowserRouter([
         path: '/senior/tomorrow',
         element: <SeniorSchedulePage day="tomorrow" />,
       },
+      // 시니어 복약 알림 수신
+      { path: '/senior/call', element: <SeniorIncomingCallPage /> },
       // 약 등록 흐름 (하단 네비게이션 미노출)
       { path: '/medicines/register', element: <MedicineRegisterMethodPage /> },
       {
