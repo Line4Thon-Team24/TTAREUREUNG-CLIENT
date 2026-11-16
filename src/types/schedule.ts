@@ -28,5 +28,6 @@ export type ScheduleSlot = {
   mealTime: MealTime;
   time: string; // HH:mm
   timingLabel: string; // 예: 아침 식후
+  callConfirmedAt?: string; // 복용 확인 전화 받은 시각 (HH:mm)
   medicines: ScheduleMedicine[];
 };
