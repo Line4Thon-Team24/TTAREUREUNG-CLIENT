@@ -8,6 +8,8 @@ const sampleSeniors: Senior[] = [
     birthDate: '1948-03-15',
     gender: 'female',
     phoneNumber: '010-1234-5678',
+    registeredAt: '2026-11-05T09:00:00.000Z',
+    isFavorite: false,
   },
   {
     id: 2,
@@ -15,6 +17,8 @@ const sampleSeniors: Senior[] = [
     birthDate: '1951-07-22',
     gender: 'female',
     phoneNumber: '010-2345-6789',
+    registeredAt: '2026-11-08T09:00:00.000Z',
+    isFavorite: true,
   },
   {
     id: 3,
@@ -22,6 +26,8 @@ const sampleSeniors: Senior[] = [
     birthDate: '1946-11-02',
     gender: 'male',
     phoneNumber: '010-3456-7890',
+    registeredAt: '2026-11-10T09:00:00.000Z',
+    isFavorite: false,
   },
 ];
 
@@ -30,8 +36,27 @@ const seniors: Senior[] = [...sampleSeniors];
 
 export const getSeniors = () => [...seniors];
 
+export const getSenior = (id: number) =>
+  seniors.find((senior) => senior.id === id);
+
 export const addSenior = (form: SeniorForm) => {
-  const senior: Senior = { id: Date.now(), ...form };
+  const senior: Senior = {
+    id: Date.now(),
+    ...form,
+    registeredAt: new Date().toISOString(),
+    isFavorite: false,
+  };
   seniors.push(senior);
   return senior;
+};
+
+export const updateSenior = (id: number, form: SeniorForm) => {
+  const index = seniors.findIndex((senior) => senior.id === id);
+  if (index === -1) return;
+  seniors[index] = { ...seniors[index], ...form };
+};
+
+export const toggleFavorite = (id: number) => {
+  const senior = seniors.find((item) => item.id === id);
+  if (senior) senior.isFavorite = !senior.isFavorite;
 };
