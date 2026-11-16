@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, SquarePen } from 'lucide-react';
 import EmptyState from '@/components/common/EmptyState';
+import FilterChips from '@/components/common/FilterChips';
 import SeniorCard from '@/components/seniors/SeniorCard';
 import { getMedicines } from '@/mocks/medicines';
 import { getSeniors, toggleFavorite } from '@/mocks/seniors';
@@ -68,30 +69,7 @@ const SeniorListPage = () => {
       </header>
 
       {seniors.length > 0 && (
-        <div className="flex gap-3 px-5 py-3">
-          {FILTERS.map(({ label, value }) => {
-            const isSelected = value === filter;
-
-            return (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={isSelected}
-                onClick={() => setFilter(value)}
-                className={`flex shrink-0 items-center rounded-full py-2 text-[14px] transition-colors ${
-                  isSelected
-                    ? 'bg-[#191F28] px-4 font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.05)]'
-                    : 'bg-[#F2F4F6] px-3.5 font-medium text-[#4E5968]'
-                }`}
-              >
-                {isSelected && (
-                  <span className="mr-1.5 size-2 rounded-full bg-[#34D399]" />
-                )}
-                {label}
-              </button>
-            );
-          })}
-        </div>
+        <FilterChips options={FILTERS} value={filter} onChange={setFilter} />
       )}
 
       {seniors.length === 0 ? (
