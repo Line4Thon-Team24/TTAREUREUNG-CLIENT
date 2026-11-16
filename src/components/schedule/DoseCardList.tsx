@@ -1,6 +1,7 @@
 import DoseCard from '@/components/schedule/DoseCard';
 import useDragScroll from '@/hooks/useDragScroll';
 import type { ScheduleMedicine } from '@/types/schedule';
+import { sortMissedFirst } from '@/utils/schedule';
 
 type DoseCardListProps = {
   medicines: ScheduleMedicine[];
@@ -27,7 +28,7 @@ export default function DoseCardList({
           : 'cursor-grab snap-x snap-mandatory'
       }`}
     >
-      {medicines.map((medicine) => (
+      {sortMissedFirst(medicines).map((medicine) => (
         <li key={medicine.id} className="shrink-0 snap-start">
           <DoseCard
             medicine={medicine}

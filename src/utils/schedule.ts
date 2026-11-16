@@ -1,4 +1,8 @@
-import type { DoseStatus, SlotStatus } from '@/types/schedule';
+import type {
+  DoseStatus,
+  ScheduleMedicine,
+  SlotStatus,
+} from '@/types/schedule';
 
 // 시간대에 속한 약들의 상태로 시간대 전체 상태 계산
 export const getSlotStatus = (statuses: DoseStatus[]): SlotStatus => {
@@ -18,3 +22,9 @@ export const formatKoreanTime = (time: string) => {
   const hour = hours % 12 === 0 ? 12 : hours % 12;
   return `${period} ${hour}시${minutes > 0 ? ` ${minutes}분` : ''}`;
 };
+
+// 미복용 약을 맨 앞으로 (눈에 잘 띄도록, 나머지는 원래 순서 유지)
+export const sortMissedFirst = (medicines: ScheduleMedicine[]) => [
+  ...medicines.filter((medicine) => medicine.status === 'missed'),
+  ...medicines.filter((medicine) => medicine.status !== 'missed'),
+];
