@@ -7,11 +7,9 @@ import { toDateString } from '@/utils/date';
 import pillBlisterImage from '@/assets/images/pill-blister.jpg';
 import pillAssortedImage from '@/assets/images/pill-assorted.jpg';
 
-// API 연동 전 디자인 확인용 고정 샘플 (Figma 복용 일정 화면과 같은 내용)
-// → 약 ID는 시니어에게 미리 등록된 약(mocks/medicines.ts)과 같음
-// → 김순자: 복용 완료·일부 복용(미복용 포함)·복용 중 / 박종옥: 복용 완료·복용 중·복용 예정
+// API 연동 전 고정 샘플 (약 ID는 mocks/medicines.ts와 같음)
 
-// 카드에 보여줄 약 정보 (약 ID 기준)
+// 약 ID별 카드 정보
 const cardInfo: Record<
   number,
   Pick<ScheduleMedicine, 'displayName' | 'dosage' | 'amount' | 'shape'>
@@ -48,7 +46,7 @@ const cardInfo: Record<
   },
 };
 
-// 박종옥의 약(6~8)은 김순자의 약(1·4·5)과 같은 카드 정보 사용
+// 박종옥 약 → 같은 김순자 약 카드 정보
 const SAME_CARD: Record<number, number> = { 6: 1, 7: 4, 8: 5 };
 
 const createMedicine = (
@@ -59,12 +57,12 @@ const createMedicine = (
   id: `${slotId}-${medicineId}`,
   medicineId,
   ...cardInfo[SAME_CARD[medicineId] ?? medicineId],
-  // 디자인처럼 미복용 약은 다른 사진으로 구분
+  // 미복용은 다른 사진
   imageUrl: status === 'missed' ? pillAssortedImage : pillBlisterImage,
   status,
 });
 
-// 김순자: 아침·점심·저녁 3개 시간대 (점심은 카드가 3개를 넘어 가로로 넘겨 보는 경우)
+// 김순자 일정
 const kimSlots: ScheduleSlot[] = [
   {
     id: 'morning',
@@ -100,7 +98,7 @@ const kimSlots: ScheduleSlot[] = [
   },
 ];
 
-// 박종옥: 아침 복용 완료 → 점심 복용 중 → 저녁 복용 예정
+// 박종옥 일정
 const parkSlots: ScheduleSlot[] = [
   {
     id: 'morning',
@@ -139,7 +137,7 @@ const sampleSchedules: Record<number, ScheduleSlot[]> = {
   2: parkSlots,
 };
 
-// 시니어·날짜별 복용 일정 (오늘 이후 날짜는 모두 복용 예정으로 표시)
+// 시니어·날짜별 일정 (미래는 복용 예정)
 export const getDailySchedule = (
   seniorId: number,
   date: Date

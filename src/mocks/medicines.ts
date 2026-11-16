@@ -13,7 +13,7 @@ const samplePrescription = {
   imageUrl: prescriptionSampleImage,
 };
 
-// 김순자 시니어에게 미리 등록된 약 (복용 일정 샘플과 같은 약)
+// 김순자 샘플 약
 const sampleMedicines: Medicine[] = [
   {
     id: 1,
@@ -109,7 +109,7 @@ const sampleMedicines: Medicine[] = [
   },
 ];
 
-// 박종옥 시니어에게 미리 등록된 약 (김순자의 혈압약·당뇨약·콜레스테롤 약과 같은 약, ID 6~8)
+// 박종옥 샘플 약 (ID 6~8)
 const sampleMedicinesOfSenior2: Medicine[] = sampleMedicines
   .filter((medicine) => [1, 4, 5].includes(medicine.id))
   .map((medicine, index) => ({ ...medicine, id: 6 + index, seniorId: 2 }));

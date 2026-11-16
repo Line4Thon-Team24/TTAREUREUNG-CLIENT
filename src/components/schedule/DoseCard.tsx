@@ -19,13 +19,13 @@ type DoseCardProps = {
   onClick: () => void;
 };
 
-// 복용 일정 타임라인의 약 카드 (약 사진 위에 이름·용량·복용 상태)
+// 복약 카드
 export default function DoseCard({ medicine, onClick }: DoseCardProps) {
   const { displayName, dosage, amount, shape, imageUrl, status } = medicine;
   const { label, Icon, textColor, amountClassName } =
     DOSE_STATUS_STYLES[status];
   const isMissed = status === 'missed';
-  // 미복용은 약 모양 대신 경고 아이콘
+  // 미복용은 경고 아이콘
   const ShapeIcon = isMissed ? CircleMinus : SHAPE_ICONS[shape];
 
   return (
@@ -44,7 +44,7 @@ export default function DoseCard({ medicine, onClick }: DoseCardProps) {
           className="pointer-events-none absolute inset-0 size-full object-cover"
         />
       )}
-      {/* 사진 위 그라데이션 (미복용은 붉은 톤) */}
+      {/* 사진 위 그라데이션 */}
       <span
         aria-hidden
         className={`absolute inset-0 bg-linear-to-t ${

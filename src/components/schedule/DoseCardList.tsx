@@ -8,8 +8,7 @@ type DoseCardListProps = {
   onMedicineClick: (medicine: ScheduleMedicine) => void;
 };
 
-// 시간대 하나의 약 카드 가로 목록 (스크롤바 없이 넘겨 보기)
-// - PC: 마우스로 클릭한 채 좌우 드래그 / 모바일: 터치 스와이프
+// 복약 카드 가로 목록 (PC 드래그 / 모바일 스와이프)
 export default function DoseCardList({
   medicines,
   onMedicineClick,
@@ -20,8 +19,8 @@ export default function DoseCardList({
     <ul
       ref={ref}
       {...handlers}
-      // 드래그 중에는 스냅을 꺼서 마우스를 그대로 따라가게 하고, 놓으면 카드 단위로 맞춤
-      // 위아래 2px은 미복용 카드의 빨간 테두리가 잘리지 않게 하는 여백
+      // 드래그 중엔 스냅 해제
+      // py-0.5: 미복용 테두리 잘림 방지
       className={`scrollbar-hide flex scroll-px-5 gap-2 overflow-x-auto overscroll-x-contain px-5 py-0.5 select-none [&_button]:cursor-[inherit] ${
         isDragging
           ? 'cursor-grabbing snap-none'

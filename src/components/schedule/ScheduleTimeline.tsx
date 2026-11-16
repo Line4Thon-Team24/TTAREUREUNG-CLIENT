@@ -9,14 +9,14 @@ type ScheduleTimelineProps = {
   onMedicineClick: (medicine: ScheduleMedicine) => void;
 };
 
-// 시간대별 복용 일정 타임라인 (왼쪽 세로선 + 상태 점 + 약 카드 목록)
+// 복용 일정 타임라인
 export default function ScheduleTimeline({
   slots,
   onMedicineClick,
 }: ScheduleTimelineProps) {
   return (
     <ol className="relative flex flex-col gap-5.25 pt-8 pb-6">
-      {/* 세로선: 점(20px)의 가운데를 지나도록 위치 */}
+      {/* 세로선 */}
       <span
         aria-hidden
         className="absolute top-7.75 bottom-0 left-7.5 w-0.5 bg-[#E5E7EB]"

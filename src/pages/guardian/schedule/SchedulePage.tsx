@@ -20,7 +20,7 @@ const SchedulePage = () => {
   const hasMedicine =
     selectedSeniorId !== null && getMedicines(selectedSeniorId).length > 0;
 
-  // 시니어 없음 → 약 없음 → 복용 일정 순서로 확인
+  // 시니어 없음 → 약 없음 → 일정
   const renderContent = () => {
     if (!hasSenior) {
       return (
@@ -53,7 +53,7 @@ const SchedulePage = () => {
     return (
       <ScheduleTimeline
         slots={getDailySchedule(selectedSeniorId, date)}
-        // 약 상세 팝업은 다음 단계에서 연결
+        // 상세 팝업 연결 예정
         onMedicineClick={() => {}}
       />
     );
@@ -64,7 +64,7 @@ const SchedulePage = () => {
       <DateNavigator date={date} onChange={setDate} />
 
       {hasSenior && (
-        // 복용 일정이 있을 때만 칩 아래 구분선 (빈 화면은 기존 디자인 유지)
+        // 일정 있을 때만 구분선
         <div
           className={hasMedicine ? 'border-b border-[#E5E8EB] pb-2' : undefined}
         >

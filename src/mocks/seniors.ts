@@ -1,7 +1,6 @@
 import type { Senior, SeniorForm } from '@/types/senior';
 
-// 미리 등록된 시니어 (Figma 복용 일정 화면과 같은 이름)
-// → 김순자만 약이 등록되어 있고, 나머지는 약 없음 화면 확인용
+// 샘플 시니어
 const sampleSeniors: Senior[] = [
   {
     id: 1,

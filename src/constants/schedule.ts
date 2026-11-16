@@ -8,13 +8,13 @@ import {
 } from 'lucide-react';
 import type { DoseStatus, SlotStatus } from '@/types/schedule';
 
-// 시간대 상태별 배지·타임라인 점·시간대 이름 색상
+// 시간대 상태별 스타일
 type SlotStatusStyle = {
   label: string;
   Icon: LucideIcon;
-  textColor: string; // 배지 글씨 + 시간대 이름 (예: 아침)
-  badgeClassName: string; // 배지 배경 + 테두리
-  markerClassName: string; // 타임라인 점 + 바깥 테두리
+  textColor: string; // 배지·시간대 이름 글씨
+  badgeClassName: string; // 배지 배경·테두리
+  markerClassName: string; // 타임라인 점
 };
 
 export const SLOT_STATUS_STYLES: Record<SlotStatus, SlotStatusStyle> = {
@@ -55,12 +55,12 @@ export const SLOT_STATUS_STYLES: Record<SlotStatus, SlotStatusStyle> = {
   },
 };
 
-// 약 카드 상태별 문구·색상
+// 약 카드 상태별 스타일
 type DoseStatusStyle = {
   label: string;
   Icon: LucideIcon;
-  textColor: string; // 카드 아래쪽 상태 문구 (예: 복용함)
-  amountClassName: string | null; // 오른쪽 위 복용량 (예: 1정), 미복용은 표시 안 함
+  textColor: string; // 하단 상태 문구
+  amountClassName: string | null; // 미복용은 null (표시 안 함)
 };
 
 export const DOSE_STATUS_STYLES: Record<DoseStatus, DoseStatusStyle> = {

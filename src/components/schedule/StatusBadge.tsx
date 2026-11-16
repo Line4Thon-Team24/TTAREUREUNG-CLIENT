@@ -5,7 +5,7 @@ type StatusBadgeProps = {
   status: SlotStatus;
 };
 
-// 시간대 오른쪽 복용 상태 배지 (예: ✓ 복용 완료)
+// 복용 상태 배지
 export default function StatusBadge({ status }: StatusBadgeProps) {
   const { label, Icon, textColor, badgeClassName } = SLOT_STATUS_STYLES[status];
 

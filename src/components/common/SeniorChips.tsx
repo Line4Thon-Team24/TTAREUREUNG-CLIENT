@@ -5,7 +5,7 @@ type SeniorChipsProps = {
   seniors: Senior[];
   selectedId: number | null;
   onSelect: (id: number) => void;
-  onAdd?: () => void; // 넘기면 마지막에 시니어 추가(+) 버튼 노출
+  onAdd?: () => void; // 있으면 + 버튼 노출
 };
 
 // 화면에서 볼 시니어 선택 칩 목록 (복용 일정, 약 목록)
