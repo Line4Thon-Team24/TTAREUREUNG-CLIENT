@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import EmptyState from '@/components/common/EmptyState';
 import DateNavigator from '@/components/schedule/DateNavigator';
+import MedicineDetailModal from '@/components/schedule/MedicineDetailModal';
 import ScheduleTimeline from '@/components/schedule/ScheduleTimeline';
 import SeniorChips from '@/components/common/SeniorChips';
 import { getSeniors } from '@/mocks/seniors';
-import { getMedicines } from '@/mocks/medicines';
+import { getMedicine, getMedicines } from '@/mocks/medicines';
 import { getDailySchedule } from '@/mocks/schedule';
+import type { Medicine } from '@/types/medicine';
 
 const SchedulePage = () => {
   const navigate = useNavigate();
@@ -15,6 +17,7 @@ const SchedulePage = () => {
   const [selectedSeniorId, setSelectedSeniorId] = useState(
     seniors[0]?.id ?? null
   );
+  const [detailMedicine, setDetailMedicine] = useState<Medicine | null>(null);
 
   const hasSenior = seniors.length > 0;
   const hasMedicine =
@@ -53,8 +56,10 @@ const SchedulePage = () => {
     return (
       <ScheduleTimeline
         slots={getDailySchedule(selectedSeniorId, date)}
-        // 상세 팝업 연결 예정
-        onMedicineClick={() => {}}
+        // 삭제된 약이면 열지 않음
+        onMedicineClick={({ medicineId }) =>
+          setDetailMedicine(getMedicine(medicineId) ?? null)
+        }
       />
     );
   };
@@ -78,6 +83,11 @@ const SchedulePage = () => {
       )}
 
       {renderContent()}
+
+      <MedicineDetailModal
+        medicine={detailMedicine}
+        onClose={() => setDetailMedicine(null)}
+      />
     </div>
   );
 };
