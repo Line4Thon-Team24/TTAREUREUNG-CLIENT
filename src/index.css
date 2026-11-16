@@ -7,6 +7,15 @@
     'Noto Sans KR', 'Malgun Gothic', sans-serif;
 }
 
+/* 스크롤 기능은 유지하고 스크롤바만 숨김 (가로로 넘겨 보는 목록용) */
+@utility scrollbar-hide {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;

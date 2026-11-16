@@ -45,10 +45,11 @@ export default function ScheduleTimeline({
                 </div>
                 <StatusBadge status={status} />
               </div>
-              {/* 약이 많으면 가로로 넘겨 보기 (테두리가 잘리지 않게 위아래 여백) */}
-              <ul className="flex gap-2 overflow-x-auto px-5 py-0.5">
+              {/* 카드가 화면을 넘으면 스와이프로 넘겨 보기 (스크롤바는 숨김)
+                  위아래 2px은 미복용 카드의 빨간 테두리가 잘리지 않게 하는 여백 */}
+              <ul className="scrollbar-hide flex snap-x snap-mandatory scroll-px-5 gap-2 overflow-x-auto overscroll-x-contain px-5 py-0.5">
                 {slot.medicines.map((medicine) => (
-                  <li key={medicine.id}>
+                  <li key={medicine.id} className="shrink-0 snap-start">
                     <DoseCard
                       medicine={medicine}
                       onClick={() => onMedicineClick(medicine)}
