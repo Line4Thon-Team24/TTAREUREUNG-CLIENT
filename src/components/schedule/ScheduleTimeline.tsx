@@ -1,4 +1,4 @@
-import DoseCard from '@/components/schedule/DoseCard';
+import DoseCardList from '@/components/schedule/DoseCardList';
 import StatusBadge from '@/components/schedule/StatusBadge';
 import { MEAL_TIME_LABELS, SLOT_STATUS_STYLES } from '@/constants/schedule';
 import type { ScheduleMedicine, ScheduleSlot } from '@/types/schedule';
@@ -45,18 +45,10 @@ export default function ScheduleTimeline({
                 </div>
                 <StatusBadge status={status} />
               </div>
-              {/* 카드가 화면을 넘으면 스와이프로 넘겨 보기 (스크롤바는 숨김)
-                  위아래 2px은 미복용 카드의 빨간 테두리가 잘리지 않게 하는 여백 */}
-              <ul className="scrollbar-hide flex snap-x snap-mandatory scroll-px-5 gap-2 overflow-x-auto overscroll-x-contain px-5 py-0.5">
-                {slot.medicines.map((medicine) => (
-                  <li key={medicine.id} className="shrink-0 snap-start">
-                    <DoseCard
-                      medicine={medicine}
-                      onClick={() => onMedicineClick(medicine)}
-                    />
-                  </li>
-                ))}
-              </ul>
+              <DoseCardList
+                medicines={slot.medicines}
+                onMedicineClick={onMedicineClick}
+              />
             </div>
           </li>
         );
