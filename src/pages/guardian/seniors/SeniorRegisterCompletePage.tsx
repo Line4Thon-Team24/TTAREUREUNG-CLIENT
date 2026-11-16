@@ -7,7 +7,11 @@ const SeniorRegisterCompletePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const seniorId = (location.state as { seniorId?: number } | null)?.seniorId;
+  const state = location.state as {
+    seniorId?: number;
+    returnTo?: string; // 건너뛰기 시 돌아갈 곳 (기본: 복용 일정)
+  } | null;
+  const seniorId = state?.seniorId;
 
   // 등록을 거치지 않고 주소로 바로 들어온 경우 복용 일정으로 이동
   if (seniorId === undefined) {
@@ -51,7 +55,9 @@ const SeniorRegisterCompletePage = () => {
         </Button>
         <button
           type="button"
-          onClick={() => navigate('/schedule', { replace: true })}
+          onClick={() =>
+            navigate(state?.returnTo ?? '/schedule', { replace: true })
+          }
           className="text-[16px] text-[#333D4B] underline"
         >
           건너뛰기
