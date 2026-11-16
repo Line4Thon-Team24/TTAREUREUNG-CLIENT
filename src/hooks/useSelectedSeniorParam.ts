@@ -13,7 +13,14 @@ export default function useSelectedSeniorParam(seniors: Senior[]) {
     : (seniors[0]?.id ?? null);
 
   const selectSenior = (id: number) => {
-    setSearchParams({ seniorId: String(id) }, { replace: true });
+    // 다른 값(?date= 등)은 유지
+    setSearchParams(
+      (prev) => {
+        prev.set('seniorId', String(id));
+        return prev;
+      },
+      { replace: true }
+    );
   };
 
   return [selectedId, selectSenior] as const;

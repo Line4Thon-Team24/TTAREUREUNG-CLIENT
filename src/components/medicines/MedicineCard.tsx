@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 import { getIntervalLabel, getTimingLabel } from '@/constants/medicine';
 import type { Medicine } from '@/types/medicine';
 import { formatDate, formatDotDate } from '@/utils/date';
@@ -12,6 +12,8 @@ type MedicineCardProps = {
   onToggleSelect?: () => void;
   // 목록 화면: '세부 편집' 버튼
   onEdit?: () => void;
+  // 팝업: 닫기 버튼, 복용 이유 항상 표시
+  onClose?: () => void;
 };
 
 type InfoRowProps = {
@@ -51,9 +53,10 @@ export default function MedicineCard({
   selected = false,
   onToggleSelect,
   onEdit,
+  onClose,
 }: MedicineCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const showReason = selectable || expanded;
+  const showReason = selectable || !!onClose || expanded;
   const checkboxId = `medicine-select-${medicine.id}`;
 
   return (
@@ -90,6 +93,16 @@ export default function MedicineCard({
             className="shrink-0 rounded-md border border-[#E5E8EB] bg-[#FAFAFA] px-2.25 py-1.25 text-[12px] font-semibold text-[#6B7684] active:bg-[#F2F4F6]"
           >
             세부 편집
+          </button>
+        )}
+        {onClose && (
+          <button
+            type="button"
+            aria-label="닫기"
+            onClick={onClose}
+            className="flex size-6 shrink-0 items-center justify-center text-[#191F28]"
+          >
+            <X size={20} strokeWidth={2.5} aria-hidden />
           </button>
         )}
       </header>
@@ -137,7 +150,7 @@ export default function MedicineCard({
         </div>
       )}
 
-      {!selectable && (
+      {!selectable && !onClose && (
         <button
           type="button"
           aria-expanded={expanded}
