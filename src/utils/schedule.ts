@@ -2,6 +2,7 @@ import type { Medicine } from '@/types/medicine';
 import type {
   DoseStatus,
   ScheduleMedicine,
+  ScheduleSlot,
   SlotStatus,
 } from '@/types/schedule';
 import { diffDays } from '@/utils/date';
@@ -40,4 +41,30 @@ export const isMedicineOnDate = (medicine: Medicine, date: string) => {
   return (
     diffDays(medicine.startDate, date) % INTERVAL_DAYS[medicine.interval] === 0
   );
+};
+
+// 하루 복약 요약 (섭취 횟수·달성률)
+// 놓친 약은 시간대 전체를 놓쳤는지(missed), 일부만 놓쳤는지(partialMissed)로 구분
+export const getScheduleSummary = (slots: ScheduleSlot[]) => {
+  const summary = {
+    slotCount: slots.length,
+    total: 0,
+    taken: 0,
+    missed: 0,
+    partialMissed: 0,
+  };
+  for (const slot of slots) {
+    const isPartial =
+      getSlotStatus(slot.medicines.map((medicine) => medicine.status)) ===
+      'partial';
+    for (const { status } of slot.medicines) {
+      summary.total += 1;
+      if (status === 'taken') summary.taken += 1;
+      if (status === 'missed') {
+        if (isPartial) summary.partialMissed += 1;
+        else summary.missed += 1;
+      }
+    }
+  }
+  return summary;
 };
