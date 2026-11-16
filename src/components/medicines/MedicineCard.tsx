@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { ChevronDown, X } from 'lucide-react';
+import InfoRow, { InfoValue as Value } from '@/components/common/InfoRow';
 import { getIntervalLabel, getTimingLabel } from '@/constants/medicine';
 import type { Medicine } from '@/types/medicine';
 import { formatDate, formatDotDate } from '@/utils/date';
@@ -15,36 +16,6 @@ type MedicineCardProps = {
   // 팝업: 닫기 버튼, 복용 이유 항상 표시
   onClose?: () => void;
 };
-
-type InfoRowProps = {
-  label: string;
-  tone?: 'default' | 'green' | 'orange';
-  children: ReactNode;
-};
-
-const TONE_CLASS = {
-  default: 'bg-[#FAFAFA] text-[#6B7684]',
-  green: 'bg-[#E7F6EC] text-[#01A16A]',
-  orange: 'bg-[#FFF4E0] text-[#D97706]',
-};
-
-// 회색/색깔 라벨 + 값 한 줄
-const InfoRow = ({ label, tone = 'default', children }: InfoRowProps) => (
-  <div className="flex items-start gap-2">
-    <span
-      className={`shrink-0 rounded-sm px-4 py-0.5 text-[12px] font-semibold ${TONE_CLASS[tone]}`}
-    >
-      {label}
-    </span>
-    {children}
-  </div>
-);
-
-const Value = ({ children }: { children: ReactNode }) => (
-  <span className="py-px text-[12px] leading-4 font-medium text-[#191F28]">
-    {children}
-  </span>
-);
 
 // 약 카드 (약 목록 / 약 목록 편집)
 export default function MedicineCard({
