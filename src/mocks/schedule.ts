@@ -154,3 +154,11 @@ export const getDailySchedule = (
     })),
   }));
 };
+
+// 이번 달 복용률 (API 연동 전 고정값)
+export const getMonthlyAdherence = () => ({
+  rate: 65,
+  taken: 40,
+  partial: 20,
+  missed: 5,
+});
