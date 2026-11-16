@@ -72,6 +72,7 @@ const SchedulePage = () => {
             seniors={seniors}
             selectedId={selectedSeniorId}
             onSelect={setSelectedSeniorId}
+            onAdd={() => navigate('/seniors/register')}
           />
         </div>
       )}
