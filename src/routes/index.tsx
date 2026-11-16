@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import RootLayout from '@/layouts/RootLayout';
 import GuardianLayout from '@/layouts/GuardianLayout';
 import SchedulePage from '@/pages/guardian/schedule/SchedulePage';
+import ScheduleMonthPage from '@/pages/guardian/schedule/ScheduleMonthPage';
 import MedicineListPage from '@/pages/guardian/medicines/MedicineListPage';
 import SeniorListPage from '@/pages/guardian/seniors/SeniorListPage';
 import GuardianListPage from '@/pages/guardian/guardians/GuardianListPage';
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
         element: <GuardianLayout />,
         children: [
           { path: '/schedule', element: <SchedulePage /> },
+          { path: '/schedule/month', element: <ScheduleMonthPage /> },
           { path: '/medicines', element: <MedicineListPage /> },
           { path: '/seniors', element: <SeniorListPage /> },
           { path: '/guardians', element: <GuardianListPage /> },
