@@ -23,7 +23,7 @@ type SeniorSlotStyle = {
   dotClassName: string; // 상태 배지 점 / 약 이름 앞 점
   timingClassName: string; // 시간 옆 안내 (예: 아침 식후)
   countClassName: string; // 오른쪽 위 약 개수
-  chipClassName: string; // 약 이름 칩
+  chipClassName: string; // 약 이름 칩 (간격·굵기 포함)
   alert?: {
     Icon: LucideIcon;
     title: string;
@@ -49,7 +49,8 @@ export const SENIOR_SLOT_STYLES: Record<SlotStatus, SeniorSlotStyle> = {
     dotClassName: 'size-1.5 bg-[#01A16A]',
     timingClassName: 'text-[#333D4B]',
     countClassName: 'bg-[#FAFAFA] text-[#333D4B]',
-    chipClassName: 'rounded-md bg-[#FAFAFA] px-2.5 py-1 text-[#191F28]',
+    chipClassName:
+      'gap-1.5 rounded-md bg-[#FAFAFA] px-2.5 py-1 font-medium text-[#191F28]',
   },
   missed: {
     label: '미복용',
@@ -63,7 +64,8 @@ export const SENIOR_SLOT_STYLES: Record<SlotStatus, SeniorSlotStyle> = {
     dotClassName: 'size-1.5 bg-[#E5484D]',
     timingClassName: 'text-[#333D4B]',
     countClassName: 'bg-[#FFEEEE] text-[#E5484D]',
-    chipClassName: 'rounded-md bg-[#FFEEEE] px-2.75 py-1.25 text-[#333D4B]',
+    chipClassName:
+      'gap-1.5 rounded-md bg-[#FFEEEE] px-2.75 py-1.25 font-medium text-[#333D4B]',
     alert: {
       Icon: CircleAlert,
       title: '복용 전화를 받지 않으셨습니다.',
@@ -84,7 +86,8 @@ export const SENIOR_SLOT_STYLES: Record<SlotStatus, SeniorSlotStyle> = {
     timingClassName: 'text-[#333D4B]',
     countClassName: 'bg-[#FFF4E0] text-[#B45309]',
     // 먹은 약 (못 먹은 약은 주황 테두리로 따로 표시)
-    chipClassName: 'rounded-md bg-[#FAFAFA] px-2.5 py-1 text-[#191F28]',
+    chipClassName:
+      'gap-1.5 rounded-md bg-[#FAFAFA] px-2.5 py-1 font-medium text-[#191F28]',
     alert: {
       Icon: TriangleAlert,
       title: '약 중 일부만 복용하셨습니다.',

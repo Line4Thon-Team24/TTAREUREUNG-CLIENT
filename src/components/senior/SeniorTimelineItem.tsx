@@ -127,9 +127,9 @@ export default function SeniorTimelineItem({ slot }: SeniorTimelineItemProps) {
               return (
                 <li
                   key={medicine.id}
-                  className={`flex items-center gap-1.5 text-[12px] font-medium ${
+                  className={`flex items-center text-[12px] ${
                     isPartialMissed
-                      ? 'rounded-md border border-[#D97706] bg-[#FFF4E0] px-2.5 py-1 text-[#191F28]'
+                      ? 'gap-1.5 rounded-md border border-[#D97706] bg-[#FFF4E0] px-2.5 py-1 font-medium text-[#191F28]'
                       : style.chipClassName
                   }`}
                 >
