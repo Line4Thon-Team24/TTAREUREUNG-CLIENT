@@ -73,9 +73,11 @@ const LoginPage = () => {
         </Button>
 
         <div className="mt-2 flex items-center justify-center gap-4 text-[12px] text-text-sub">
-          <Link to="/find-email">이메일 찾기</Link>
+          {/* TODO: /find-email 라우트 연결 */}
+          <Link to="/login">이메일 찾기</Link>
           <span aria-hidden className="h-3 w-px bg-text-placeholder" />
-          <Link to="/find-password">비밀번호 찾기</Link>
+          {/* TODO: /find-password 라우트 연결 */}
+          <Link to="/login">비밀번호 찾기</Link>
         </div>
       </div>
 
