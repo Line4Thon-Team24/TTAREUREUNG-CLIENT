@@ -12,11 +12,19 @@ import {
   isValidPhoneNumber,
 } from '@/utils/formatPhoneNumber';
 
+// 번호 입력 안내 문구
+const PHONE_ERRORS = {
+  duplicate: '이미 추가한 번호예요.',
+  tooLong: '전화번호는 숫자 11자리까지 입력할 수 있어요.',
+};
+
 const GuardianInvitePage = () => {
   const navigate = useNavigate();
   const [phoneInput, setPhoneInput] = useState('');
   const [phoneNumbers, setPhoneNumbers] = useState<string[]>([]);
-  const [isDuplicate, setIsDuplicate] = useState(false);
+  const [phoneError, setPhoneError] = useState<
+    keyof typeof PHONE_ERRORS | null
+  >(null);
   const [isDiscardOpen, setIsDiscardOpen] = useState(false);
 
   const count = phoneNumbers.length;
@@ -24,11 +32,18 @@ const GuardianInvitePage = () => {
 
   // 번호가 완성되면 자동으로 목록에 추가 (이미 있는 번호는 입력창만 비우고 안내)
   const handlePhoneChange = (value: string) => {
+    // 11자리를 넘으면 잘라서 추가하지 않고 그대로 두고 안내 (붙여넣기 등)
+    if (value.replace(/\D/g, '').length > 11) {
+      setPhoneError('tooLong');
+      setPhoneInput(value);
+      return;
+    }
+
     const formatted = formatPhoneNumber(value);
     const isComplete = isValidPhoneNumber(formatted);
     const isDup = isComplete && phoneNumbers.includes(formatted);
 
-    setIsDuplicate(isDup);
+    setPhoneError(isDup ? 'duplicate' : null);
     if (isComplete && !isDup) {
       setPhoneNumbers((prev) => [...prev, formatted]);
     }
@@ -37,7 +52,7 @@ const GuardianInvitePage = () => {
 
   const removePhoneNumber = (target: string) => {
     setPhoneNumbers((prev) => prev.filter((phone) => phone !== target));
-    setIsDuplicate(false);
+    setPhoneError((prev) => (prev === 'duplicate' ? null : prev));
   };
 
   // 입력한 내용이 있으면 버릴지 먼저 확인
@@ -85,8 +100,10 @@ const GuardianInvitePage = () => {
               onChange={(e) => handlePhoneChange(e.target.value)}
             />
           </FormField>
-          {isDuplicate && (
-            <p className="text-[12px] text-[#E5484D]">이미 추가한 번호예요.</p>
+          {phoneError && (
+            <p role="alert" className="text-[12px] text-[#E5484D]">
+              {PHONE_ERRORS[phoneError]}
+            </p>
           )}
           {count > 0 && (
             <ul className="flex flex-wrap gap-x-3 gap-y-2">

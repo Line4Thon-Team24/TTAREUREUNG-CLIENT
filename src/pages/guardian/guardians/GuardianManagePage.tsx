@@ -44,7 +44,8 @@ const GuardianManagePage = () => {
   const handleDelete = () => {
     deleteGuardians(selectedIds);
     setIsConfirmOpen(false);
-    navigate(-1);
+    // 주소로 바로 들어온 경우에도 목록으로
+    navigate('/guardians', { replace: true });
   };
 
   return (
