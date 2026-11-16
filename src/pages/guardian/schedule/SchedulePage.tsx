@@ -55,9 +55,18 @@ const SchedulePage = () => {
       );
     }
 
+    const slots = getDailySchedule(selectedSeniorId, date);
+    if (slots.length === 0) {
+      return (
+        <p className="flex flex-1 items-center justify-center text-[12px] text-black">
+          이 날은 복용할 약이 없어요.
+        </p>
+      );
+    }
+
     return (
       <ScheduleTimeline
-        slots={getDailySchedule(selectedSeniorId, date)}
+        slots={slots}
         // 삭제된 약이면 열지 않음
         onMedicineClick={({ medicineId }) =>
           setDetailMedicine(getMedicine(medicineId) ?? null)
