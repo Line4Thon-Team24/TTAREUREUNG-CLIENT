@@ -34,7 +34,7 @@ const SchedulePage = () => {
       );
     }
 
-    if (!hasMedicine) {
+    if (!hasMedicine || selectedSeniorId === null) {
       return (
         <div className="flex flex-1 items-center justify-center">
           <EmptyState
@@ -52,7 +52,7 @@ const SchedulePage = () => {
 
     return (
       <ScheduleTimeline
-        slots={getDailySchedule(date)}
+        slots={getDailySchedule(selectedSeniorId, date)}
         // 약 상세 팝업은 다음 단계에서 연결
         onMedicineClick={() => {}}
       />
