@@ -5,6 +5,46 @@
     'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
     system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo',
     'Noto Sans KR', 'Malgun Gothic', sans-serif;
+
+  /* 포인트 / 아이콘 */
+  --color-point: #34d399;
+  --color-icon: #374151;
+
+  /* 텍스트 */
+  --color-text-title: #191f28;
+  --color-text-body: #333d4b;
+  --color-text-sub: #6b7684;
+  --color-text-placeholder: #b0b8c1;
+  --color-text-main: #0e6e3b;
+  --color-text-white: #ffffff;
+  --color-text-on-dark-green: #c4d0c9;
+
+  /* 테두리 */
+  --color-border-default: #d1d6db;
+  --color-border-divider: #e5e8eb;
+  --color-border-focus: #01a16a;
+
+  /* 배경 */
+  --color-bg-disabled: #e5e8eb;
+  --color-bg-section: #fafafa;
+  --color-bg-screen: #ffffff;
+  --color-bg-primary: #138a4b;
+  --color-bg-primary-pressed: #0e6e3b;
+  --color-bg-secondary: #e7f6ec;
+  --color-bg-secondary-pressed: #cdebd8;
+  --color-bg-call: #0f2419;
+
+  /* 복용 상태 */
+  --color-status-done: #138a4b;
+  --color-status-done-bg: #e7f6ec;
+  --color-status-ing: #3182f6;
+  --color-status-ing-bg: #e8f3ff;
+  --color-status-partial: #d97706;
+  --color-status-partial-bg: #fff4e0;
+  --color-status-missed: #e5484d;
+  --color-status-missed-bg: #ffeeee;
+  --color-status-planned: #8b95a1;
+  --color-status-planned-bg: #f2f4f6;
 }
 
 /* 스크롤바만 숨김 */

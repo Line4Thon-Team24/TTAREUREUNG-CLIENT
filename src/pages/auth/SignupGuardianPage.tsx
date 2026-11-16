@@ -1,0 +1,209 @@
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import BackHeader from '@/components/common/BackHeader';
+import BirthDateField from '@/components/common/BirthDateField';
+import BrandBadge from '@/components/common/BrandBadge';
+import FormField from '@/components/common/FormField';
+import SelectField from '@/components/common/SelectField';
+import TextField from '@/components/common/TextField';
+import Button from '@/components/auth/Button';
+import { GENDER_OPTIONS } from '@/constants/auth';
+import { useSignupForm } from '@/hooks/useSignupForm';
+import type { Gender } from '@/types/senior';
+import { isValidBirthDate } from '@/utils/birthDate';
+import {
+  formatPhoneNumber,
+  isValidPhoneNumber,
+} from '@/utils/formatPhoneNumber';
+
+// 입력 단계: 이름 → 생년월일 → 성별 → 전화번호
+const STEP = { NAME: 1, BIRTH_DATE: 2, GENDER: 3, PHONE: 4 } as const;
+
+const SignupGuardianPage = () => {
+  const navigate = useNavigate();
+  const { account, guardian, setGuardian } = useSignupForm();
+  const [step, setStep] = useState<number>(STEP.NAME);
+  const [name, setName] = useState(guardian.name);
+  const [birthDate, setBirthDate] = useState(guardian.birthDate);
+  const [gender, setGender] = useState<Gender | ''>(guardian.gender);
+  const [phoneNumber, setPhoneNumber] = useState(guardian.phoneNumber);
+
+  const nameRef = useRef<HTMLInputElement>(null);
+  const birthDateRef = useRef<HTMLSelectElement>(null);
+  const genderRef = useRef<HTMLSelectElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+
+  // 새 입력칸이 나타나면 해당 칸으로 포커스 이동
+  useEffect(() => {
+    const refs = {
+      [STEP.NAME]: nameRef,
+      [STEP.BIRTH_DATE]: birthDateRef,
+      [STEP.GENDER]: genderRef,
+      [STEP.PHONE]: phoneRef,
+    };
+    refs[step as keyof typeof refs]?.current?.focus();
+  }, [step]);
+
+  // 계정 정보 없이 주소로 바로 들어온 경우 첫 단계로 이동
+  if (!account.email || !account.password) {
+    return <Navigate to="/signup" replace />;
+  }
+
+  const goNext = (from: number) => {
+    setStep((prev) => (prev === from ? from + 1 : prev));
+  };
+
+  const isValid =
+    name.trim() !== '' &&
+    isValidBirthDate(birthDate) &&
+    gender !== '' &&
+    isValidPhoneNumber(phoneNumber);
+
+  const handleSubmit = () => {
+    if (!isValid) return;
+
+    setGuardian({ name: name.trim(), birthDate, gender, phoneNumber });
+    navigate('/signup/complete', { replace: true });
+  };
+
+  // 단계 순서대로 정의하고, 화면에는 최신 입력칸이 위로 오도록 역순 표시
+  const fields: { step: number; node: ReactNode }[] = [
+    {
+      step: STEP.NAME,
+      node: (
+        <FormField label="이름" htmlFor="guardian-name">
+          <TextField
+            id="guardian-name"
+            ref={nameRef}
+            placeholder="이름을 입력해주세요."
+            value={name}
+            enterKeyHint="next"
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              // 한글 조합 중 Enter 무시
+              if (e.key !== 'Enter' || e.nativeEvent.isComposing) return;
+              e.preventDefault();
+              if (name.trim()) goNext(STEP.NAME);
+            }}
+            onBlur={() => name.trim() && goNext(STEP.NAME)}
+          />
+        </FormField>
+      ),
+    },
+    {
+      step: STEP.BIRTH_DATE,
+      node: (
+        <FormField label="생년월일" htmlFor="guardian-birth-date">
+          <BirthDateField
+            id="guardian-birth-date"
+            ref={birthDateRef}
+            value={birthDate}
+            onChange={(next) => {
+              setBirthDate(next);
+              if (next.year && next.month && next.day) {
+                goNext(STEP.BIRTH_DATE);
+              }
+            }}
+          />
+        </FormField>
+      ),
+    },
+    {
+      step: STEP.GENDER,
+      node: (
+        <FormField label="성별" htmlFor="guardian-gender">
+          <SelectField
+            id="guardian-gender"
+            ref={genderRef}
+            placeholder="성별을 입력해주세요."
+            options={GENDER_OPTIONS}
+            value={gender}
+            onChange={(e) => {
+              setGender(e.target.value as Gender);
+              goNext(STEP.GENDER);
+            }}
+          />
+        </FormField>
+      ),
+    },
+    {
+      step: STEP.PHONE,
+      node: (
+        <FormField label="전화번호" htmlFor="guardian-phone">
+          <div>
+            <div className="flex gap-3">
+              <TextField
+                id="guardian-phone"
+                ref={phoneRef}
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
+                placeholder="전화번호를 입력해주세요."
+                value={phoneNumber}
+                onChange={(e) =>
+                  setPhoneNumber(formatPhoneNumber(e.target.value))
+                }
+              />
+              <button
+                type="button"
+                // 전화번호 형식이 맞을 때만 활성화
+                disabled={!isValidPhoneNumber(phoneNumber)}
+                className="shrink-0 rounded-2xl border border-bg-secondary-pressed bg-bg-secondary px-4 text-[14px] font-medium whitespace-nowrap text-border-focus transition-colors active:bg-bg-secondary-pressed disabled:border-border-divider disabled:bg-bg-section disabled:text-text-placeholder"
+              >
+                인증번호 받기
+              </button>
+            </div>
+          </div>
+        </FormField>
+      ),
+    },
+  ];
+
+  return (
+    <div className="flex min-h-dvh flex-col">
+      <BackHeader />
+
+      <div className="flex flex-1 flex-col gap-8 pt-8">
+        <section className="flex flex-col items-start gap-2 px-5">
+          <BrandBadge label="따르릉 보호자" />
+          <h1 className="text-[22px] leading-tight font-bold text-text-title">
+            보호자 본인의 정보를
+            <br />
+            입력해주세요
+          </h1>
+          <p className="text-[14px] text-text-body">
+            다음 단계에서 시니어의 정보를 기입할 예정이에요.
+          </p>
+        </section>
+
+        <form
+          className="flex flex-col gap-6 px-5 pt-6 pb-10"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
+        >
+          {fields
+            .filter((field) => field.step <= step)
+            .reverse()
+            .map((field) => (
+              <div
+                key={field.step}
+                className="transition-[opacity,translate] duration-300 ease-out motion-reduce:transition-none starting:-translate-y-2 starting:opacity-0"
+              >
+                {field.node}
+              </div>
+            ))}
+        </form>
+      </div>
+
+      <div className="sticky bottom-0 bg-white px-5 pt-4 pb-10">
+        <Button disabled={!isValid} onClick={handleSubmit}>
+          회원가입
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default SignupGuardianPage;
