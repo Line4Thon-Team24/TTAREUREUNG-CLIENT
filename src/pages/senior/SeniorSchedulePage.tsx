@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarDays } from 'lucide-react';
 import DailySummaryCard from '@/components/senior/DailySummaryCard';
 import SeniorTimelineItem from '@/components/senior/SeniorTimelineItem';
+import useToday from '@/hooks/useToday';
 import { getDailySchedule } from '@/mocks/schedule';
 import { getScheduleSummary } from '@/utils/schedule';
 
@@ -22,7 +22,8 @@ const formatMonthDay = (date: Date) =>
 // 시니어 약 복용 일정 (오늘 / 내일)
 const SeniorSchedulePage = ({ day }: SeniorSchedulePageProps) => {
   const navigate = useNavigate();
-  const [today] = useState(() => new Date());
+  // 자정이 지나면 오늘·내일 기준도 함께 바뀜
+  const today = useToday();
   const isToday = day === 'today';
   const date = isToday ? today : addDays(today, 1);
   const otherDate = isToday ? addDays(today, 1) : today;

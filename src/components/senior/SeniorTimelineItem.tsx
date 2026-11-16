@@ -16,7 +16,6 @@ export default function SeniorTimelineItem({ slot }: SeniorTimelineItemProps) {
 
   const total = medicines.length;
   const takenCount = medicines.filter((m) => m.status === 'taken').length;
-  const missedCount = medicines.filter((m) => m.status === 'missed').length;
   const isEmphasized = status === 'taken' || status === 'missed';
 
   const label =
@@ -33,7 +32,7 @@ export default function SeniorTimelineItem({ slot }: SeniorTimelineItemProps) {
     status === 'missed'
       ? `${total}개 누락`
       : status === 'partial'
-        ? `남은 약 ${missedCount}개`
+        ? `남은 약 ${total - takenCount}개`
         : `${total}개`;
 
   return (

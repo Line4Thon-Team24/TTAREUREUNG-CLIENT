@@ -54,9 +54,8 @@ export const getScheduleSummary = (slots: ScheduleSlot[]) => {
     partialMissed: 0,
   };
   for (const slot of slots) {
-    const isPartial =
-      getSlotStatus(slot.medicines.map((medicine) => medicine.status)) ===
-      'partial';
+    const statuses = slot.medicines.map((medicine) => medicine.status);
+    const isPartial = statuses.includes('taken') && statuses.includes('missed');
     for (const { status } of slot.medicines) {
       summary.total += 1;
       if (status === 'taken') summary.taken += 1;
