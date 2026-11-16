@@ -24,6 +24,13 @@ export const isValidBirthDate = ({ year, month, day }: BirthDate) => {
   if (!year || !month || !day) return false;
 
   const date = new Date(Number(year), Number(month) - 1, Number(day));
+  // 없는 날짜(2월 30일 등)는 다음 달로 넘어가므로 입력값과 비교
+  const isRealDate =
+    date.getFullYear() === Number(year) &&
+    date.getMonth() === Number(month) - 1 &&
+    date.getDate() === Number(day);
+  if (!isRealDate) return false;
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return date <= today;
