@@ -9,6 +9,7 @@ import FormField from '@/components/common/FormField';
 import SelectField from '@/components/common/SelectField';
 import TextField from '@/components/common/TextField';
 import BrandBadge from '@/components/common/BrandBadge';
+import { GENDER_OPTIONS } from '@/constants/senior';
 import { addSenior } from '@/mocks/seniors';
 import type { Gender } from '@/types/senior';
 import { isValidBirthDate } from '@/utils/birthDate';
@@ -16,11 +17,6 @@ import {
   formatPhoneNumber,
   isValidPhoneNumber,
 } from '@/utils/formatPhoneNumber';
-
-const GENDER_OPTIONS = [
-  { label: '여성', value: 'female' },
-  { label: '남성', value: 'male' },
-];
 
 // 입력 단계: 이름 → 생년월일 → 성별 → 전화번호
 const STEP = { NAME: 1, BIRTH_DATE: 2, GENDER: 3, PHONE: 4 } as const;
