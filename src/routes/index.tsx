@@ -14,6 +14,7 @@ import SeniorEditPage from '@/pages/guardian/seniors/SeniorEditPage';
 import GuardianManagePage from '@/pages/guardian/guardians/GuardianManagePage';
 import GuardianInvitePage from '@/pages/guardian/guardians/GuardianInvitePage';
 import GuardianInviteCompletePage from '@/pages/guardian/guardians/GuardianInviteCompletePage';
+import SeniorSchedulePage from '@/pages/senior/SeniorSchedulePage';
 import MedicineRegisterMethodPage from '@/pages/guardian/medicines/MedicineRegisterMethodPage';
 import MedicineRecognitionPage from '@/pages/guardian/medicines/MedicineRecognitionPage';
 import MedicineInfoFormPage from '@/pages/guardian/medicines/MedicineInfoFormPage';
@@ -57,6 +58,12 @@ export const router = createBrowserRouter([
       {
         path: '/guardians/invite/complete',
         element: <GuardianInviteCompletePage />,
+      },
+      // 시니어 약 섭취 일정 (오늘 / 내일)
+      { path: '/senior', element: <SeniorSchedulePage day="today" /> },
+      {
+        path: '/senior/tomorrow',
+        element: <SeniorSchedulePage day="tomorrow" />,
       },
       // 약 등록 흐름 (하단 네비게이션 미노출)
       { path: '/medicines/register', element: <MedicineRegisterMethodPage /> },
