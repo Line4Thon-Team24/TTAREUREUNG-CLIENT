@@ -22,7 +22,13 @@ const STEP = { NAME: 1, BIRTH_DATE: 2, GENDER: 3, PHONE: 4 } as const;
 const SignupGuardianPage = () => {
   const navigate = useNavigate();
   const { account, guardian, setGuardian } = useSignupForm();
-  const [step, setStep] = useState<number>(STEP.NAME);
+  // 저장된 입력값이 있으면 그 단계까지 입력칸을 미리 표시
+  const [step, setStep] = useState<number>(() => {
+    if (guardian.gender !== '') return STEP.PHONE;
+    if (isValidBirthDate(guardian.birthDate)) return STEP.GENDER;
+    if (guardian.name.trim() !== '') return STEP.BIRTH_DATE;
+    return STEP.NAME;
+  });
   const [name, setName] = useState(guardian.name);
   const [birthDate, setBirthDate] = useState(guardian.birthDate);
   const [gender, setGender] = useState<Gender | ''>(guardian.gender);
@@ -43,6 +49,11 @@ const SignupGuardianPage = () => {
     };
     refs[step as keyof typeof refs]?.current?.focus();
   }, [step]);
+
+  // 이전 단계로 돌아갔다 와도 입력이 유지되도록 입력값 저장
+  useEffect(() => {
+    setGuardian({ name, birthDate, gender, phoneNumber });
+  }, [name, birthDate, gender, phoneNumber, setGuardian]);
 
   // 계정 정보 없이 주소로 바로 들어온 경우 첫 단계로 이동
   if (!account.email || !account.password) {

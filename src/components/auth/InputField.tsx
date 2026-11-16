@@ -1,4 +1,4 @@
-import { useState, type InputHTMLAttributes, type Ref } from 'react';
+import { useId, useState, type InputHTMLAttributes, type Ref } from 'react';
 import eyeOffIcon from '@/assets/icons/eye-off.svg';
 import eyeOnIcon from '@/assets/icons/eye-on.svg';
 
@@ -12,10 +12,15 @@ export default function InputField({
   type = 'text',
   error,
   className = '',
+  'aria-describedby': describedBy,
   ...props
 }: InputFieldProps) {
   const [visible, setVisible] = useState(false);
   const isPassword = type === 'password';
+  const errorId = useId();
+  const describedByIds =
+    [describedBy, error ? errorId : undefined].filter(Boolean).join(' ') ||
+    undefined;
 
   return (
     <div className="w-full">
@@ -24,6 +29,7 @@ export default function InputField({
           type={isPassword && visible ? 'text' : type}
           inputMode={type === 'email' ? 'email' : undefined}
           aria-invalid={error ? true : undefined}
+          aria-describedby={describedByIds}
           className={`w-full rounded-xl border border-border-divider p-4 text-[16px] font-medium text-text-body transition-colors outline-none placeholder:text-text-placeholder focus:border-border-focus ${isPassword ? 'pr-14' : ''} ${className}`}
           {...props}
         />
@@ -45,7 +51,11 @@ export default function InputField({
       </div>
 
       {error && (
-        <p role="alert" className="mt-1 px-1 text-[12px] text-status-missed">
+        <p
+          id={errorId}
+          role="alert"
+          className="mt-1 px-1 text-[12px] text-status-missed"
+        >
           {error}
         </p>
       )}
