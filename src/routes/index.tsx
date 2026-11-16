@@ -9,6 +9,8 @@ import GuardianListPage from '@/pages/guardian/guardians/GuardianListPage';
 import ProfilePage from '@/pages/guardian/profile/ProfilePage';
 import SeniorRegisterPage from '@/pages/guardian/seniors/SeniorRegisterPage';
 import SeniorRegisterCompletePage from '@/pages/guardian/seniors/SeniorRegisterCompletePage';
+import SeniorAddPage from '@/pages/guardian/seniors/SeniorAddPage';
+import SeniorEditPage from '@/pages/guardian/seniors/SeniorEditPage';
 import MedicineRegisterMethodPage from '@/pages/guardian/medicines/MedicineRegisterMethodPage';
 import MedicineRecognitionPage from '@/pages/guardian/medicines/MedicineRecognitionPage';
 import MedicineInfoFormPage from '@/pages/guardian/medicines/MedicineInfoFormPage';
@@ -43,6 +45,9 @@ export const router = createBrowserRouter([
         path: '/seniors/register/complete',
         element: <SeniorRegisterCompletePage />,
       },
+      // 시니어 추가 / 정보 수정 (시니어 목록)
+      { path: '/seniors/add', element: <SeniorAddPage /> },
+      { path: '/seniors/:seniorId/edit', element: <SeniorEditPage /> },
       // 약 등록 흐름 (하단 네비게이션 미노출)
       { path: '/medicines/register', element: <MedicineRegisterMethodPage /> },
       {
