@@ -45,7 +45,7 @@ const SignupCompletePage = () => {
         </Button>
         <button
           type="button"
-          onClick={() => navigate('/schedule', { replace: true })}
+          onClick={() => navigate('/profile/select', { replace: true })}
           className="text-[16px] text-text-body underline underline-offset-2"
         >
           건너뛰기

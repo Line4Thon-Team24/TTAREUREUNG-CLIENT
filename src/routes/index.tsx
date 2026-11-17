@@ -7,6 +7,7 @@ import SignupEmailPage from '@/pages/auth/SignupEmailPage';
 import SignupPasswordPage from '@/pages/auth/SignupPasswordPage';
 import SignupGuardianPage from '@/pages/auth/SignupGuardianPage';
 import SignupCompletePage from '@/pages/auth/SignupCompletePage';
+import ProfileSelectPage from '@/pages/profile/ProfileSelectPage';
 import SchedulePage from '@/pages/guardian/schedule/SchedulePage';
 import ScheduleMonthPage from '@/pages/guardian/schedule/ScheduleMonthPage';
 import ScheduleWeekPage from '@/pages/guardian/schedule/ScheduleWeekPage';
@@ -47,6 +48,8 @@ export const router = createBrowserRouter([
       },
       // 로그인 (하단 네비게이션 미노출)
       { path: '/login', element: <LoginPage /> },
+      // 로그인/회원가입 후 프로필 선택 (하단 네비게이션 미노출)
+      { path: '/profile/select', element: <ProfileSelectPage /> },
       // 회원가입 흐름 (하단 네비게이션 미노출)
       {
         element: <SignupLayout />,
