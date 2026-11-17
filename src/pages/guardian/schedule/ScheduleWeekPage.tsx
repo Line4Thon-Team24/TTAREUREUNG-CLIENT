@@ -7,6 +7,7 @@ import ScheduleTimeline from '@/components/schedule/ScheduleTimeline';
 import WeekStrip from '@/components/schedule/WeekStrip';
 import useDateParam from '@/hooks/useDateParam';
 import useSelectedSeniorParam from '@/hooks/useSelectedSeniorParam';
+import { SCHEDULE_SENIOR_KEY } from '@/constants/schedule';
 import { getMedicine } from '@/mocks/medicines';
 import { getDailySchedule } from '@/mocks/schedule';
 import { getSeniors } from '@/mocks/seniors';
@@ -17,7 +18,10 @@ const ScheduleWeekPage = () => {
   const location = useLocation();
   const [seniors] = useState(getSeniors);
   // 월 달력과 시니어·날짜 공유 (주소에 저장)
-  const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(seniors);
+  const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(
+    seniors,
+    SCHEDULE_SENIOR_KEY
+  );
   const [date, setDate] = useDateParam();
   const [detailMedicine, setDetailMedicine] = useState<Medicine | null>(null);
 

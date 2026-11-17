@@ -6,6 +6,7 @@ import AdherenceSummary from '@/components/schedule/AdherenceSummary';
 import MonthCalendar from '@/components/schedule/MonthCalendar';
 import useDateParam from '@/hooks/useDateParam';
 import useSelectedSeniorParam from '@/hooks/useSelectedSeniorParam';
+import { SCHEDULE_SENIOR_KEY } from '@/constants/schedule';
 import { getMedicines } from '@/mocks/medicines';
 import { getMonthlyAdherence } from '@/mocks/schedule';
 import { getSeniors } from '@/mocks/seniors';
@@ -15,7 +16,10 @@ const ScheduleMonthPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [seniors] = useState(getSeniors);
-  const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(seniors);
+  const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(
+    seniors,
+    SCHEDULE_SENIOR_KEY
+  );
   const [date, setDate] = useDateParam();
 
   const year = date.getFullYear();

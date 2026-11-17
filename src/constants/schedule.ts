@@ -99,3 +99,6 @@ export const MEAL_TIME_LABELS = {
 
 // 요일 이름 (일요일 시작)
 export const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+
+// 복용 일정 화면(당일·월·주)이 공유하는 마지막 선택 시니어 저장 키
+export const SCHEDULE_SENIOR_KEY = 'schedule-senior-id';
