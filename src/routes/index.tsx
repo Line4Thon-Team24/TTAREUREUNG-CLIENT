@@ -9,6 +9,7 @@ import SignupGuardianPage from '@/pages/auth/SignupGuardianPage';
 import SignupCompletePage from '@/pages/auth/SignupCompletePage';
 import SchedulePage from '@/pages/guardian/schedule/SchedulePage';
 import ScheduleMonthPage from '@/pages/guardian/schedule/ScheduleMonthPage';
+import ScheduleWeekPage from '@/pages/guardian/schedule/ScheduleWeekPage';
 import MedicineListPage from '@/pages/guardian/medicines/MedicineListPage';
 import SeniorListPage from '@/pages/guardian/seniors/SeniorListPage';
 import GuardianListPage from '@/pages/guardian/guardians/GuardianListPage';
@@ -55,6 +56,7 @@ export const router = createBrowserRouter([
         children: [
           { path: '/schedule', element: <SchedulePage /> },
           { path: '/schedule/month', element: <ScheduleMonthPage /> },
+          { path: '/schedule/week', element: <ScheduleWeekPage /> },
           { path: '/medicines', element: <MedicineListPage /> },
           { path: '/seniors', element: <SeniorListPage /> },
           { path: '/guardians', element: <GuardianListPage /> },

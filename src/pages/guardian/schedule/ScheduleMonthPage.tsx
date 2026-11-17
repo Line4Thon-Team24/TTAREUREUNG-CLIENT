@@ -39,7 +39,7 @@ const ScheduleMonthPage = () => {
     if (selectedSeniorId !== null) {
       params.set('seniorId', String(selectedSeniorId));
     }
-    navigate(`/schedule?${params}`);
+    navigate(`/schedule/week?${params}`);
   };
 
   return (
