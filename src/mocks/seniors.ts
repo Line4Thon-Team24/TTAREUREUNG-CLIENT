@@ -1,3 +1,4 @@
+import { deleteMedicines, getMedicines } from '@/mocks/medicines';
 import type { Senior, SeniorForm } from '@/types/senior';
 
 // 샘플 시니어
@@ -59,4 +60,13 @@ export const updateSenior = (id: number, form: SeniorForm) => {
 export const toggleFavorite = (id: number) => {
   const senior = seniors.find((item) => item.id === id);
   if (senior) senior.isFavorite = !senior.isFavorite;
+};
+
+// 시니어 삭제 (등록된 약도 함께 삭제)
+export const deleteSeniors = (ids: number[]) => {
+  for (const id of ids) {
+    deleteMedicines(getMedicines(id).map((medicine) => medicine.id));
+    const index = seniors.findIndex((senior) => senior.id === id);
+    if (index !== -1) seniors.splice(index, 1);
+  }
 };
