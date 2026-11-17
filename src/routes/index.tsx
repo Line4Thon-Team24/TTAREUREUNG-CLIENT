@@ -28,6 +28,7 @@ import MedicineRecognitionPage from '@/pages/guardian/medicines/MedicineRecognit
 import MedicineInfoFormPage from '@/pages/guardian/medicines/MedicineInfoFormPage';
 import MedicineManagePage from '@/pages/guardian/medicines/MedicineManagePage';
 import MedicineEditPage from '@/pages/guardian/medicines/MedicineEditPage';
+import { markNavigated } from '@/utils/history';
 
 export const router = createBrowserRouter([
   {
@@ -102,3 +103,9 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
+// 처음 연 기록과 다른 곳으로 이동하면 기록 (첫 진입과 뒤로 가기 구분용)
+const initialKey = router.state.location.key;
+router.subscribe(({ location }) => {
+  if (location.key !== initialKey) markNavigated();
+});

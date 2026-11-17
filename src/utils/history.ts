@@ -4,3 +4,12 @@ export const getHistoryIndex = () => {
   const idx = (window.history.state as { idx?: unknown } | null)?.idx;
   return typeof idx === 'number' ? idx : 0;
 };
+
+// 앱이 뜬 뒤 다른 기록으로 이동한 적이 있는지 (첫 진입과 뒤로 가기 구분용)
+let hasNavigated = false;
+
+export const markNavigated = () => {
+  hasNavigated = true;
+};
+
+export const hasNavigatedInApp = () => hasNavigated;
