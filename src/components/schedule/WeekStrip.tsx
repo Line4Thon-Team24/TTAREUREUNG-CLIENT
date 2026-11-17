@@ -1,6 +1,5 @@
+import { WEEKDAYS } from '@/constants/schedule';
 import { getWeekDates, toDateString } from '@/utils/date';
-
-const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
 // 주말 글자색 (일요일 빨강, 토요일 파랑)
 const WEEKEND_COLORS: Record<number, string> = {

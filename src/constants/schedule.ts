@@ -96,3 +96,6 @@ export const MEAL_TIME_LABELS = {
   lunch: '점심',
   dinner: '저녁',
 } as const;
+
+// 요일 이름 (일요일 시작)
+export const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];

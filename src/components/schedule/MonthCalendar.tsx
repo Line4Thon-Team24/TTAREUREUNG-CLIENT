@@ -1,9 +1,8 @@
 import { Plus } from 'lucide-react';
+import { WEEKDAYS } from '@/constants/schedule';
 import type { Medicine } from '@/types/medicine';
 import { getMonthWeeks, toDateString } from '@/utils/date';
 import { isMedicineOnDate } from '@/utils/schedule';
-
-const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
 type MonthCalendarProps = {
   year: number;
