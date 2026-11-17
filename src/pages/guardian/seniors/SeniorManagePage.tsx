@@ -3,10 +3,12 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import SearchField from '@/components/common/SearchField';
 import StepHeader from '@/components/common/StepHeader';
 import SeniorCard from '@/components/seniors/SeniorCard';
 import { getMedicines } from '@/mocks/medicines';
 import { deleteSeniors, getSeniors } from '@/mocks/seniors';
+import { filterByName } from '@/utils/nameSearch';
 
 const SeniorManagePage = () => {
   const navigate = useNavigate();
@@ -16,14 +18,18 @@ const SeniorManagePage = () => {
   );
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [keyword, setKeyword] = useState('');
 
   // 편집할 시니어가 없으면 목록으로
   if (seniors.length === 0) {
     return <Navigate to="/seniors" replace />;
   }
 
-  const allIds = seniors.map(({ id }) => id);
-  const isAllSelected = allIds.every((id) => selectedIds.includes(id));
+  const visibleSeniors = filterByName(seniors, keyword);
+  const visibleIds = visibleSeniors.map(({ id }) => id);
+  const isAllSelected =
+    visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
 
   const toggleSenior = (id: number) => {
     setSelectedIds((prev) =>
@@ -31,7 +37,19 @@ const SeniorManagePage = () => {
     );
   };
 
-  const toggleAll = () => setSelectedIds(isAllSelected ? [] : allIds);
+  // 전체 선택은 지금 보이는(검색된) 시니어 기준
+  const toggleAll = () => {
+    setSelectedIds((prev) =>
+      isAllSelected
+        ? prev.filter((id) => !visibleIds.includes(id))
+        : [...new Set([...prev, ...visibleIds])]
+    );
+  };
+
+  const toggleSearch = () => {
+    setIsSearching((prev) => !prev);
+    setKeyword('');
+  };
 
   const handleDelete = () => {
     deleteSeniors(selectedIds);
@@ -50,34 +68,54 @@ const SeniorManagePage = () => {
             type="checkbox"
             checked={isAllSelected}
             onChange={toggleAll}
+            disabled={visibleIds.length === 0}
             className="size-4 accent-[#01A16A]"
           />
           전체 선택
         </label>
-        {/* 검색은 이름 검색 작업 때 연결 */}
         <button
           type="button"
           aria-label="시니어 검색"
+          aria-pressed={isSearching}
+          onClick={toggleSearch}
           className="flex size-6 items-center justify-center text-[#4B5563]"
         >
           <Search size={16} strokeWidth={2} aria-hidden />
         </button>
       </div>
 
+      {isSearching && (
+        <div className="px-5 pb-1">
+          <SearchField
+            value={keyword}
+            onChange={setKeyword}
+            placeholder="시니어 이름으로 검색해주세요."
+            aria-label="시니어 검색"
+            autoFocus
+          />
+        </div>
+      )}
+
       <main className="min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-12">
-        <ul className="flex flex-col gap-6">
-          {seniors.map((senior) => (
-            <li key={senior.id}>
-              <SeniorCard
-                senior={senior}
-                medicineCount={getMedicines(senior.id).length}
-                selectable
-                selected={selectedIds.includes(senior.id)}
-                onToggleSelect={() => toggleSenior(senior.id)}
-              />
-            </li>
-          ))}
-        </ul>
+        {visibleSeniors.length === 0 ? (
+          <p className="pt-20 text-center text-[14px] text-[#6B7684]">
+            검색 결과가 없어요.
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-6">
+            {visibleSeniors.map((senior) => (
+              <li key={senior.id}>
+                <SeniorCard
+                  senior={senior}
+                  medicineCount={getMedicines(senior.id).length}
+                  selectable
+                  selected={selectedIds.includes(senior.id)}
+                  onToggleSelect={() => toggleSenior(senior.id)}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
       </main>
 
       <div className="z-10 flex shrink-0 gap-3 border-t border-[#E5E8EB] bg-white px-5 pt-4 pb-10">
