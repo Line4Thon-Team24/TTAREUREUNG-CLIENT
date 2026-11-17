@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import SeniorSelect from '@/components/common/SeniorSelect';
+import SeniorDropdown from '@/components/common/SeniorDropdown';
 import AdherenceSummary from '@/components/schedule/AdherenceSummary';
 import MonthCalendar from '@/components/schedule/MonthCalendar';
 import useDateParam from '@/hooks/useDateParam';
@@ -76,10 +76,12 @@ const ScheduleMonthPage = () => {
 
         <div className="justify-self-end">
           {hasSenior ? (
-            <SeniorSelect
+            <SeniorDropdown
               seniors={seniors}
               selectedId={selectedSeniorId}
               onSelect={selectSenior}
+              label="시니어 선택"
+              variant="pill"
             />
           ) : (
             <button

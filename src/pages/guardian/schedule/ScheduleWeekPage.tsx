@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
-import SeniorSelect from '@/components/common/SeniorSelect';
+import SeniorDropdown from '@/components/common/SeniorDropdown';
 import MedicineDetailModal from '@/components/schedule/MedicineDetailModal';
 import ScheduleTimeline from '@/components/schedule/ScheduleTimeline';
 import WeekStrip from '@/components/schedule/WeekStrip';
@@ -41,10 +41,12 @@ const ScheduleWeekPage = () => {
         </div>
 
         {seniors.length > 0 ? (
-          <SeniorSelect
+          <SeniorDropdown
             seniors={seniors}
             selectedId={selectedSeniorId}
             onSelect={selectSenior}
+            label="시니어 선택"
+            variant="pill"
           />
         ) : (
           <button
