@@ -2,16 +2,18 @@ import {
   MedicineOrderCard,
   StorageLocationCard,
 } from '@/components/senior/IncomingCallInfo';
+import { useNavigate } from 'react-router-dom';
 import callIcon from '@/assets/icons/call.svg';
 import { mockIncomingCall } from '@/mocks/incomingCall';
 import { formatCallTime, formatMedicineOrder } from '@/utils/call';
 
 // 시니어 복약 알림 수신 화면
 const SeniorIncomingCallPage = () => {
+  const navigate = useNavigate();
   const call = mockIncomingCall;
 
   const handleAccept = () => {
-    // TODO: 약 인식 화면 구현 후 해당 경로로 이동
+    navigate(`/senior/recognition?order=${call.medicineOrder}`);
   };
 
   return (
