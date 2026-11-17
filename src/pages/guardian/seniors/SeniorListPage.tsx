@@ -42,7 +42,7 @@ const SeniorListPage = () => {
           </span>
         </div>
         <div className="flex items-center gap-1">
-          {/* 검색·목록 편집은 화면이 정해지면 연결 */}
+          {/* 검색은 이름 검색 작업 때 연결 */}
           <button
             type="button"
             aria-label="시니어 검색"
@@ -53,6 +53,7 @@ const SeniorListPage = () => {
           <button
             type="button"
             aria-label="목록 편집"
+            onClick={() => navigate('/seniors/manage')}
             className={ICON_BUTTON_CLASS}
           >
             <SquarePen size={20} strokeWidth={1.83} aria-hidden />

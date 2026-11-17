@@ -18,6 +18,7 @@ import SeniorRegisterPage from '@/pages/guardian/seniors/SeniorRegisterPage';
 import SeniorRegisterCompletePage from '@/pages/guardian/seniors/SeniorRegisterCompletePage';
 import SeniorAddPage from '@/pages/guardian/seniors/SeniorAddPage';
 import SeniorEditPage from '@/pages/guardian/seniors/SeniorEditPage';
+import SeniorManagePage from '@/pages/guardian/seniors/SeniorManagePage';
 import GuardianManagePage from '@/pages/guardian/guardians/GuardianManagePage';
 import GuardianInvitePage from '@/pages/guardian/guardians/GuardianInvitePage';
 import GuardianInviteCompletePage from '@/pages/guardian/guardians/GuardianInviteCompletePage';
@@ -72,6 +73,8 @@ export const router = createBrowserRouter([
       // 시니어 추가 / 정보 수정 (시니어 목록)
       { path: '/seniors/add', element: <SeniorAddPage /> },
       { path: '/seniors/:seniorId/edit', element: <SeniorEditPage /> },
+      // 시니어 목록 편집 (선택 삭제)
+      { path: '/seniors/manage', element: <SeniorManagePage /> },
       // 보호자 목록 편집 / 보호자 초대 (보호자 목록)
       { path: '/guardians/manage', element: <GuardianManagePage /> },
       { path: '/guardians/invite', element: <GuardianInvitePage /> },
