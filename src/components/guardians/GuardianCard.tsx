@@ -1,6 +1,6 @@
 import { Flag } from 'lucide-react';
 import InfoRow, { InfoValue } from '@/components/common/InfoRow';
-import SeniorDropdown from '@/components/guardians/SeniorDropdown';
+import SeniorDropdown from '@/components/common/SeniorDropdown';
 import { GENDER_SHORT_LABELS } from '@/constants/senior';
 import type { Guardian } from '@/types/guardian';
 import type { Senior } from '@/types/senior';
