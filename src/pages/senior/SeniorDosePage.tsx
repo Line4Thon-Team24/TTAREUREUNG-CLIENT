@@ -1,19 +1,35 @@
-import { useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ZoomIn } from 'lucide-react';
 import MicPrompt from '@/components/recognition/MicPrompt';
 import MaskIcon from '@/components/common/MaskIcon';
 import { mockTargetMedicines } from '@/mocks/recognition';
+import { parsePositiveInt } from '@/utils/recognition';
 import pillIcon from '@/assets/icons/pill.svg';
 
 // 시니어 약 복용 안내 화면 (복용 수량 + 약 사진 슬라이드)
+// ?order=약 순서
 const SeniorDosePage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const medicines = mockTargetMedicines;
+  const order = parsePositiveInt(searchParams.get('order'));
   const trackRef = useRef<HTMLDivElement>(null);
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(() =>
+    Math.max(
+      0,
+      medicines.findIndex((medicine) => medicine.order === order)
+    )
+  );
   const [zoomed, setZoomed] = useState(false);
   const current = medicines[index];
+
+  // 초기 선택된 약의 슬라이드 위치로 이동
+  useLayoutEffect(() => {
+    const track = trackRef.current;
+    if (track) track.scrollLeft = index * track.clientWidth;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleScroll = () => {
     const track = trackRef.current;
