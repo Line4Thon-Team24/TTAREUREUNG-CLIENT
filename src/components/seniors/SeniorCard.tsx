@@ -8,53 +8,80 @@ import { formatDate, formatDotDate } from '@/utils/date';
 type SeniorCardProps = {
   senior: Senior;
   medicineCount: number;
-  onToggleFavorite: () => void;
-  onEdit: () => void;
-  onMedicineDetail: () => void;
+  // 목록 편집 화면에서 체크박스 노출 (즐겨찾기·편집 버튼은 숨김)
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
+  onToggleFavorite?: () => void;
+  onEdit?: () => void;
+  onMedicineDetail?: () => void;
 };
 
 // 시니어 카드 (시니어 목록)
 export default function SeniorCard({
   senior,
   medicineCount,
+  selectable = false,
+  selected = false,
+  onToggleSelect,
   onToggleFavorite,
   onEdit,
   onMedicineDetail,
 }: SeniorCardProps) {
+  const checkboxId = `senior-select-${senior.id}`;
+
   return (
-    <article className="flex w-full flex-col gap-3 rounded-2xl border border-[#CDEBD8] bg-white p-4.25 drop-shadow-[0_2px_5px_rgba(0,0,0,0.04)]">
+    <article
+      // 선택해도 테두리는 그대로 (체크박스로만 표시)
+      className="flex w-full flex-col gap-3 rounded-2xl border border-[#CDEBD8] bg-white p-4.25 drop-shadow-[0_2px_5px_rgba(0,0,0,0.04)]"
+    >
       <header className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1">
-          <h2 className="text-[16px] font-bold break-keep text-[#111827]">
-            {senior.name}
-          </h2>
+          <div className="flex items-center gap-2">
+            {selectable && (
+              <input
+                id={checkboxId}
+                type="checkbox"
+                checked={selected}
+                onChange={onToggleSelect}
+                className="size-4 shrink-0 accent-[#01A16A]"
+              />
+            )}
+            <h2 className="text-[16px] font-bold break-keep text-[#111827]">
+              <label htmlFor={selectable ? checkboxId : undefined}>
+                {senior.name}
+              </label>
+            </h2>
+          </div>
           <p className="text-[11px] text-[#9CA3AF]">
             등록 날짜: {formatDate(new Date(senior.registeredAt))}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            aria-label={`${senior.name} 즐겨찾기`}
-            aria-pressed={senior.isFavorite}
-            onClick={onToggleFavorite}
-            className="flex size-6 items-center justify-center text-[#F59E0B]"
-          >
-            <Star
-              size={19}
-              strokeWidth={1.75}
-              aria-hidden
-              className={senior.isFavorite ? 'fill-current' : ''}
-            />
-          </button>
-          <button
-            type="button"
-            onClick={onEdit}
-            className="rounded-md border border-[#E5E8EB] bg-[#FAFAFA] px-2.25 py-1.25 text-[12px] font-semibold text-[#6B7684] active:bg-[#F2F4F6]"
-          >
-            세부 편집
-          </button>
-        </div>
+        {!selectable && (
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              aria-label={`${senior.name} 즐겨찾기`}
+              aria-pressed={senior.isFavorite}
+              onClick={onToggleFavorite}
+              className="flex size-6 items-center justify-center text-[#F59E0B]"
+            >
+              <Star
+                size={19}
+                strokeWidth={1.75}
+                aria-hidden
+                className={senior.isFavorite ? 'fill-current' : ''}
+              />
+            </button>
+            <button
+              type="button"
+              onClick={onEdit}
+              className="rounded-md border border-[#E5E8EB] bg-[#FAFAFA] px-2.25 py-1.25 text-[12px] font-semibold text-[#6B7684] active:bg-[#F2F4F6]"
+            >
+              세부 편집
+            </button>
+          </div>
+        )}
       </header>
 
       <div className="flex flex-col gap-3">
@@ -78,13 +105,15 @@ export default function SeniorCard({
           </InfoRow>
           <InfoRow label="약 복용 개수" tone="green">
             <InfoValue>{medicineCount}개</InfoValue>
-            <button
-              type="button"
-              onClick={onMedicineDetail}
-              className="py-px text-[11px] text-[#6B7684] underline"
-            >
-              약상세정보
-            </button>
+            {!selectable && (
+              <button
+                type="button"
+                onClick={onMedicineDetail}
+                className="py-px text-[11px] text-[#6B7684] underline"
+              >
+                약상세정보
+              </button>
+            )}
           </InfoRow>
         </div>
       </div>

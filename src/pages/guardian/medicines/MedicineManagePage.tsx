@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import SearchField from '@/components/common/SearchField';
 import StepHeader from '@/components/common/StepHeader';
 import MedicineCard from '@/components/medicines/MedicineCard';
+import useGoBack from '@/hooks/useGoBack';
 import { deleteMedicines, getMedicines } from '@/mocks/medicines';
 import { filterMedicines } from '@/utils/medicineSearch';
 
@@ -12,7 +13,7 @@ import { filterMedicines } from '@/utils/medicineSearch';
 type ModalStep = 'doctor' | 'confirm' | null;
 
 const MedicineManagePage = () => {
-  const navigate = useNavigate();
+  const goBack = useGoBack();
   const [searchParams] = useSearchParams();
   const seniorId = Number(searchParams.get('seniorId'));
 
@@ -50,12 +51,15 @@ const MedicineManagePage = () => {
   const handleDelete = () => {
     deleteMedicines(selectedIds);
     setModalStep(null);
-    navigate(-1);
+    goBack(`/medicines?seniorId=${seniorId}`);
   };
 
   return (
     <div className="flex h-dvh flex-col">
-      <StepHeader title="약 목록 편집" />
+      <StepHeader
+        title="약 목록 편집"
+        onBack={() => goBack(`/medicines?seniorId=${seniorId}`)}
+      />
 
       <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-2">
         <label className="flex shrink-0 items-center gap-2 px-1.25 text-[14px] font-semibold text-[#191F28]">
@@ -101,7 +105,10 @@ const MedicineManagePage = () => {
 
       <div className="z-10 flex shrink-0 gap-3 border-t border-[#E5E8EB] bg-white px-5 pt-4 pb-10">
         <div className="w-29.25 shrink-0">
-          <Button variant="secondary" onClick={() => navigate(-1)}>
+          <Button
+            variant="secondary"
+            onClick={() => goBack(`/medicines?seniorId=${seniorId}`)}
+          >
             취소
           </Button>
         </div>

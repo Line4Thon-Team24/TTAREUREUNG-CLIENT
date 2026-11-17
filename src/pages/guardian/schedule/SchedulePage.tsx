@@ -7,6 +7,7 @@ import ScheduleTimeline from '@/components/schedule/ScheduleTimeline';
 import SeniorChips from '@/components/common/SeniorChips';
 import useDateParam from '@/hooks/useDateParam';
 import useSelectedSeniorParam from '@/hooks/useSelectedSeniorParam';
+import { SCHEDULE_SENIOR_KEY } from '@/constants/schedule';
 import { getSeniors } from '@/mocks/seniors';
 import { getMedicine, getMedicines } from '@/mocks/medicines';
 import { getDailySchedule } from '@/mocks/schedule';
@@ -17,7 +18,10 @@ const SchedulePage = () => {
   const location = useLocation();
   const [seniors] = useState(getSeniors);
   // 월 달력과 시니어·날짜 공유 (주소에 저장)
-  const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(seniors);
+  const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(
+    seniors,
+    SCHEDULE_SENIOR_KEY
+  );
   const [date, setDate] = useDateParam();
   const [detailMedicine, setDetailMedicine] = useState<Medicine | null>(null);
 
@@ -33,7 +37,11 @@ const SchedulePage = () => {
           <EmptyState
             message="등록된 시니어가 없어요!"
             actionLabel="시니어 등록하기"
-            onAction={() => navigate('/seniors/register')}
+            onAction={() =>
+              navigate('/seniors/register', {
+                state: { returnTo: `${location.pathname}${location.search}` },
+              })
+            }
           />
         </div>
       );
@@ -93,7 +101,9 @@ const SchedulePage = () => {
             selectedId={selectedSeniorId}
             onSelect={selectSenior}
             onAdd={() =>
-              navigate('/seniors/add', { state: { returnTo: '/schedule' } })
+              navigate('/seniors/add', {
+                state: { returnTo: `${location.pathname}${location.search}` },
+              })
             }
           />
         </div>

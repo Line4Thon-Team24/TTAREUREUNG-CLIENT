@@ -4,6 +4,7 @@ import BackHeader from '@/components/common/BackHeader';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import SeniorInfoForm from '@/components/seniors/SeniorInfoForm';
+import useGoBack from '@/hooks/useGoBack';
 import { addSenior } from '@/mocks/seniors';
 import {
   EMPTY_SENIOR_FORM,
@@ -14,6 +15,7 @@ import {
 
 const SeniorAddPage = () => {
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const location = useLocation();
   // 완료 화면에서 '건너뛰기' 시 돌아갈 곳 (기본: 시니어 목록)
   const returnTo =
@@ -28,7 +30,7 @@ const SeniorAddPage = () => {
   // 입력한 내용이 있으면 버릴지 먼저 확인
   const handleCancel = () => {
     if (isChanged) setIsDiscardOpen(true);
-    else navigate(-1);
+    else goBack(returnTo);
   };
 
   const handleSubmit = () => {
@@ -87,7 +89,7 @@ const SeniorAddPage = () => {
         onCancel={() => setIsDiscardOpen(false)}
         onConfirm={() => {
           setIsDiscardOpen(false);
-          navigate(-1);
+          goBack(returnTo);
         }}
       />
     </div>

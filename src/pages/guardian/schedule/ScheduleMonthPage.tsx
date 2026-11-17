@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import SeniorSelect from '@/components/common/SeniorSelect';
+import SeniorDropdown from '@/components/common/SeniorDropdown';
 import AdherenceSummary from '@/components/schedule/AdherenceSummary';
 import MonthCalendar from '@/components/schedule/MonthCalendar';
 import useDateParam from '@/hooks/useDateParam';
+import useGoBack from '@/hooks/useGoBack';
 import useSelectedSeniorParam from '@/hooks/useSelectedSeniorParam';
+import { SCHEDULE_SENIOR_KEY } from '@/constants/schedule';
 import { getMedicines } from '@/mocks/medicines';
 import { getMonthlyAdherence } from '@/mocks/schedule';
 import { getSeniors } from '@/mocks/seniors';
@@ -14,8 +16,12 @@ import { toDateString } from '@/utils/date';
 const ScheduleMonthPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const goBackOr = useGoBack();
   const [seniors] = useState(getSeniors);
-  const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(seniors);
+  const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(
+    seniors,
+    SCHEDULE_SENIOR_KEY
+  );
   const [date, setDate] = useDateParam();
 
   const year = date.getFullYear();
@@ -29,17 +35,14 @@ const ScheduleMonthPage = () => {
     setDate(new Date(year, month + offset, 1));
 
   // 당일 화면에서 들어왔으면 뒤로, 바로 들어왔으면 당일 화면으로
-  const goBack = () => {
-    if (location.key !== 'default') navigate(-1);
-    else navigate(`/schedule${location.search}`, { replace: true });
-  };
+  const goBack = () => goBackOr(`/schedule${location.search}`);
 
   const goToDate = (next: Date) => {
     const params = new URLSearchParams({ date: toDateString(next) });
     if (selectedSeniorId !== null) {
       params.set('seniorId', String(selectedSeniorId));
     }
-    navigate(`/schedule?${params}`);
+    navigate(`/schedule/week?${params}`);
   };
 
   return (
@@ -76,15 +79,21 @@ const ScheduleMonthPage = () => {
 
         <div className="justify-self-end">
           {hasSenior ? (
-            <SeniorSelect
+            <SeniorDropdown
               seniors={seniors}
               selectedId={selectedSeniorId}
               onSelect={selectSenior}
+              label="시니어 선택"
+              variant="pill"
             />
           ) : (
             <button
               type="button"
-              onClick={() => navigate('/seniors/register')}
+              onClick={() =>
+                navigate('/seniors/register', {
+                  state: { returnTo: `${location.pathname}${location.search}` },
+                })
+              }
               className="rounded-full bg-[#F2F4F6] px-3 py-1 text-[12px] font-semibold whitespace-nowrap text-[#6B7684]"
             >
               시니어 등록하기

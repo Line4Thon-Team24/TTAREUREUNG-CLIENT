@@ -39,7 +39,7 @@ export default function SeniorTimelineItem({ slot }: SeniorTimelineItemProps) {
     <li className="relative flex items-start gap-4">
       <span
         aria-hidden
-        className={`flex size-10 shrink-0 items-center justify-center rounded-full text-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] ring-4 ${style.nodeClassName}`}
+        className={`flex size-10 shrink-0 items-center justify-center rounded-full shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] ring-4 ${style.nodeClassName}`}
       >
         <NodeIcon size={isEmphasized ? 24 : 20} strokeWidth={2.5} />
       </span>
@@ -78,14 +78,14 @@ export default function SeniorTimelineItem({ slot }: SeniorTimelineItemProps) {
                 {formatKoreanTime(slot.time)}
               </span>
               <span
-                className={`text-[16px] leading-6 font-semibold tracking-[-0.32px] ${style.timingClassName}`}
+                className={`text-[16px] leading-6 ${style.timingClassName}`}
               >
                 {slot.timingLabel}
               </span>
             </h3>
           </div>
           <span
-            className={`shrink-0 rounded-md px-2.5 py-1 text-[12px] leading-4 font-bold tracking-[-0.32px] whitespace-nowrap ${style.countClassName}`}
+            className={`shrink-0 rounded-md py-1 text-[12px] leading-4 tracking-[-0.32px] whitespace-nowrap ${style.countClassName}`}
           >
             {countText}
           </span>

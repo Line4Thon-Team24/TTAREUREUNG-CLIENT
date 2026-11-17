@@ -51,13 +51,21 @@ export type RecognizedMedicine = {
   accuracy: number; // 정확도 (%)
 };
 
+// 약 등록 흐름 전체에 넘기는 값 (방법 선택 → AI 인식 → 입력)
+export type RegisterFlow = {
+  seniorId: number;
+  replaceMedicineId?: number; // 다시 등록하기: 등록 후 삭제할 기존 약
+  extraBackSteps?: number; // 등록 후 흐름 시작 화면보다 더 건너뛸 기록 수
+};
+
 // 약 정보 입력 화면으로 넘기는 값
 // recognized: AI 인식 결과 중 선택한 약만 전달 / manual: 직접 입력
-export type MedicineFormState =
-  | {
-      seniorId: number;
-      mode: 'recognized';
-      medicines: RecognizedMedicine[];
-      prescription: Prescription;
-    }
-  | { seniorId: number; mode: 'manual' };
+export type MedicineFormState = RegisterFlow &
+  (
+    | {
+        mode: 'recognized';
+        medicines: RecognizedMedicine[];
+        prescription: Prescription;
+      }
+    | { mode: 'manual' }
+  );

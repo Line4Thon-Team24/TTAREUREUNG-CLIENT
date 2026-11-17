@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, SquarePen } from 'lucide-react';
 import FilterChips from '@/components/common/FilterChips';
+import SearchField from '@/components/common/SearchField';
 import GuardianCard from '@/components/guardians/GuardianCard';
 import { getGuardians, setRepresentative } from '@/mocks/guardians';
 import { getSeniors } from '@/mocks/seniors';
 import type { Guardian } from '@/types/guardian';
+import { filterByName } from '@/utils/nameSearch';
 
 const ICON_BUTTON_CLASS =
   'flex size-9 items-center justify-center rounded-full text-[#4B5563] transition-colors active:bg-[#F2F4F6] disabled:text-[#D1D6DB]';
@@ -30,8 +32,19 @@ const GuardianListPage = () => {
   const [guardians, setGuardians] = useState(getGuardians);
   const [seniors] = useState(getSeniors);
   const [sort, setSort] = useState<Sort>('representative');
+  const [isSearching, setIsSearching] = useState(false);
+  const [keyword, setKeyword] = useState('');
 
   const hasGuardian = guardians.length > 0;
+  const visibleGuardians = sortGuardians(
+    filterByName(guardians, keyword),
+    sort
+  );
+
+  const toggleSearch = () => {
+    setIsSearching((prev) => !prev);
+    setKeyword('');
+  };
 
   const handleSetRepresentative = (id: number) => {
     setRepresentative(id);
@@ -48,10 +61,12 @@ const GuardianListPage = () => {
           </span>
         </div>
         <div className="flex items-center gap-1">
-          {/* 검색은 화면이 정해지면 연결 */}
           <button
             type="button"
             aria-label="보호자 검색"
+            aria-pressed={isSearching}
+            disabled={!hasGuardian}
+            onClick={toggleSearch}
             className={ICON_BUTTON_CLASS}
           >
             <Search size={20} strokeWidth={1.83} aria-hidden />
@@ -76,27 +91,45 @@ const GuardianListPage = () => {
         </div>
       </header>
 
-      {hasGuardian ? (
-        <>
-          <FilterChips options={SORTS} value={sort} onChange={setSort} />
-          <ul className="flex flex-col gap-6 px-5 pt-3 pb-6">
-            {sortGuardians(guardians, sort).map((guardian) => (
-              <li key={guardian.id}>
-                <GuardianCard
-                  guardian={guardian}
-                  seniors={seniors}
-                  onSetRepresentative={() =>
-                    handleSetRepresentative(guardian.id)
-                  }
-                />
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : (
+      {isSearching && hasGuardian && (
+        <div className="px-5 pb-3">
+          <SearchField
+            value={keyword}
+            onChange={setKeyword}
+            placeholder="보호자 이름으로 검색해주세요."
+            aria-label="보호자 검색"
+            autoFocus
+          />
+        </div>
+      )}
+
+      {!hasGuardian ? (
         <p className="flex flex-1 items-center justify-center text-[14px] text-[#6B7684]">
           등록된 보호자가 없어요.
         </p>
+      ) : (
+        <>
+          <FilterChips options={SORTS} value={sort} onChange={setSort} />
+          {visibleGuardians.length === 0 ? (
+            <p className="flex flex-1 items-center justify-center text-[14px] text-[#6B7684]">
+              검색 결과가 없어요.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-6 px-5 pt-3 pb-6">
+              {visibleGuardians.map((guardian) => (
+                <li key={guardian.id}>
+                  <GuardianCard
+                    guardian={guardian}
+                    seniors={seniors}
+                    onSetRepresentative={() =>
+                      handleSetRepresentative(guardian.id)
+                    }
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
     </div>
   );

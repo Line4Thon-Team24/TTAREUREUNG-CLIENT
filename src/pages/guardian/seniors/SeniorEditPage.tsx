@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import StepHeader from '@/components/common/StepHeader';
 import SeniorInfoForm from '@/components/seniors/SeniorInfoForm';
+import useGoBack from '@/hooks/useGoBack';
 import { getSenior, updateSenior } from '@/mocks/seniors';
 import {
   isSeniorFormChanged,
@@ -13,7 +14,7 @@ import {
 } from '@/utils/seniorForm';
 
 const SeniorEditPage = () => {
-  const navigate = useNavigate();
+  const goBack = useGoBack();
   const { seniorId } = useParams();
 
   const [senior] = useState(() => getSenior(Number(seniorId)));
@@ -33,13 +34,13 @@ const SeniorEditPage = () => {
   // 바꾼 내용이 있으면 버릴지 먼저 확인
   const handleCancel = () => {
     if (isChanged) setIsDiscardOpen(true);
-    else navigate(-1);
+    else goBack('/seniors');
   };
 
   const handleSubmit = () => {
     if (!canSubmit) return;
     updateSenior(senior.id, toSeniorForm(form));
-    navigate(-1);
+    goBack('/seniors');
   };
 
   return (
@@ -75,7 +76,7 @@ const SeniorEditPage = () => {
         onCancel={() => setIsDiscardOpen(false)}
         onConfirm={() => {
           setIsDiscardOpen(false);
-          navigate(-1);
+          goBack('/seniors');
         }}
       />
     </div>

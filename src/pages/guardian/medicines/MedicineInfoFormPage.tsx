@@ -4,9 +4,14 @@ import { Sparkles } from 'lucide-react';
 import Button from '@/components/common/Button';
 import StepHeader from '@/components/common/StepHeader';
 import MedicineInfoCard from '@/components/medicines/MedicineInfoCard';
-import { addMedicines, createEmptyMedicineForm } from '@/mocks/medicines';
+import {
+  addMedicines,
+  createEmptyMedicineForm,
+  deleteMedicines,
+} from '@/mocks/medicines';
 import type { MedicineForm, MedicineFormState } from '@/types/medicine';
 import { formatDateTime } from '@/utils/date';
+import { getHistoryIndex } from '@/utils/history';
 import { isMedicineFormValid, trimMedicineForm } from '@/utils/medicineForm';
 
 // 입력 중인 약 (인식 결과의 고유 ID 기준으로 관리)
@@ -57,12 +62,20 @@ const MedicineInfoFormPage = () => {
       drafts.map(({ form }) => trimMedicineForm(form)),
       state.mode === 'recognized' ? state.prescription : null
     );
+    // 다시 등록하기면 기존 약 삭제
+    if (state.replaceMedicineId !== undefined) {
+      deleteMedicines([state.replaceMedicineId]);
+    }
     // 이동하기 전에 완료 표시 (등록 처리 중 다시 렌더링되어도 이동과 엇갈리지 않도록 state를 바꾸지 않음)
     completedKeys.add(location.key);
     // 약 등록 흐름(방법 선택 → AI 인식 결과 → 입력)을 기록에서 되돌려 시작 화면으로 이동
     // → 등록 후 뒤로가기로 입력 화면에 다시 들어가 중복 등록하는 것을 방지
     // (인식 결과 다시 올리기·약 선택은 replace라 기록이 늘지 않음)
-    navigate(isManual ? -2 : -3);
+    // 흐름 시작 화면이 거쳐 갈 곳이면 더 건너뜀 (삭제된 약의 수정 화면, 시니어 등록 완료 화면)
+    const steps = (isManual ? 2 : 3) + (state.extraBackSteps ?? 0);
+    // 앱 안 기록이 모자라면(주소로 바로 들어온 경우) 약 목록으로
+    if (getHistoryIndex() >= steps) navigate(-steps);
+    else navigate(`/medicines?seniorId=${state.seniorId}`, { replace: true });
   };
 
   return (
