@@ -45,6 +45,18 @@ export const diffDays = (from: string, to: string) =>
       86_400_000
   );
 
+// 날짜가 포함된 주의 7일 (일요일 시작)
+export const getWeekDates = (date: Date) =>
+  Array.from(
+    { length: 7 },
+    (_, day) =>
+      new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate() - date.getDay() + day
+      )
+  );
+
 // 달력에 그릴 주 목록 (일요일 시작, 앞뒤 달 날짜 포함)
 export const getMonthWeeks = (year: number, month: number) => {
   const first = new Date(year, month, 1);
