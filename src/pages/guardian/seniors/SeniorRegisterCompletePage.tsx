@@ -2,11 +2,13 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import Button from '@/components/common/Button';
 import BrandBadge from '@/components/common/BrandBadge';
+import useGoBack from '@/hooks/useGoBack';
 import { getMedicines } from '@/mocks/medicines';
 
 const SeniorRegisterCompletePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const goBack = useGoBack();
 
   const state = location.state as {
     seniorId?: number;
@@ -60,7 +62,10 @@ const SeniorRegisterCompletePage = () => {
         <button
           type="button"
           onClick={() =>
-            navigate(state?.returnTo ?? '/schedule', { replace: true })
+            // 시작한 화면으로 돌아가고, 회원가입 직후면 복용 일정으로
+            state?.returnTo
+              ? goBack(state.returnTo)
+              : navigate('/schedule', { replace: true })
           }
           className="text-[16px] text-[#333D4B] underline"
         >

@@ -33,7 +33,11 @@ const SchedulePage = () => {
           <EmptyState
             message="등록된 시니어가 없어요!"
             actionLabel="시니어 등록하기"
-            onAction={() => navigate('/seniors/register')}
+            onAction={() =>
+              navigate('/seniors/register', {
+                state: { returnTo: `${location.pathname}${location.search}` },
+              })
+            }
           />
         </div>
       );
@@ -93,7 +97,9 @@ const SchedulePage = () => {
             selectedId={selectedSeniorId}
             onSelect={selectSenior}
             onAdd={() =>
-              navigate('/seniors/add', { state: { returnTo: '/schedule' } })
+              navigate('/seniors/add', {
+                state: { returnTo: `${location.pathname}${location.search}` },
+              })
             }
           />
         </div>

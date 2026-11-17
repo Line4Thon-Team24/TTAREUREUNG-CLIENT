@@ -108,7 +108,11 @@ const MedicineListPage = () => {
           <EmptyState
             message="등록된 시니어가 없어요!"
             actionLabel="시니어 등록하기"
-            onAction={() => navigate('/seniors/register')}
+            onAction={() =>
+              navigate('/seniors/register', {
+                state: { returnTo: '/medicines' },
+              })
+            }
           />
         </div>
       ) : !hasMedicine ? (

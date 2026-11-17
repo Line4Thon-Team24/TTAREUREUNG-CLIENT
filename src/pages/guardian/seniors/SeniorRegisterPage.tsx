@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import BackHeader from '@/components/common/BackHeader';
 import BirthDateField, {
   type BirthDate,
@@ -8,6 +8,7 @@ import Button from '@/components/common/Button';
 import FormField from '@/components/common/FormField';
 import SelectField from '@/components/common/SelectField';
 import TextField from '@/components/common/TextField';
+import useGoBack from '@/hooks/useGoBack';
 import BrandBadge from '@/components/common/BrandBadge';
 import { GENDER_OPTIONS } from '@/constants/senior';
 import { addSenior } from '@/mocks/seniors';
@@ -25,6 +26,10 @@ const pad = (value: string) => value.padStart(2, '0');
 
 const SeniorRegisterPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const goBack = useGoBack();
+  // 등록을 시작한 화면 (없으면 회원가입 직후 등록 → 복용 일정)
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
   const [step, setStep] = useState<number>(STEP.NAME);
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState<BirthDate>({
@@ -74,7 +79,7 @@ const SeniorRegisterPage = () => {
     // 완료 화면은 등록을 거쳐 온 경우에만 보이도록 state 전달 (약 등록에 시니어 id 사용)
     navigate('/seniors/register/complete', {
       replace: true,
-      state: { seniorId: senior.id },
+      state: { seniorId: senior.id, returnTo },
     });
   };
 
@@ -165,8 +170,12 @@ const SeniorRegisterPage = () => {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      {/* 주소로 바로 들어온 경우에도 안전하게 복용 일정으로 이동 */}
-      <BackHeader onBack={() => navigate('/schedule', { replace: true })} />
+      {/* 시작한 화면으로 돌아가고, 회원가입 직후·주소로 바로 들어온 경우엔 복용 일정으로 */}
+      <BackHeader
+        onBack={() =>
+          returnTo ? goBack(returnTo) : navigate('/schedule', { replace: true })
+        }
+      />
 
       <div className="flex flex-1 flex-col gap-8 pt-8">
         <section className="flex flex-col items-start gap-2 px-5">

@@ -86,7 +86,11 @@ const ScheduleMonthPage = () => {
           ) : (
             <button
               type="button"
-              onClick={() => navigate('/seniors/register')}
+              onClick={() =>
+                navigate('/seniors/register', {
+                  state: { returnTo: `${location.pathname}${location.search}` },
+                })
+              }
               className="rounded-full bg-[#F2F4F6] px-3 py-1 text-[12px] font-semibold whitespace-nowrap text-[#6B7684]"
             >
               시니어 등록하기
