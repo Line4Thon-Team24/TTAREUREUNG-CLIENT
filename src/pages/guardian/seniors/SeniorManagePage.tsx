@@ -138,7 +138,7 @@ const SeniorManagePage = () => {
       <ConfirmModal
         open={isConfirmOpen}
         message={
-          '선택된 시니어와 등록된 약 정보가 삭제됩니다.\n정말 삭제하시겠습니까?'
+          '선택된 시니어와 약 정보, 담당 보호자가\n함께 삭제됩니다. 정말 삭제하시겠습니까?'
         }
         cancelLabel="취소"
         confirmLabel="삭제하기"

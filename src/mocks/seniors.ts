@@ -1,3 +1,4 @@
+import { deleteGuardians, getGuardians } from '@/mocks/guardians';
 import { deleteMedicines, getMedicines } from '@/mocks/medicines';
 import type { Senior, SeniorForm } from '@/types/senior';
 
@@ -62,8 +63,13 @@ export const toggleFavorite = (id: number) => {
   if (senior) senior.isFavorite = !senior.isFavorite;
 };
 
-// 시니어 삭제 (등록된 약도 함께 삭제)
+// 시니어 삭제 (등록된 약, 담당 보호자도 함께 삭제)
 export const deleteSeniors = (ids: number[]) => {
+  deleteGuardians(
+    getGuardians()
+      .filter((guardian) => ids.includes(guardian.seniorId))
+      .map((guardian) => guardian.id)
+  );
   for (const id of ids) {
     deleteMedicines(getMedicines(id).map((medicine) => medicine.id));
     const index = seniors.findIndex((senior) => senior.id === id);
