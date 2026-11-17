@@ -1,17 +1,18 @@
 import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import SearchField from '@/components/common/SearchField';
 import StepHeader from '@/components/common/StepHeader';
 import SeniorCard from '@/components/seniors/SeniorCard';
+import useGoBack from '@/hooks/useGoBack';
 import { getMedicines } from '@/mocks/medicines';
 import { deleteSeniors, getSeniors } from '@/mocks/seniors';
 import { filterByName } from '@/utils/nameSearch';
 
 const SeniorManagePage = () => {
-  const navigate = useNavigate();
+  const goBack = useGoBack();
   // 목록과 같은 최근 추가순
   const [seniors] = useState(() =>
     getSeniors().sort((a, b) => b.registeredAt.localeCompare(a.registeredAt))
@@ -54,13 +55,12 @@ const SeniorManagePage = () => {
   const handleDelete = () => {
     deleteSeniors(selectedIds);
     setIsConfirmOpen(false);
-    // 주소로 바로 들어온 경우에도 목록으로
-    navigate('/seniors', { replace: true });
+    goBack('/seniors');
   };
 
   return (
     <div className="flex h-dvh flex-col">
-      <StepHeader title="시니어 목록 편집" />
+      <StepHeader title="시니어 목록 편집" onBack={() => goBack('/seniors')} />
 
       <div className="flex items-center justify-between px-5 py-4">
         <label className="flex items-center gap-2 px-1.25 text-[14px] font-semibold text-[#191F28]">
@@ -120,7 +120,7 @@ const SeniorManagePage = () => {
 
       <div className="z-10 flex shrink-0 gap-3 border-t border-[#E5E8EB] bg-white px-5 pt-4 pb-10">
         <div className="w-29.25 shrink-0">
-          <Button variant="secondary" onClick={() => navigate(-1)}>
+          <Button variant="secondary" onClick={() => goBack('/seniors')}>
             취소
           </Button>
         </div>

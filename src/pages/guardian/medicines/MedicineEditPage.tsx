@@ -5,6 +5,7 @@ import ConfirmModal from '@/components/common/ConfirmModal';
 import StepHeader from '@/components/common/StepHeader';
 import MedicineInfoCard from '@/components/medicines/MedicineInfoCard';
 import PrescriptionSummary from '@/components/medicines/PrescriptionSummary';
+import useGoBack from '@/hooks/useGoBack';
 import { getMedicine, updateMedicine } from '@/mocks/medicines';
 import { formatDateTime } from '@/utils/date';
 import {
@@ -22,6 +23,7 @@ type LeaveTarget = 'back' | 'reRegister';
 
 const MedicineEditPage = () => {
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const { medicineId } = useParams();
 
   const [medicine] = useState(() => getMedicine(Number(medicineId)));
@@ -42,7 +44,7 @@ const MedicineEditPage = () => {
 
   const leave = (target: LeaveTarget) => {
     if (target === 'back') {
-      navigate(-1);
+      goBack(`/medicines?seniorId=${medicine.seniorId}`);
     } else {
       // 등록을 마치면 이 약을 새 정보로 교체
       navigate('/medicines/register', {
@@ -66,7 +68,7 @@ const MedicineEditPage = () => {
   const handleSubmit = () => {
     updateMedicine(medicine.id, trimMedicineForm(form));
     setModalStep(null);
-    navigate(-1);
+    goBack(`/medicines?seniorId=${medicine.seniorId}`);
   };
 
   return (
