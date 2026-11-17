@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import SearchField from '@/components/common/SearchField';
 import StepHeader from '@/components/common/StepHeader';
 import GuardianCard from '@/components/guardians/GuardianCard';
+import useGoBack from '@/hooks/useGoBack';
 import {
   changeGuardianSenior,
   deleteGuardians,
@@ -14,19 +15,39 @@ import {
 import { getSeniors } from '@/mocks/seniors';
 import { filterByName } from '@/utils/nameSearch';
 
+// 삭제 확인 / 변경 취소 확인
+type ModalStep = 'delete' | 'discard' | null;
+
 const GuardianManagePage = () => {
-  const navigate = useNavigate();
-  const [guardians, setGuardians] = useState(getGuardians);
+  const goBack = useGoBack();
+  const [savedGuardians] = useState(getGuardians);
   const [seniors] = useState(getSeniors);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  // 저장 전 담당 시니어 변경 (보호자 id → 시니어 id)
+  const [seniorChanges, setSeniorChanges] = useState<Record<number, number>>(
+    {}
+  );
+  const [modalStep, setModalStep] = useState<ModalStep>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [keyword, setKeyword] = useState('');
 
   // 편집할 보호자가 없으면 목록으로
-  if (guardians.length === 0) {
+  if (savedGuardians.length === 0) {
     return <Navigate to="/guardians" replace />;
   }
+
+  // 화면에는 변경 내용을 반영해서 표시 (담당 시니어가 바뀌면 대표 해제)
+  const guardians = savedGuardians.map((guardian) =>
+    guardian.id in seniorChanges
+      ? {
+          ...guardian,
+          seniorId: seniorChanges[guardian.id],
+          isRepresentative: false,
+        }
+      : guardian
+  );
+  const hasChanges = Object.keys(seniorChanges).length > 0;
+  const hasSelection = selectedIds.length > 0;
 
   const visibleGuardians = filterByName(guardians, keyword);
   const visibleIds = visibleGuardians.map(({ id }) => id);
@@ -53,22 +74,47 @@ const GuardianManagePage = () => {
     setKeyword('');
   };
 
-  // 담당 시니어는 바로 반영
+  // 담당 시니어 변경은 저장 전까지 화면에만 반영 (원래 값으로 돌리면 변경 없음)
   const handleChangeSenior = (id: number, seniorId: number) => {
-    changeGuardianSenior(id, seniorId);
-    setGuardians(getGuardians());
+    const original = savedGuardians.find((guardian) => guardian.id === id);
+    setSeniorChanges((prev) => {
+      const next = { ...prev };
+      if (original?.seniorId === seniorId) delete next[id];
+      else next[id] = seniorId;
+      return next;
+    });
+  };
+
+  // 삭제할 보호자를 빼고 담당 시니어 변경 저장
+  const saveChanges = () => {
+    for (const [id, seniorId] of Object.entries(seniorChanges)) {
+      if (!selectedIds.includes(Number(id))) {
+        changeGuardianSenior(Number(id), seniorId);
+      }
+    }
+  };
+
+  const handleSave = () => {
+    saveChanges();
+    goBack('/guardians');
   };
 
   const handleDelete = () => {
+    saveChanges();
     deleteGuardians(selectedIds);
-    setIsConfirmOpen(false);
-    // 주소로 바로 들어온 경우에도 목록으로
-    navigate('/guardians', { replace: true });
+    setModalStep(null);
+    goBack('/guardians');
+  };
+
+  // 바꾼 내용이 있으면 버릴지 먼저 확인
+  const handleCancel = () => {
+    if (hasChanges) setModalStep('discard');
+    else goBack('/guardians');
   };
 
   return (
     <div className="flex h-dvh flex-col">
-      <StepHeader title="보호자 목록 편집" />
+      <StepHeader title="보호자 목록 편집" onBack={handleCancel} />
 
       <div className="flex items-center justify-between px-5 py-4">
         <label className="flex items-center gap-2 px-1.25 text-[14px] font-semibold text-[#191F28]">
@@ -131,29 +177,45 @@ const GuardianManagePage = () => {
 
       <div className="z-10 flex shrink-0 gap-3 border-t border-[#E5E8EB] bg-white px-5 pt-4 pb-10">
         <div className="w-29.25 shrink-0">
-          <Button variant="secondary" onClick={() => navigate(-1)}>
+          <Button variant="secondary" onClick={handleCancel}>
             취소
           </Button>
         </div>
         <div className="min-w-0 flex-1">
-          <Button
-            variant="danger"
-            disabled={selectedIds.length === 0}
-            onClick={() => setIsConfirmOpen(true)}
-          >
-            삭제하기
-          </Button>
+          {/* 선택한 보호자가 없고 담당 시니어만 바꿨으면 저장 버튼 */}
+          {!hasSelection && hasChanges ? (
+            <Button onClick={handleSave}>저장하기</Button>
+          ) : (
+            <Button
+              variant="danger"
+              disabled={!hasSelection}
+              onClick={() => setModalStep('delete')}
+            >
+              삭제하기
+            </Button>
+          )}
         </div>
       </div>
 
       <ConfirmModal
-        open={isConfirmOpen}
+        open={modalStep === 'delete'}
         message={'선택된 보호자가 삭제됩니다.\n정말 삭제하시겠습니까?'}
         cancelLabel="취소"
         confirmLabel="삭제하기"
         confirmVariant="danger"
-        onCancel={() => setIsConfirmOpen(false)}
+        onCancel={() => setModalStep(null)}
         onConfirm={handleDelete}
+      />
+      <ConfirmModal
+        open={modalStep === 'discard'}
+        message={'변경한 내용이 사라집니다.\n그래도 취소하시겠습니까?'}
+        cancelLabel="돌아가기"
+        confirmLabel="취소하기"
+        onCancel={() => setModalStep(null)}
+        onConfirm={() => {
+          setModalStep(null);
+          goBack('/guardians');
+        }}
       />
     </div>
   );
