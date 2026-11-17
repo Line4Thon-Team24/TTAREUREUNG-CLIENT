@@ -15,7 +15,7 @@ import {
 } from '@/mocks/medicines';
 import type { MedicineFormState } from '@/types/medicine';
 import {
-  revokePreviewUrl,
+  releasePreviewUrls,
   toRecognitionState,
   UPLOAD_ACCEPT,
   validatePrescriptionFile,
@@ -73,11 +73,7 @@ const MedicineRecognitionPage = () => {
     setUploadError(errorMessage);
     if (errorMessage) return;
 
-    // 교체되어 더 이상 쓰지 않는 이전 사진의 미리보기 주소 해제
-    // (이미 등록된 약이 쓰고 있는 주소는 유지)
-    if (state.imageUrl && !isPrescriptionImageInUse(state.imageUrl)) {
-      revokePreviewUrl(state);
-    }
+    // 이전 사진 주소는 바로 해제하지 않음 (교체 이동은 앞쪽 기록이 남아 앞으로가기로 다시 쓸 수 있음)
     navigate(location.pathname, {
       replace: true,
       state: toRecognitionState(state, state.source, file),
@@ -142,7 +138,9 @@ const MedicineRecognitionPage = () => {
           {/* 선택한 약이 없으면 비활성, 선택한 약만 다음 화면으로 전달 */}
           <Button
             disabled={selectedMedicines.length === 0}
-            onClick={() =>
+            onClick={() => {
+              // 앞쪽 기록이 지워지므로 지금 사진 외 미리보기 주소 해제
+              releasePreviewUrls(state.imageUrl, isPrescriptionImageInUse);
               navigate('/medicines/register/form', {
                 state: {
                   seniorId: state.seniorId,
@@ -156,8 +154,8 @@ const MedicineRecognitionPage = () => {
                     imageUrl: state.imageUrl,
                   },
                 } satisfies MedicineFormState,
-              })
-            }
+              });
+            }}
           >
             다음
           </Button>

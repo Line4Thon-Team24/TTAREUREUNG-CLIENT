@@ -45,9 +45,26 @@ export const validatePrescriptionFile = async (
   }
 };
 
-// 더 이상 쓰지 않는 미리보기 주소 해제 (메모리 정리)
-export const revokePreviewUrl = (state: RecognitionState) => {
-  if (state.imageUrl) URL.revokeObjectURL(state.imageUrl);
+// 만든 미리보기 주소 (쌓으며 이동할 때 한꺼번에 해제)
+const previewUrls = new Set<string>();
+
+// 지금 화면과 등록된 약이 쓰는 주소만 남기고 해제 (메모리 정리)
+// → 쌓으며 이동하면 앞쪽 기록이 지워져서, 해제한 주소로 다시 들어갈 수 없음
+export const releasePreviewUrls = (
+  keep: string | null,
+  isInUse: (url: string) => boolean
+) => {
+  for (const url of previewUrls) {
+    if (url === keep || isInUse(url)) continue;
+    URL.revokeObjectURL(url);
+    previewUrls.delete(url);
+  }
+};
+
+const createPreviewUrl = (file: File) => {
+  const url = URL.createObjectURL(file);
+  previewUrls.add(url);
+  return url;
 };
 
 // 선택한 파일을 다음 화면으로 넘길 값으로 변환
@@ -62,5 +79,5 @@ export const toRecognitionState = (
   source,
   fileName: file.name,
   // API 연동 전에는 미리보기 주소만 넘김
-  imageUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+  imageUrl: file.type.startsWith('image/') ? createPreviewUrl(file) : null,
 });
