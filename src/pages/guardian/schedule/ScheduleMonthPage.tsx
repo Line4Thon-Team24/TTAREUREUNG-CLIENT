@@ -5,6 +5,7 @@ import SeniorDropdown from '@/components/common/SeniorDropdown';
 import AdherenceSummary from '@/components/schedule/AdherenceSummary';
 import MonthCalendar from '@/components/schedule/MonthCalendar';
 import useDateParam from '@/hooks/useDateParam';
+import useGoBack from '@/hooks/useGoBack';
 import useSelectedSeniorParam from '@/hooks/useSelectedSeniorParam';
 import { SCHEDULE_SENIOR_KEY } from '@/constants/schedule';
 import { getMedicines } from '@/mocks/medicines';
@@ -15,6 +16,7 @@ import { toDateString } from '@/utils/date';
 const ScheduleMonthPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const goBackOr = useGoBack();
   const [seniors] = useState(getSeniors);
   const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(
     seniors,
@@ -33,10 +35,7 @@ const ScheduleMonthPage = () => {
     setDate(new Date(year, month + offset, 1));
 
   // 당일 화면에서 들어왔으면 뒤로, 바로 들어왔으면 당일 화면으로
-  const goBack = () => {
-    if (location.key !== 'default') navigate(-1);
-    else navigate(`/schedule${location.search}`, { replace: true });
-  };
+  const goBack = () => goBackOr(`/schedule${location.search}`);
 
   const goToDate = (next: Date) => {
     const params = new URLSearchParams({ date: toDateString(next) });

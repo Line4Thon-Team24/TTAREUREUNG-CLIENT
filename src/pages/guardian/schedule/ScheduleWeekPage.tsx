@@ -6,6 +6,7 @@ import MedicineDetailModal from '@/components/schedule/MedicineDetailModal';
 import ScheduleTimeline from '@/components/schedule/ScheduleTimeline';
 import WeekStrip from '@/components/schedule/WeekStrip';
 import useDateParam from '@/hooks/useDateParam';
+import useGoBack from '@/hooks/useGoBack';
 import useSelectedSeniorParam from '@/hooks/useSelectedSeniorParam';
 import { SCHEDULE_SENIOR_KEY } from '@/constants/schedule';
 import { getMedicine } from '@/mocks/medicines';
@@ -16,6 +17,7 @@ import type { Medicine } from '@/types/medicine';
 const ScheduleWeekPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const goBackOr = useGoBack();
   const [seniors] = useState(getSeniors);
   // 월 달력과 시니어·날짜 공유 (주소에 저장)
   const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(
@@ -29,10 +31,7 @@ const ScheduleWeekPage = () => {
     selectedSeniorId === null ? [] : getDailySchedule(selectedSeniorId, date);
 
   // 월 달력에서 들어왔으면 뒤로, 바로 들어왔으면 월 달력으로
-  const goBack = () => {
-    if (location.key !== 'default') navigate(-1);
-    else navigate(`/schedule/month${location.search}`, { replace: true });
-  };
+  const goBack = () => goBackOr(`/schedule/month${location.search}`);
 
   return (
     <div className="flex flex-1 flex-col">

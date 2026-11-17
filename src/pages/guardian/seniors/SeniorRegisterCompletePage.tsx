@@ -5,6 +5,7 @@ import BrandBadge from '@/components/common/BrandBadge';
 import useGoBack from '@/hooks/useGoBack';
 import { getMedicines } from '@/mocks/medicines';
 import type { RegisterFlow } from '@/types/medicine';
+import { getHistoryIndex } from '@/utils/history';
 
 const SeniorRegisterCompletePage = () => {
   const navigate = useNavigate();
@@ -54,11 +55,12 @@ const SeniorRegisterCompletePage = () => {
       <div className="flex flex-col items-center gap-3 px-5 pt-4 pb-10">
         <Button
           onClick={() =>
-            // 시작한 화면이 있으면 등록 후 이 화면도 건너뛰어 바로 돌아감
+            // 앱 안에 시작한 화면 기록이 있으면 등록 후 이 화면도 건너뛰어 바로 돌아감
             navigate('/medicines/register', {
               state: {
                 seniorId,
-                extraBackSteps: state?.returnTo ? 1 : 0,
+                extraBackSteps:
+                  state?.returnTo && getHistoryIndex() > 0 ? 1 : 0,
               } satisfies RegisterFlow,
             })
           }
