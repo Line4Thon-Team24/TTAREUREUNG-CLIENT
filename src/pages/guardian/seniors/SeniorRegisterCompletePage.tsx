@@ -2,6 +2,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import Button from '@/components/common/Button';
 import BrandBadge from '@/components/common/BrandBadge';
+import { getMedicines } from '@/mocks/medicines';
 
 const SeniorRegisterCompletePage = () => {
   const navigate = useNavigate();
@@ -16,6 +17,11 @@ const SeniorRegisterCompletePage = () => {
   // 등록을 거치지 않고 주소로 바로 들어온 경우 복용 일정으로 이동
   if (seniorId === undefined) {
     return <Navigate to="/schedule" replace />;
+  }
+
+  // 약 등록을 마치고 돌아오면 원래 가려던 화면으로
+  if (getMedicines(seniorId).length > 0) {
+    return <Navigate to={state?.returnTo ?? '/schedule'} replace />;
   }
 
   return (
@@ -45,10 +51,8 @@ const SeniorRegisterCompletePage = () => {
       <div className="flex flex-col items-center gap-3 px-5 pt-4 pb-10">
         <Button
           onClick={() =>
-            navigate('/medicines/register', {
-              replace: true,
-              state: { seniorId },
-            })
+            // 기록에 남겨서 약 등록 후 이 화면으로 돌아오게 함
+            navigate('/medicines/register', { state: { seniorId } })
           }
         >
           약 등록하러 가기
