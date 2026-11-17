@@ -53,6 +53,10 @@ const GuardianManagePage = () => {
   const visibleIds = visibleGuardians.map(({ id }) => id);
   const isAllSelected =
     visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
+  // 검색으로 가려졌지만 선택된 보호자 (삭제 확인 때 함께 안내)
+  const hiddenCount = selectedIds.filter(
+    (id) => !visibleIds.includes(id)
+  ).length;
 
   const toggleGuardian = (id: number) => {
     setSelectedIds((prev) =>
@@ -191,7 +195,7 @@ const GuardianManagePage = () => {
               disabled={!hasSelection}
               onClick={() => setModalStep('delete')}
             >
-              삭제하기
+              {hasSelection ? `${selectedIds.length}명 삭제하기` : '삭제하기'}
             </Button>
           )}
         </div>
@@ -199,7 +203,11 @@ const GuardianManagePage = () => {
 
       <ConfirmModal
         open={modalStep === 'delete'}
-        message={'선택된 보호자가 삭제됩니다.\n정말 삭제하시겠습니까?'}
+        message={`선택된 보호자 ${selectedIds.length}명이 삭제됩니다.${
+          hiddenCount > 0
+            ? `\n(검색 결과에 보이지 않는 ${hiddenCount}명 포함)`
+            : ''
+        }\n정말 삭제하시겠습니까?`}
         cancelLabel="취소"
         confirmLabel="삭제하기"
         confirmVariant="danger"

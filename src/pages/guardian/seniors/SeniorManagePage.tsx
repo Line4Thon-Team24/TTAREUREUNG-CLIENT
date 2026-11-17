@@ -32,6 +32,11 @@ const SeniorManagePage = () => {
   const isAllSelected =
     visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
 
+  // 검색으로 가려졌지만 선택된 시니어 (삭제 확인 때 함께 안내)
+  const hiddenCount = selectedIds.filter(
+    (id) => !visibleIds.includes(id)
+  ).length;
+
   const toggleSenior = (id: number) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((prevId) => prevId !== id) : [...prev, id]
@@ -130,16 +135,20 @@ const SeniorManagePage = () => {
             disabled={selectedIds.length === 0}
             onClick={() => setIsConfirmOpen(true)}
           >
-            삭제하기
+            {selectedIds.length > 0
+              ? `${selectedIds.length}명 삭제하기`
+              : '삭제하기'}
           </Button>
         </div>
       </div>
 
       <ConfirmModal
         open={isConfirmOpen}
-        message={
-          '선택된 시니어와 약 정보, 담당 보호자가\n함께 삭제됩니다. 정말 삭제하시겠습니까?'
-        }
+        message={`선택된 시니어 ${selectedIds.length}명과 약 정보, 담당 보호자가\n함께 삭제됩니다.${
+          hiddenCount > 0
+            ? `\n(검색 결과에 보이지 않는 ${hiddenCount}명 포함)`
+            : ''
+        }\n정말 삭제하시겠습니까?`}
         cancelLabel="취소"
         confirmLabel="삭제하기"
         confirmVariant="danger"
