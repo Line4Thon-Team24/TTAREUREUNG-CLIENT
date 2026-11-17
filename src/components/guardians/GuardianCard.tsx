@@ -34,19 +34,21 @@ export default function GuardianCard({
   const isRepresentative = guardian.isRepresentative && !selectable;
   const checkboxId = `guardian-select-${guardian.id}`;
 
-  const borderClass = selected
-    ? 'border-[#01A16A]'
-    : isRepresentative
-      ? 'border-[#CDEBD8]'
-      : 'border-[#E5E8EB]';
+  // 선택해도 테두리는 그대로 (체크박스로만 표시)
+  const borderClass = isRepresentative
+    ? 'border-[#CDEBD8]'
+    : 'border-[#E5E8EB]';
 
   return (
     // 드롭다운이 열리면 아래 카드보다 위에 보이도록
     <article
-      className={`relative flex w-full flex-col gap-3 rounded-2xl border bg-white p-4.25 drop-shadow-[0_2px_5px_rgba(0,0,0,0.04)] transition-colors has-[[aria-expanded=true]]:z-10 ${borderClass}`}
+      className={`relative flex w-full flex-col gap-3 rounded-2xl border bg-white p-4.25 drop-shadow-[0_2px_5px_rgba(0,0,0,0.04)] has-[[aria-expanded=true]]:z-10 ${borderClass}`}
     >
       <header className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
+        {/* 체크박스 ↔ 이름 8px, 대표 깃발 ↔ 이름 4px */}
+        <div
+          className={`flex min-w-0 items-center ${selectable ? 'gap-2' : 'gap-1'}`}
+        >
           {selectable && (
             <input
               id={checkboxId}

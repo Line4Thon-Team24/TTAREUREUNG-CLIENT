@@ -32,7 +32,8 @@ export default function MedicineCard({
 
   return (
     <article
-      className={`flex w-full flex-col gap-3 rounded-2xl border bg-white p-4.25 drop-shadow-[0_2px_5px_rgba(0,0,0,0.04)] transition-colors ${selected ? 'border-[#01A16A]' : 'border-[#CDEBD8]'}`}
+      // 선택해도 테두리는 그대로 (체크박스로만 표시)
+      className="flex w-full flex-col gap-3 rounded-2xl border border-[#CDEBD8] bg-white p-4.25 drop-shadow-[0_2px_5px_rgba(0,0,0,0.04)]"
     >
       <header className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-2">
