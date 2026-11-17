@@ -7,6 +7,7 @@ import MedicineInfoCard from '@/components/medicines/MedicineInfoCard';
 import PrescriptionSummary from '@/components/medicines/PrescriptionSummary';
 import useGoBack from '@/hooks/useGoBack';
 import { getMedicine, updateMedicine } from '@/mocks/medicines';
+import type { RegisterFlow } from '@/types/medicine';
 import { formatDateTime } from '@/utils/date';
 import {
   isMedicineFormChanged,
@@ -46,9 +47,13 @@ const MedicineEditPage = () => {
     if (target === 'back') {
       goBack(`/medicines?seniorId=${medicine.seniorId}`);
     } else {
-      // 등록을 마치면 이 약을 새 정보로 교체
+      // 등록을 마치면 이 약을 새 정보로 교체하고, 수정 화면은 건너뛰어 목록으로
       navigate('/medicines/register', {
-        state: { seniorId: medicine.seniorId, replaceMedicineId: medicine.id },
+        state: {
+          seniorId: medicine.seniorId,
+          replaceMedicineId: medicine.id,
+          extraBackSteps: 1,
+        } satisfies RegisterFlow,
       });
     }
   };

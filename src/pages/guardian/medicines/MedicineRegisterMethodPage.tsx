@@ -12,7 +12,7 @@ import BrandBadge from '@/components/common/BrandBadge';
 import MethodOptionCard from '@/components/medicines/MethodOptionCard';
 import UploadErrorMessage from '@/components/medicines/UploadErrorMessage';
 import useLatestRequest from '@/hooks/useLatestRequest';
-import type { MedicineFormState } from '@/types/medicine';
+import type { MedicineFormState, RegisterFlow } from '@/types/medicine';
 import {
   toRecognitionState,
   UPLOAD_ACCEPT,
@@ -23,11 +23,8 @@ import {
 const MedicineRegisterMethodPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { seniorId, replaceMedicineId } =
-    (location.state as {
-      seniorId?: number;
-      replaceMedicineId?: number;
-    } | null) ?? {};
+  const flow = location.state as RegisterFlow | null;
+  const seniorId = flow?.seniorId;
 
   const galleryRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -56,7 +53,7 @@ const MedicineRegisterMethodPage = () => {
       if (errorMessage) return;
 
       navigate('/medicines/register/recognition', {
-        state: toRecognitionState(seniorId, source, file, replaceMedicineId),
+        state: toRecognitionState({ ...flow, seniorId }, source, file),
       });
     };
 
@@ -128,8 +125,8 @@ const MedicineRegisterMethodPage = () => {
             onClick={() =>
               navigate('/medicines/register/form', {
                 state: {
+                  ...flow,
                   seniorId,
-                  replaceMedicineId,
                   mode: 'manual',
                 } satisfies MedicineFormState,
               })

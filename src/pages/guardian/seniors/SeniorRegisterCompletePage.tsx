@@ -4,6 +4,7 @@ import Button from '@/components/common/Button';
 import BrandBadge from '@/components/common/BrandBadge';
 import useGoBack from '@/hooks/useGoBack';
 import { getMedicines } from '@/mocks/medicines';
+import type { RegisterFlow } from '@/types/medicine';
 
 const SeniorRegisterCompletePage = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const SeniorRegisterCompletePage = () => {
     return <Navigate to="/schedule" replace />;
   }
 
-  // 약 등록을 마치고 돌아오면 원래 가려던 화면으로
+  // 회원가입 직후 약 등록을 마치고 돌아오면 복용 일정으로
   if (getMedicines(seniorId).length > 0) {
     return <Navigate to={state?.returnTo ?? '/schedule'} replace />;
   }
@@ -53,8 +54,13 @@ const SeniorRegisterCompletePage = () => {
       <div className="flex flex-col items-center gap-3 px-5 pt-4 pb-10">
         <Button
           onClick={() =>
-            // 기록에 남겨서 약 등록 후 이 화면으로 돌아오게 함
-            navigate('/medicines/register', { state: { seniorId } })
+            // 시작한 화면이 있으면 등록 후 이 화면도 건너뛰어 바로 돌아감
+            navigate('/medicines/register', {
+              state: {
+                seniorId,
+                extraBackSteps: state?.returnTo ? 1 : 0,
+              } satisfies RegisterFlow,
+            })
           }
         >
           약 등록하러 가기
