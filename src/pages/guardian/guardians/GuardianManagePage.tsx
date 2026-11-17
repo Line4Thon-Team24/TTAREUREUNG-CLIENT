@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import SearchField from '@/components/common/SearchField';
 import StepHeader from '@/components/common/StepHeader';
 import GuardianCard from '@/components/guardians/GuardianCard';
 import {
@@ -11,6 +12,7 @@ import {
   getGuardians,
 } from '@/mocks/guardians';
 import { getSeniors } from '@/mocks/seniors';
+import { filterByName } from '@/utils/nameSearch';
 
 const GuardianManagePage = () => {
   const navigate = useNavigate();
@@ -18,14 +20,18 @@ const GuardianManagePage = () => {
   const [seniors] = useState(getSeniors);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [keyword, setKeyword] = useState('');
 
   // 편집할 보호자가 없으면 목록으로
   if (guardians.length === 0) {
     return <Navigate to="/guardians" replace />;
   }
 
-  const allIds = guardians.map(({ id }) => id);
-  const isAllSelected = allIds.every((id) => selectedIds.includes(id));
+  const visibleGuardians = filterByName(guardians, keyword);
+  const visibleIds = visibleGuardians.map(({ id }) => id);
+  const isAllSelected =
+    visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
 
   const toggleGuardian = (id: number) => {
     setSelectedIds((prev) =>
@@ -33,7 +39,19 @@ const GuardianManagePage = () => {
     );
   };
 
-  const toggleAll = () => setSelectedIds(isAllSelected ? [] : allIds);
+  // 전체 선택은 지금 보이는(검색된) 보호자 기준
+  const toggleAll = () => {
+    setSelectedIds((prev) =>
+      isAllSelected
+        ? prev.filter((id) => !visibleIds.includes(id))
+        : [...new Set([...prev, ...visibleIds])]
+    );
+  };
+
+  const toggleSearch = () => {
+    setIsSearching((prev) => !prev);
+    setKeyword('');
+  };
 
   // 담당 시니어는 바로 반영
   const handleChangeSenior = (id: number, seniorId: number) => {
@@ -58,37 +76,57 @@ const GuardianManagePage = () => {
             type="checkbox"
             checked={isAllSelected}
             onChange={toggleAll}
+            disabled={visibleIds.length === 0}
             className="size-4 accent-[#01A16A]"
           />
           전체 선택
         </label>
-        {/* 검색은 화면이 정해지면 연결 */}
         <button
           type="button"
           aria-label="보호자 검색"
+          aria-pressed={isSearching}
+          onClick={toggleSearch}
           className="flex size-6 items-center justify-center text-[#4B5563]"
         >
           <Search size={16} strokeWidth={2} aria-hidden />
         </button>
       </div>
 
+      {isSearching && (
+        <div className="px-5 pb-1">
+          <SearchField
+            value={keyword}
+            onChange={setKeyword}
+            placeholder="보호자 이름으로 검색해주세요."
+            aria-label="보호자 검색"
+            autoFocus
+          />
+        </div>
+      )}
+
       <main className="min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-12">
-        <ul className="flex flex-col gap-6">
-          {guardians.map((guardian) => (
-            <li key={guardian.id}>
-              <GuardianCard
-                guardian={guardian}
-                seniors={seniors}
-                selectable
-                selected={selectedIds.includes(guardian.id)}
-                onToggleSelect={() => toggleGuardian(guardian.id)}
-                onChangeSenior={(seniorId) =>
-                  handleChangeSenior(guardian.id, seniorId)
-                }
-              />
-            </li>
-          ))}
-        </ul>
+        {visibleGuardians.length === 0 ? (
+          <p className="pt-20 text-center text-[14px] text-[#6B7684]">
+            검색 결과가 없어요.
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-6">
+            {visibleGuardians.map((guardian) => (
+              <li key={guardian.id}>
+                <GuardianCard
+                  guardian={guardian}
+                  seniors={seniors}
+                  selectable
+                  selected={selectedIds.includes(guardian.id)}
+                  onToggleSelect={() => toggleGuardian(guardian.id)}
+                  onChangeSenior={(seniorId) =>
+                    handleChangeSenior(guardian.id, seniorId)
+                  }
+                />
+              </li>
+            ))}
+          </ul>
+        )}
       </main>
 
       <div className="z-10 flex shrink-0 gap-3 border-t border-[#E5E8EB] bg-white px-5 pt-4 pb-10">
