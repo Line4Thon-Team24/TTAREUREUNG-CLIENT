@@ -3,6 +3,7 @@ export type UploadSource = 'gallery' | 'file' | 'camera';
 // 약 등록 방법 선택 → AI 인식 결과 화면으로 넘기는 값
 export type RecognitionState = {
   seniorId: number;
+  replaceMedicineId?: number; // 다시 등록하기: 등록 후 삭제할 기존 약
   source: UploadSource;
   fileName: string;
   imageUrl: string | null; // PDF는 미리보기 없음
@@ -53,9 +54,11 @@ export const revokePreviewUrl = (state: RecognitionState) => {
 export const toRecognitionState = (
   seniorId: number,
   source: UploadSource,
-  file: File
+  file: File,
+  replaceMedicineId?: number
 ): RecognitionState => ({
   seniorId,
+  replaceMedicineId,
   source,
   fileName: file.name,
   // API 연동 전에는 미리보기 주소만 넘김

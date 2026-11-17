@@ -53,11 +53,14 @@ export type RecognizedMedicine = {
 
 // 약 정보 입력 화면으로 넘기는 값
 // recognized: AI 인식 결과 중 선택한 약만 전달 / manual: 직접 입력
-export type MedicineFormState =
+export type MedicineFormState = {
+  seniorId: number;
+  replaceMedicineId?: number; // 다시 등록하기: 등록 후 삭제할 기존 약
+} & (
   | {
-      seniorId: number;
       mode: 'recognized';
       medicines: RecognizedMedicine[];
       prescription: Prescription;
     }
-  | { seniorId: number; mode: 'manual' };
+  | { mode: 'manual' }
+);

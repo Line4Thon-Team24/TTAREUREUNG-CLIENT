@@ -80,7 +80,12 @@ const MedicineRecognitionPage = () => {
     }
     navigate(location.pathname, {
       replace: true,
-      state: toRecognitionState(state.seniorId, state.source, file),
+      state: toRecognitionState(
+        state.seniorId,
+        state.source,
+        file,
+        state.replaceMedicineId
+      ),
     });
   };
 
@@ -146,6 +151,7 @@ const MedicineRecognitionPage = () => {
               navigate('/medicines/register/form', {
                 state: {
                   seniorId: state.seniorId,
+                  replaceMedicineId: state.replaceMedicineId,
                   mode: 'recognized',
                   medicines: selectedMedicines,
                   // 약 목록에서 보여줄 처방전 정보

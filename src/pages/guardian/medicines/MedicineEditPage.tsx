@@ -44,8 +44,9 @@ const MedicineEditPage = () => {
     if (target === 'back') {
       navigate(-1);
     } else {
+      // 등록을 마치면 이 약을 새 정보로 교체
       navigate('/medicines/register', {
-        state: { seniorId: medicine.seniorId },
+        state: { seniorId: medicine.seniorId, replaceMedicineId: medicine.id },
       });
     }
   };
