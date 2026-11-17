@@ -15,9 +15,9 @@ const MicPrompt = ({
   keyword,
   trailing = '라고 말씀해주세요!',
 }: MicPromptProps) => (
-  <div className="flex flex-col items-center gap-4 text-center">
-    <span className="flex size-24 items-center justify-center rounded-full bg-bg-secondary-pressed/70">
-      <span className="flex size-16 items-center justify-center rounded-full bg-bg-secondary">
+  <div className="flex flex-col items-center gap-2.5 text-center">
+    <span className="flex size-12 items-center justify-center rounded-full bg-bg-secondary-pressed/70">
+      <span className="flex size-9 items-center justify-center rounded-full bg-bg-secondary">
         <MaskIcon src={microphoneIcon} color="#138A4B" width={20} />
       </span>
     </span>
