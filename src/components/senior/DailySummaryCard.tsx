@@ -2,7 +2,7 @@ import { Pill } from 'lucide-react';
 
 type DailySummaryCardProps = {
   date: Date;
-  dayLabel: string; // 예: 오늘 / 내일
+  isToday: boolean; // 오늘 / 내일 (배지·횟수 색이 다름)
   slotCount: number; // 섭취 횟수
   total: number;
   taken: number;
@@ -16,7 +16,7 @@ const toPercent = (value: number, total: number) =>
 // 하루 복약 요약 (날짜·섭취 횟수·복약 달성률)
 export default function DailySummaryCard({
   date,
-  dayLabel,
+  isToday,
   slotCount,
   total,
   taken,
@@ -32,12 +32,19 @@ export default function DailySummaryCard({
           <h2 className="text-[22px] font-bold text-[#191F28]">
             {date.getMonth() + 1}월 {date.getDate()}일
           </h2>
-          <span className="rounded-md bg-[#CDEBD8] px-2 py-0.5 text-[14px] font-bold text-[#01A16A]">
-            {dayLabel}
+          <span
+            className={`rounded-md px-2 py-0.5 text-[14px] font-bold text-[#01A16A] ${
+              isToday ? 'bg-[#CDEBD8]' : 'bg-[#F2F4F6]'
+            }`}
+          >
+            {isToday ? '오늘' : '내일'}
           </span>
         </div>
         <p className="rounded-lg bg-[#FAFAFA] px-2.5 py-1 text-[16px] font-bold text-[#333D4B]">
-          섭취 횟수: <span className="text-[#01A16A]">{slotCount}회</span>
+          섭취 횟수:{' '}
+          <span className={isToday ? 'text-[#01A16A]' : 'text-[#138A4B]'}>
+            {slotCount}회
+          </span>
         </p>
       </div>
 

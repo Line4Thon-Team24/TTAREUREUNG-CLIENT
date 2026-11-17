@@ -35,11 +35,7 @@ const SeniorSchedulePage = ({ day }: SeniorSchedulePageProps) => {
     <div className="flex min-h-dvh flex-col gap-8 bg-[#FAFAFA] px-5 pt-10 pb-10">
       <h1 className="text-[24px] font-bold text-black">약 복용 일정</h1>
 
-      <DailySummaryCard
-        date={date}
-        dayLabel={isToday ? '오늘' : '내일'}
-        {...summary}
-      />
+      <DailySummaryCard date={date} isToday={isToday} {...summary} />
 
       {slots.length === 0 ? (
         <p className="py-10 text-center text-[16px] text-[#6B7684]">
