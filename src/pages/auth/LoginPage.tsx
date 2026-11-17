@@ -29,7 +29,7 @@ const LoginPage = () => {
       return;
     }
 
-    navigate('/schedule', { replace: true });
+    navigate('/profile/select', { replace: true });
   };
 
   return (
