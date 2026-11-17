@@ -57,7 +57,9 @@ const SeniorFindMedicinePage = () => {
         {isCountdown ? (
           <Countdown onDone={goCamera} />
         ) : (
-          <MicPrompt lead="약을 찾으셨다면" keyword="찾았어" />
+          <button type="button" onClick={goCamera} className="text-center">
+            <MicPrompt lead="약을 찾으셨다면" keyword="찾았어" />
+          </button>
         )}
       </div>
     </div>
