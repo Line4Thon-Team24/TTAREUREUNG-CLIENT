@@ -12,7 +12,10 @@ import BrandBadge from '@/components/common/BrandBadge';
 import MethodOptionCard from '@/components/medicines/MethodOptionCard';
 import UploadErrorMessage from '@/components/medicines/UploadErrorMessage';
 import useLatestRequest from '@/hooks/useLatestRequest';
+import { isPrescriptionImageInUse } from '@/mocks/medicines';
+import type { MedicineFormState, RegisterFlow } from '@/types/medicine';
 import {
+  releasePreviewUrls,
   toRecognitionState,
   UPLOAD_ACCEPT,
   validatePrescriptionFile,
@@ -22,7 +25,8 @@ import {
 const MedicineRegisterMethodPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const seniorId = (location.state as { seniorId?: number } | null)?.seniorId;
+  const flow = location.state as RegisterFlow | null;
+  const seniorId = flow?.seniorId;
 
   const galleryRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -50,9 +54,10 @@ const MedicineRegisterMethodPage = () => {
       setUploadError(errorMessage);
       if (errorMessage) return;
 
-      navigate('/medicines/register/recognition', {
-        state: toRecognitionState(seniorId, source, file),
-      });
+      const next = toRecognitionState({ ...flow, seniorId }, source, file);
+      // 앞쪽 기록이 지워지므로 새 사진 외 미리보기 주소 해제
+      releasePreviewUrls(next.imageUrl, isPrescriptionImageInUse);
+      navigate('/medicines/register/recognition', { state: next });
     };
 
   return (
@@ -122,7 +127,11 @@ const MedicineRegisterMethodPage = () => {
             type="button"
             onClick={() =>
               navigate('/medicines/register/form', {
-                state: { seniorId, mode: 'manual' },
+                state: {
+                  ...flow,
+                  seniorId,
+                  mode: 'manual',
+                } satisfies MedicineFormState,
               })
             }
             className="flex items-center gap-1 text-[14px] font-bold text-[#01A16A]"

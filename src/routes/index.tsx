@@ -9,6 +9,7 @@ import SignupGuardianPage from '@/pages/auth/SignupGuardianPage';
 import SignupCompletePage from '@/pages/auth/SignupCompletePage';
 import SchedulePage from '@/pages/guardian/schedule/SchedulePage';
 import ScheduleMonthPage from '@/pages/guardian/schedule/ScheduleMonthPage';
+import ScheduleWeekPage from '@/pages/guardian/schedule/ScheduleWeekPage';
 import MedicineListPage from '@/pages/guardian/medicines/MedicineListPage';
 import SeniorListPage from '@/pages/guardian/seniors/SeniorListPage';
 import GuardianListPage from '@/pages/guardian/guardians/GuardianListPage';
@@ -17,6 +18,7 @@ import SeniorRegisterPage from '@/pages/guardian/seniors/SeniorRegisterPage';
 import SeniorRegisterCompletePage from '@/pages/guardian/seniors/SeniorRegisterCompletePage';
 import SeniorAddPage from '@/pages/guardian/seniors/SeniorAddPage';
 import SeniorEditPage from '@/pages/guardian/seniors/SeniorEditPage';
+import SeniorManagePage from '@/pages/guardian/seniors/SeniorManagePage';
 import GuardianManagePage from '@/pages/guardian/guardians/GuardianManagePage';
 import GuardianInvitePage from '@/pages/guardian/guardians/GuardianInvitePage';
 import GuardianInviteCompletePage from '@/pages/guardian/guardians/GuardianInviteCompletePage';
@@ -31,6 +33,7 @@ import SeniorRecognitionPage from '@/pages/senior/SeniorRecognitionPage';
 import SeniorFindMedicinePage from '@/pages/senior/SeniorFindMedicinePage';
 import SeniorDosePage from '@/pages/senior/SeniorDosePage';
 import SeniorDoseResultPage from '@/pages/senior/SeniorDoseResultPage';
+import { markNavigated } from '@/utils/history';
 
 export const router = createBrowserRouter([
   {
@@ -60,6 +63,7 @@ export const router = createBrowserRouter([
         children: [
           { path: '/schedule', element: <SchedulePage /> },
           { path: '/schedule/month', element: <ScheduleMonthPage /> },
+          { path: '/schedule/week', element: <ScheduleWeekPage /> },
           { path: '/medicines', element: <MedicineListPage /> },
           { path: '/seniors', element: <SeniorListPage /> },
           { path: '/guardians', element: <GuardianListPage /> },
@@ -75,6 +79,8 @@ export const router = createBrowserRouter([
       // 시니어 추가 / 정보 수정 (시니어 목록)
       { path: '/seniors/add', element: <SeniorAddPage /> },
       { path: '/seniors/:seniorId/edit', element: <SeniorEditPage /> },
+      // 시니어 목록 편집 (선택 삭제)
+      { path: '/seniors/manage', element: <SeniorManagePage /> },
       // 보호자 목록 편집 / 보호자 초대 (보호자 목록)
       { path: '/guardians/manage', element: <GuardianManagePage /> },
       { path: '/guardians/invite', element: <GuardianInvitePage /> },
@@ -109,3 +115,9 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
+// 처음 연 기록과 다른 곳으로 이동하면 기록 (첫 진입과 뒤로 가기 구분용)
+const initialKey = router.state.location.key;
+router.subscribe(({ location }) => {
+  if (location.key !== initialKey) markNavigated();
+});

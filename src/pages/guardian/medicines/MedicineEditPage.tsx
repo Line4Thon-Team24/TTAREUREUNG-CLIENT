@@ -5,7 +5,9 @@ import ConfirmModal from '@/components/common/ConfirmModal';
 import StepHeader from '@/components/common/StepHeader';
 import MedicineInfoCard from '@/components/medicines/MedicineInfoCard';
 import PrescriptionSummary from '@/components/medicines/PrescriptionSummary';
+import useGoBack from '@/hooks/useGoBack';
 import { getMedicine, updateMedicine } from '@/mocks/medicines';
+import type { RegisterFlow } from '@/types/medicine';
 import { formatDateTime } from '@/utils/date';
 import {
   isMedicineFormChanged,
@@ -22,6 +24,7 @@ type LeaveTarget = 'back' | 'reRegister';
 
 const MedicineEditPage = () => {
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const { medicineId } = useParams();
 
   const [medicine] = useState(() => getMedicine(Number(medicineId)));
@@ -42,10 +45,15 @@ const MedicineEditPage = () => {
 
   const leave = (target: LeaveTarget) => {
     if (target === 'back') {
-      navigate(-1);
+      goBack(`/medicines?seniorId=${medicine.seniorId}`);
     } else {
+      // 등록을 마치면 이 약을 새 정보로 교체하고, 수정 화면은 건너뛰어 목록으로
       navigate('/medicines/register', {
-        state: { seniorId: medicine.seniorId },
+        state: {
+          seniorId: medicine.seniorId,
+          replaceMedicineId: medicine.id,
+          extraBackSteps: 1,
+        } satisfies RegisterFlow,
       });
     }
   };
@@ -65,7 +73,7 @@ const MedicineEditPage = () => {
   const handleSubmit = () => {
     updateMedicine(medicine.id, trimMedicineForm(form));
     setModalStep(null);
-    navigate(-1);
+    goBack(`/medicines?seniorId=${medicine.seniorId}`);
   };
 
   return (

@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, SquarePen } from 'lucide-react';
 import EmptyState from '@/components/common/EmptyState';
 import FilterChips from '@/components/common/FilterChips';
+import SearchField from '@/components/common/SearchField';
 import SeniorCard from '@/components/seniors/SeniorCard';
 import { getMedicines } from '@/mocks/medicines';
 import { getSeniors, toggleFavorite } from '@/mocks/seniors';
+import { filterByName } from '@/utils/nameSearch';
 
 const ICON_BUTTON_CLASS =
-  'flex size-9 items-center justify-center rounded-full text-[#4B5563] transition-colors active:bg-[#F2F4F6]';
+  'flex size-9 items-center justify-center rounded-full text-[#4B5563] transition-colors active:bg-[#F2F4F6] disabled:text-[#D1D6DB]';
 
 type Filter = 'recent' | 'favorite';
 
@@ -21,11 +23,20 @@ const SeniorListPage = () => {
   const navigate = useNavigate();
   const [seniors, setSeniors] = useState(getSeniors);
   const [filter, setFilter] = useState<Filter>('recent');
+  const [isSearching, setIsSearching] = useState(false);
+  const [keyword, setKeyword] = useState('');
+
+  const hasSenior = seniors.length > 0;
 
   // 최근 추가순 정렬 (즐겨찾기는 그중 별 표시한 시니어만)
-  const visibleSeniors = seniors
+  const visibleSeniors = filterByName(seniors, keyword)
     .filter((senior) => filter === 'recent' || senior.isFavorite)
     .sort((a, b) => b.registeredAt.localeCompare(a.registeredAt));
+
+  const toggleSearch = () => {
+    setIsSearching((prev) => !prev);
+    setKeyword('');
+  };
 
   const handleToggleFavorite = (id: number) => {
     toggleFavorite(id);
@@ -42,10 +53,12 @@ const SeniorListPage = () => {
           </span>
         </div>
         <div className="flex items-center gap-1">
-          {/* 검색·목록 편집은 화면이 정해지면 연결 */}
           <button
             type="button"
             aria-label="시니어 검색"
+            aria-pressed={isSearching}
+            disabled={!hasSenior}
+            onClick={toggleSearch}
             className={ICON_BUTTON_CLASS}
           >
             <Search size={20} strokeWidth={1.83} aria-hidden />
@@ -53,6 +66,8 @@ const SeniorListPage = () => {
           <button
             type="button"
             aria-label="목록 편집"
+            disabled={!hasSenior}
+            onClick={() => navigate('/seniors/manage')}
             className={ICON_BUTTON_CLASS}
           >
             <SquarePen size={20} strokeWidth={1.83} aria-hidden />
@@ -68,21 +83,37 @@ const SeniorListPage = () => {
         </div>
       </header>
 
-      {seniors.length > 0 && (
+      {isSearching && hasSenior && (
+        <div className="px-5 pb-3">
+          <SearchField
+            value={keyword}
+            onChange={setKeyword}
+            placeholder="시니어 이름으로 검색해주세요."
+            aria-label="시니어 검색"
+            autoFocus
+          />
+        </div>
+      )}
+
+      {hasSenior && (
         <FilterChips options={FILTERS} value={filter} onChange={setFilter} />
       )}
 
-      {seniors.length === 0 ? (
+      {!hasSenior ? (
         <div className="flex flex-1 items-center justify-center">
           <EmptyState
             message="등록된 시니어가 없어요!"
             actionLabel="시니어 등록하기"
-            onAction={() => navigate('/seniors/register')}
+            onAction={() =>
+              navigate('/seniors/register', { state: { returnTo: '/seniors' } })
+            }
           />
         </div>
       ) : visibleSeniors.length === 0 ? (
         <p className="flex flex-1 items-center justify-center text-[14px] text-[#6B7684]">
-          즐겨찾기한 시니어가 없어요.
+          {keyword.trim()
+            ? '검색 결과가 없어요.'
+            : '즐겨찾기한 시니어가 없어요.'}
         </p>
       ) : (
         <ul className="flex flex-col gap-6 px-5 pt-3 pb-6">

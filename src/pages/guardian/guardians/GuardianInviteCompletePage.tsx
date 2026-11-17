@@ -1,10 +1,11 @@
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import Button from '@/components/common/Button';
 import BrandBadge from '@/components/common/BrandBadge';
+import useGoBack from '@/hooks/useGoBack';
 
 const GuardianInviteCompletePage = () => {
-  const navigate = useNavigate();
+  const goBack = useGoBack();
   const location = useLocation();
   const invited = (location.state as { invited?: boolean } | null)?.invited;
 
@@ -38,9 +39,7 @@ const GuardianInviteCompletePage = () => {
       </main>
 
       <div className="px-5 pt-4 pb-10">
-        <Button onClick={() => navigate('/guardians', { replace: true })}>
-          확인
-        </Button>
+        <Button onClick={() => goBack('/guardians')}>확인</Button>
       </div>
     </div>
   );

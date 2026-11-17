@@ -6,6 +6,7 @@ import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import FormField from '@/components/common/FormField';
 import TextField from '@/components/common/TextField';
+import useGoBack from '@/hooks/useGoBack';
 import { inviteGuardians } from '@/mocks/guardians';
 import {
   formatPhoneNumber,
@@ -20,6 +21,7 @@ const PHONE_ERRORS = {
 
 const GuardianInvitePage = () => {
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const [phoneInput, setPhoneInput] = useState('');
   const [phoneNumbers, setPhoneNumbers] = useState<string[]>([]);
   const [phoneError, setPhoneError] = useState<
@@ -58,7 +60,7 @@ const GuardianInvitePage = () => {
   // 입력한 내용이 있으면 버릴지 먼저 확인
   const handleCancel = () => {
     if (isChanged) setIsDiscardOpen(true);
-    else navigate(-1);
+    else goBack('/guardians');
   };
 
   const handleSubmit = () => {
@@ -148,7 +150,7 @@ const GuardianInvitePage = () => {
         onCancel={() => setIsDiscardOpen(false)}
         onConfirm={() => {
           setIsDiscardOpen(false);
-          navigate(-1);
+          goBack('/guardians');
         }}
       />
     </div>
