@@ -66,6 +66,7 @@ const SeniorListPage = () => {
           <button
             type="button"
             aria-label="목록 편집"
+            disabled={!hasSenior}
             onClick={() => navigate('/seniors/manage')}
             className={ICON_BUTTON_CLASS}
           >
