@@ -27,6 +27,10 @@ import MedicineInfoFormPage from '@/pages/guardian/medicines/MedicineInfoFormPag
 import MedicineManagePage from '@/pages/guardian/medicines/MedicineManagePage';
 import MedicineEditPage from '@/pages/guardian/medicines/MedicineEditPage';
 import SeniorIncomingCallPage from '@/pages/senior/SeniorIncomingCallPage';
+import SeniorRecognitionPage from '@/pages/senior/SeniorRecognitionPage';
+import SeniorFindMedicinePage from '@/pages/senior/SeniorFindMedicinePage';
+import SeniorDosePage from '@/pages/senior/SeniorDosePage';
+import SeniorDoseResultPage from '@/pages/senior/SeniorDoseResultPage';
 
 export const router = createBrowserRouter([
   {
@@ -86,6 +90,11 @@ export const router = createBrowserRouter([
       },
       // 시니어 복약 알림 수신
       { path: '/senior/call', element: <SeniorIncomingCallPage /> },
+      // 시니어 약 인식 흐름: 카메라 인식 → 약 사진 안내 → 복용 안내 → 복용 결과
+      { path: '/senior/recognition', element: <SeniorRecognitionPage /> },
+      { path: '/senior/find', element: <SeniorFindMedicinePage /> },
+      { path: '/senior/dose', element: <SeniorDosePage /> },
+      { path: '/senior/result', element: <SeniorDoseResultPage /> },
       // 약 등록 흐름 (하단 네비게이션 미노출)
       { path: '/medicines/register', element: <MedicineRegisterMethodPage /> },
       {
