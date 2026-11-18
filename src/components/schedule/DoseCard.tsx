@@ -24,7 +24,7 @@ export default function DoseCard({ medicine, onClick }: DoseCardProps) {
   const isMissed = status === 'missed';
   // 약 사진이 없으면 피그마의 기본 사진 (미복용은 다른 사진)
   const backgroundUrl =
-    imageUrl ?? (isMissed ? pillAssortedImage : pillBlisterImage);
+    imageUrl || (isMissed ? pillAssortedImage : pillBlisterImage);
   const ShapeIcon = shape === 'tablet' ? null : SHAPE_ICONS[shape];
 
   return (

@@ -40,6 +40,7 @@ const GuardianInvitePage = () => {
   const [pickedSeniorId, setPickedSeniorId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitError, setIsSubmitError] = useState(false);
+  const [isAlreadyLinked, setIsAlreadyLinked] = useState(false);
   const startRequest = useLatestRequest();
 
   const seniorId = pickedSeniorId ?? seniors?.[0]?.id ?? null;
@@ -95,10 +96,17 @@ const GuardianInvitePage = () => {
     const isLatest = startRequest();
     setIsSubmitting(true);
     setIsSubmitError(false);
+    setIsAlreadyLinked(false);
     try {
       const invitations = await inviteGuardians(seniorId, phoneNumbers);
       // 화면을 떠났으면 이동하지 않음
       if (!isLatest()) return;
+      // 서버는 이미 연결된 번호를 건너뛰어, 모두 연결된 번호면 링크가 없음
+      if (invitations.length === 0) {
+        setIsAlreadyLinked(true);
+        setIsSubmitting(false);
+        return;
+      }
       navigate('/guardians/invite/complete', {
         replace: true,
         state: { invitations },
@@ -191,12 +199,14 @@ const GuardianInvitePage = () => {
         </div>
       </main>
 
-      {isSubmitError && (
+      {(isSubmitError || isAlreadyLinked) && (
         <p
           role="alert"
           className="shrink-0 bg-white px-5 pt-4 text-center text-[13px] text-[#E5484D]"
         >
-          초대 링크를 만들지 못했어요. 다시 시도해주세요.
+          {isAlreadyLinked
+            ? '입력한 번호는 모두 이미 이 시니어의 보호자예요.'
+            : '초대 링크를 만들지 못했어요. 다시 시도해주세요.'}
         </p>
       )}
       <div className="flex shrink-0 gap-3 bg-white px-5 pt-4 pb-10">
