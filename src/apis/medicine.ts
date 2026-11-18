@@ -256,3 +256,16 @@ export const createRecognizedMedicines = async (
   });
   return data.data.medication_ids;
 };
+
+// 직접 입력한 약 등록 (등록된 약 id 반환)
+export const createMedicine = async (seniorId: number, form: MedicineForm) => {
+  const { data } = await apiClient.post<
+    BaseResponse<{ medication_id: number }>
+  >('/medications', {
+    senior_profile_id: seniorId,
+    ...toMedicationRequest(form),
+    registration_type: 'MANUAL',
+    notify_on_miss: true,
+  });
+  return data.data.medication_id;
+};

@@ -1,20 +1,23 @@
 import { Fragment, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
-import { createRecognizedMedicines, deleteMedicines } from '@/apis/medicine';
+import {
+  createMedicine,
+  createRecognizedMedicines,
+  deleteMedicines,
+} from '@/apis/medicine';
 import Button from '@/components/common/Button';
 import StepHeader from '@/components/common/StepHeader';
 import MedicineInfoCard from '@/components/medicines/MedicineInfoCard';
 import useLatestRequest from '@/hooks/useLatestRequest';
-import {
-  addMedicines,
-  createEmptyMedicineForm,
-  deleteMedicines as deleteMockMedicines,
-} from '@/mocks/medicines';
 import type { MedicineForm, MedicineFormState } from '@/types/medicine';
 import { formatDateTime } from '@/utils/date';
 import { getHistoryIndex } from '@/utils/history';
-import { isMedicineFormValid, trimMedicineForm } from '@/utils/medicineForm';
+import {
+  createEmptyMedicineForm,
+  isMedicineFormValid,
+  trimMedicineForm,
+} from '@/utils/medicineForm';
 
 // 입력 중인 약 (인식 결과의 고유 ID 기준으로 관리)
 type MedicineDraft = { id: string; form: MedicineForm };
@@ -75,39 +78,30 @@ const MedicineInfoFormPage = () => {
   const handleSubmit = async () => {
     if (!isValid || isSubmitting) return;
 
-    // TODO: 직접 입력 등록 API 연동 (지금은 목업)
-    if (state.mode === 'manual') {
-      addMedicines(
-        state.seniorId,
-        drafts.map(({ form }) => trimMedicineForm(form)),
-        null
-      );
-      if (state.replaceMedicineId !== undefined) {
-        deleteMockMedicines([state.replaceMedicineId]);
-      }
-      finishRegister();
-      return;
-    }
-
     const isLatest = startRequest();
     setIsSubmitting(true);
     setIsSubmitError(false);
     try {
-      // 선택한 약만 등록 (함량·복용량은 인식 결과에서 가져옴)
-      await createRecognizedMedicines(
-        state.seniorId,
-        drafts.map(({ id, form }) => {
-          const recognized = state.medicines.find(
-            (medicine) => medicine.id === id
-          );
-          return {
-            form: trimMedicineForm(form),
-            strength: recognized?.strength,
-            doseAmount: recognized?.doseAmount,
-          };
-        }),
-        { fileKey: state.fileKey, fileName: state.prescription.fileName }
-      );
+      if (state.mode === 'manual') {
+        // 직접 입력은 약 1개
+        await createMedicine(state.seniorId, trimMedicineForm(drafts[0].form));
+      } else {
+        // 선택한 약만 등록 (함량·복용량은 인식 결과에서 가져옴)
+        await createRecognizedMedicines(
+          state.seniorId,
+          drafts.map(({ id, form }) => {
+            const recognized = state.medicines.find(
+              (medicine) => medicine.id === id
+            );
+            return {
+              form: trimMedicineForm(form),
+              strength: recognized?.strength,
+              doseAmount: recognized?.doseAmount,
+            };
+          }),
+          { fileKey: state.fileKey, fileName: state.prescription.fileName }
+        );
+      }
       // 다시 등록하기면 기존 약 삭제 (실패해도 새 약은 등록됐으므로 계속 진행)
       if (state.replaceMedicineId !== undefined) {
         await deleteMedicines([state.replaceMedicineId]).catch(() => {});
