@@ -196,7 +196,14 @@ const GuardianManagePage = () => {
           guardian.profileId === target.profileId && guardian.id !== target.id
       )
       .map((guardian) => guardian.seniorId);
-    return (seniors ?? []).filter(({ id }) => !taken.includes(id));
+    const options: { id: number; name: string }[] = (seniors ?? []).filter(
+      ({ id }) => !taken.includes(id)
+    );
+    // 다른 계정 시니어는 내 시니어 목록에 없어 현재 담당 시니어를 선택지에 추가
+    if (!options.some(({ id }) => id === target.seniorId)) {
+      options.unshift({ id: target.seniorId, name: target.seniorName });
+    }
+    return options;
   };
 
   // 바꾼 내용이 있으면 버릴지 먼저 확인
@@ -306,11 +313,11 @@ const GuardianManagePage = () => {
 
       <ConfirmModal
         open={modalStep === 'delete'}
-        message={`선택된 보호자 ${selectedIds.length}명이 삭제됩니다.${
+        message={`선택된 보호자 ${selectedIds.length}명이 담당 시니어에서 빠집니다.${
           hiddenCount > 0
             ? `\n(검색 결과에 보이지 않는 ${hiddenCount}명 포함)`
             : ''
-        }\n정말 삭제하시겠습니까?`}
+        }\n정말 진행하시겠습니까?`}
         cancelLabel="취소"
         confirmLabel="삭제하기"
         confirmVariant="danger"

@@ -21,6 +21,7 @@ const toGuardian = ({
         : null,
   phoneNumber: guardian.phoneNumber ?? '',
   seniorId: senior.profileId,
+  seniorName: senior.name,
   isRepresentative: isPrimary,
   isMe: false,
 });

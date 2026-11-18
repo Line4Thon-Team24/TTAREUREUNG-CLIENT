@@ -4,18 +4,22 @@ import SeniorDropdown from '@/components/common/SeniorDropdown';
 import { GENDER_SHORT_LABELS } from '@/constants/senior';
 import type { Guardian } from '@/types/guardian';
 import type { Senior } from '@/types/senior';
+
+type SeniorOption = Pick<Senior, 'id' | 'name'>;
 import { getAge } from '@/utils/birthDate';
 import { formatDotDate } from '@/utils/date';
 
 // 담당 시니어 1명 (대표 여부는 시니어마다 따로)
 export type GuardianAssignment = {
   seniorId: number;
+  seniorName: string;
   isRepresentative: boolean;
 };
 
 type GuardianCardProps = {
   guardian: Guardian;
-  seniors: Senior[];
+  // 편집 화면: 담당 시니어 드롭다운 선택지
+  seniors?: SeniorOption[];
   // 목록 화면: 한 보호자의 담당 시니어 전체 (없으면 guardian의 시니어 1명)
   assignments?: GuardianAssignment[];
   // 목록 화면: 대표 지정 깃발 (누른 시니어의 대표로 지정)
@@ -30,10 +34,11 @@ type GuardianCardProps = {
 // 보호자 카드 (보호자 목록 / 보호자 목록 편집)
 export default function GuardianCard({
   guardian,
-  seniors,
+  seniors = [],
   assignments = [
     {
       seniorId: guardian.seniorId,
+      seniorName: guardian.seniorName,
       isRepresentative: guardian.isRepresentative,
     },
   ],
@@ -43,8 +48,6 @@ export default function GuardianCard({
   onToggleSelect,
   onChangeSenior,
 }: GuardianCardProps) {
-  const getSeniorName = (seniorId: number) =>
-    seniors.find(({ id }) => id === seniorId)?.name ?? '-';
   // 한 명이라도 대표면 대표 보호자로 표시
   const isRepresentative =
     !selectable && assignments.some((item) => item.isRepresentative);
@@ -98,33 +101,34 @@ export default function GuardianCard({
         ) : (
           // 담당 시니어마다 칩 (대표면 초록, 아니면 회색 + 대표 지정 깃발)
           <ul className="flex flex-wrap items-center justify-end gap-1">
-            {assignments.map(({ seniorId, isRepresentative: isPrimary }) => {
-              const seniorName = getSeniorName(seniorId);
-              return isPrimary ? (
-                <li
-                  key={seniorId}
-                  className="rounded-md bg-[#E7F6EC] px-2 py-1 text-[12px] font-semibold text-[#01A16A]"
-                >
-                  {seniorName}
-                </li>
-              ) : (
-                <li key={seniorId} className="flex items-center gap-1">
-                  <span className="rounded-md border border-[#E5E8EB] bg-[#FAFAFA] px-2.25 py-1.25 text-[12px] font-semibold text-[#6B7684]">
+            {assignments.map(
+              ({ seniorId, seniorName, isRepresentative: isPrimary }) => {
+                return isPrimary ? (
+                  <li
+                    key={seniorId}
+                    className="rounded-md bg-[#E7F6EC] px-2 py-1 text-[12px] font-semibold text-[#01A16A]"
+                  >
                     {seniorName}
-                  </span>
-                  {onSetRepresentative && (
-                    <button
-                      type="button"
-                      aria-label={`${guardian.name}을(를) ${seniorName} 대표 보호자로 지정`}
-                      onClick={() => onSetRepresentative(seniorId)}
-                      className="flex size-6 items-center justify-center text-[#8B95A1]"
-                    >
-                      <Flag size={20} strokeWidth={1.75} aria-hidden />
-                    </button>
-                  )}
-                </li>
-              );
-            })}
+                  </li>
+                ) : (
+                  <li key={seniorId} className="flex items-center gap-1">
+                    <span className="rounded-md border border-[#E5E8EB] bg-[#FAFAFA] px-2.25 py-1.25 text-[12px] font-semibold text-[#6B7684]">
+                      {seniorName}
+                    </span>
+                    {onSetRepresentative && (
+                      <button
+                        type="button"
+                        aria-label={`${guardian.name}을(를) ${seniorName} 대표 보호자로 지정`}
+                        onClick={() => onSetRepresentative(seniorId)}
+                        className="flex size-6 items-center justify-center text-[#8B95A1]"
+                      >
+                        <Flag size={20} strokeWidth={1.75} aria-hidden />
+                      </button>
+                    )}
+                  </li>
+                );
+              }
+            )}
           </ul>
         )}
       </header>

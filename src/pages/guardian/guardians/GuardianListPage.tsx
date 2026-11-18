@@ -7,7 +7,6 @@ import SearchField from '@/components/common/SearchField';
 import GuardianCard, {
   type GuardianAssignment,
 } from '@/components/guardians/GuardianCard';
-import useSeniors from '@/hooks/useSeniors';
 import type { Guardian } from '@/types/guardian';
 import { filterByName } from '@/utils/nameSearch';
 
@@ -29,6 +28,7 @@ const groupByGuardian = (links: Guardian[]) => {
   for (const link of links) {
     const assignment = {
       seniorId: link.seniorId,
+      seniorName: link.seniorName,
       isRepresentative: link.isRepresentative,
     };
     const group = groups.get(link.profileId);
@@ -54,7 +54,6 @@ const GuardianListPage = () => {
   // null이면 불러오는 중
   const [guardians, setGuardians] = useState<Guardian[] | null>(null);
   const [isError, setIsError] = useState(false);
-  const { seniors } = useSeniors();
   const [sort, setSort] = useState<Sort>('representative');
   const [isSearching, setIsSearching] = useState(false);
   const [keyword, setKeyword] = useState('');
@@ -187,7 +186,6 @@ const GuardianListPage = () => {
                 <li key={guardian.profileId}>
                   <GuardianCard
                     guardian={guardian}
-                    seniors={seniors ?? []}
                     assignments={guardian.assignments}
                     onSetRepresentative={(seniorId) =>
                       handleSetRepresentative(guardian.profileId, seniorId)
