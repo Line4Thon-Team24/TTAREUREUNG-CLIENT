@@ -29,6 +29,11 @@ export const NOTIFICATION_TIMES: Record<number, (typeof MORNING)[]> = {
   3: [MORNING, LUNCH, DINNER],
 };
 
+// 복용 시점이 취침 전이면 자기 전 1회
+export const BEDTIME_NOTIFICATION_TIMES = [
+  { label: '자기 전', time: '22:00', color: '#8B5CF6' },
+];
+
 // 저장된 값 → 화면 표시 문구 (예: 'daily' → '매일')
 export const getIntervalLabel = (value: DoseInterval) =>
   INTERVAL_OPTIONS.find((option) => option.value === value)?.label ?? '';

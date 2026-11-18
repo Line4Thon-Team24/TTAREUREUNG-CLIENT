@@ -25,7 +25,7 @@ export default function SelectField({
     <div className={`relative w-full ${className}`}>
       <select
         value={value}
-        className={`h-12 w-full appearance-none rounded-xl border border-[#E5E8EB] bg-[#FAFAFA] pr-8 pl-3.25 text-[14px] font-medium transition-colors outline-none focus:border-[#01A16A] ${value ? 'text-[#333D4B]' : 'text-[#B0B8C1]'}`}
+        className={`h-12 w-full appearance-none rounded-xl border border-[#E5E8EB] bg-[#FAFAFA] pr-8 pl-3.25 text-[14px] font-medium transition-colors outline-none focus:border-[#01A16A] disabled:bg-[#F2F4F6] disabled:text-[#8B95A1] ${value ? 'text-[#333D4B]' : 'text-[#B0B8C1]'}`}
         {...props}
       >
         <option value="" disabled hidden>

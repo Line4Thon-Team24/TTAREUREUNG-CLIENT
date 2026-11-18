@@ -5,6 +5,7 @@ import SelectField from '@/components/common/SelectField';
 import TextField from '@/components/common/TextField';
 import {
   INTERVAL_OPTIONS,
+  BEDTIME_NOTIFICATION_TIMES,
   NOTIFICATION_TIMES,
   TIMES_PER_DAY_OPTIONS,
   TIMING_OPTIONS,
@@ -225,6 +226,8 @@ export default function MedicineInfoCard({
                 placeholder="복용 횟수"
                 options={TIMES_PER_DAY_OPTIONS}
                 value={String(value.timesPerDay)}
+                // 취침 전은 하루 1회로 고정
+                disabled={value.timing === 'bedtime'}
                 onChange={(e) =>
                   update({ timesPerDay: Number(e.target.value) })
                 }
@@ -240,9 +243,14 @@ export default function MedicineInfoCard({
                 placeholder="복용 시점"
                 options={TIMING_OPTIONS}
                 value={value.timing ?? ''}
-                onChange={(e) =>
-                  update({ timing: e.target.value as DoseTiming })
-                }
+                onChange={(e) => {
+                  const timing = e.target.value as DoseTiming;
+                  update(
+                    timing === 'bedtime'
+                      ? { timing, timesPerDay: 1 }
+                      : { timing }
+                  );
+                }}
               />
             </div>
           </div>
@@ -255,21 +263,22 @@ export default function MedicineInfoCard({
           설정된 자동 알림 시간
         </h3>
         <ul className="flex flex-wrap gap-1.5">
-          {NOTIFICATION_TIMES[value.timesPerDay].map(
-            ({ label, time, color }) => (
-              <li
-                key={label}
-                className="flex items-center gap-1.5 rounded-full border border-[#E5E8EB] bg-white px-2.25 py-1.5 text-[12px] font-medium text-[#333D4B]"
-              >
-                <span
-                  className="size-1.5 rounded-full"
-                  style={{ backgroundColor: color }}
-                  aria-hidden
-                />
-                {label} {time}
-              </li>
-            )
-          )}
+          {(value.timing === 'bedtime'
+            ? BEDTIME_NOTIFICATION_TIMES
+            : NOTIFICATION_TIMES[value.timesPerDay]
+          ).map(({ label, time, color }) => (
+            <li
+              key={label}
+              className="flex items-center gap-1.5 rounded-full border border-[#E5E8EB] bg-white px-2.25 py-1.5 text-[12px] font-medium text-[#333D4B]"
+            >
+              <span
+                className="size-1.5 rounded-full"
+                style={{ backgroundColor: color }}
+                aria-hidden
+              />
+              {label} {time}
+            </li>
+          ))}
         </ul>
       </section>
     </article>
