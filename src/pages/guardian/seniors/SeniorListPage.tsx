@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, SquarePen } from 'lucide-react';
-import { fetchSeniors } from '@/apis/senior';
+import { fetchSeniors, updateSeniorFavorite } from '@/apis/senior';
 import EmptyState from '@/components/common/EmptyState';
 import FilterChips from '@/components/common/FilterChips';
 import SearchField from '@/components/common/SearchField';
@@ -69,13 +69,20 @@ const SeniorListPage = () => {
   };
 
   // 즐겨찾기 API 추가 전까지 화면 상태로만 유지
-  const handleToggleFavorite = (id: number) => {
+  const setFavorite = (id: number, isFavorite: boolean) => {
     setSeniors((prev) =>
       (prev ?? []).map((senior) =>
-        senior.id === id
-          ? { ...senior, isFavorite: !senior.isFavorite }
-          : senior
+        senior.id === id ? { ...senior, isFavorite } : senior
       )
+    );
+  };
+
+  // 화면에 먼저 반영하고 저장, 실패하면 원래대로
+  const handleToggleFavorite = (senior: Senior) => {
+    const next = !senior.isFavorite;
+    setFavorite(senior.id, next);
+    updateSeniorFavorite(senior.id, next).catch(() =>
+      setFavorite(senior.id, !next)
     );
   };
 
@@ -164,7 +171,7 @@ const SeniorListPage = () => {
               <SeniorCard
                 senior={senior}
                 medicineSummary={summaries[senior.id] ?? null}
-                onToggleFavorite={() => handleToggleFavorite(senior.id)}
+                onToggleFavorite={() => handleToggleFavorite(senior)}
                 onEdit={() => navigate(`/seniors/${senior.id}/edit`)}
                 onMedicineDetail={() =>
                   navigate(`/medicines?seniorId=${senior.id}`)
