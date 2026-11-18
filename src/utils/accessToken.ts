@@ -1,7 +1,5 @@
-// 개발용 임시 토큰 (로그인 연동 후 제거)
-let accessToken: string | null = import.meta.env.DEV
-  ? import.meta.env.VITE_DEV_ACCESS_TOKEN || null
-  : null;
+// Access Token은 메모리에만 보관 (새로고침 시 Refresh 쿠키로 재발급)
+let accessToken: string | null = null;
 
 export const getAccessToken = () => accessToken;
 
