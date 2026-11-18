@@ -18,7 +18,7 @@ const ScheduleWeekPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const goBackOr = useGoBack();
-  const { seniors } = useSeniors();
+  const { seniors, isError: isSeniorError } = useSeniors();
   // 월 달력과 시니어·날짜 공유 (주소에 저장)
   const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(
     seniors ?? [],
@@ -68,9 +68,11 @@ const ScheduleWeekPage = () => {
 
       <WeekStrip date={date} onSelect={setDate} />
 
-      {isError ? (
+      {isSeniorError || isError ? (
         <p className="flex flex-1 items-center justify-center text-[14px] text-[#6B7684]">
-          복용 일정을 불러오지 못했어요.
+          {isSeniorError
+            ? '시니어 목록을 불러오지 못했어요.'
+            : '복용 일정을 불러오지 못했어요.'}
         </p>
       ) : seniors === null || (selectedSeniorId !== null && slots === null) ? (
         <div className="flex-1" />
