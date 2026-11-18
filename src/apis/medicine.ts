@@ -56,6 +56,12 @@ const toMealTimeSlots = (
   return ['MORNING'];
 };
 
+// 시간대 → 하루 복용 횟수 (취침 전은 1회, 못 읽었으면 1회, 선택지는 최대 3회)
+const toTimesPerDay = (
+  slots: MedicationItemResponse['meal_time_slots'],
+  timing: MedicationItemResponse['intake_timing']
+) => (timing === 'BEFORE_BED' ? 1 : Math.min(Math.max(slots.length, 1), 3));
+
 // 화면 입력값 → 약 등록·수정 요청 (빈 값은 보내지 않음)
 const toMedicationRequest = (form: MedicineForm) => ({
   drug_name: form.name,
@@ -93,7 +99,7 @@ const toMedicine = (
   startDate: item.start_date,
   endDate: item.end_date,
   interval: INTERVAL_FROM_DAYS[item.interval_days ?? 1] ?? 'daily',
-  timesPerDay: item.meal_time_slots.length,
+  timesPerDay: toTimesPerDay(item.meal_time_slots, item.intake_timing),
   timing: item.intake_timing ? TIMING_FROM_API[item.intake_timing] : null,
 });
 
@@ -184,25 +190,29 @@ const toAnalysis = (
     fileKey,
     confidence: response.overall_confidence ?? 0,
     areas,
-    medicines: response.medications.map((item, index) => ({
-      id: `rx-${index + 1}`,
-      accuracy: item.confidence ?? 0,
-      strength: item.strength,
-      doseAmount: item.dose_amount,
-      form: {
-        ...base,
-        name: item.drug_name ?? '',
-        category: item.category ?? '',
-        effect: item.effect ?? '',
-        reason: item.intake_reason ?? '',
-        displayName: item.custom_drug_name ?? '',
-        storageLocation: item.storage_location ?? '',
-        interval: INTERVAL_FROM_DAYS[item.interval_days ?? 1] ?? 'daily',
-        // 시간대를 못 읽었으면 1회, 화면 선택지는 최대 3회
-        timesPerDay: Math.min(Math.max(item.meal_time_slots.length, 1), 3),
-        timing: item.intake_timing ? TIMING_FROM_API[item.intake_timing] : null,
-      },
-    })),
+    // 약 이름을 못 읽은 약은 이름을 고칠 수 없어 등록이 안 되므로 제외
+    medicines: response.medications
+      .filter((item) => item.drug_name?.trim())
+      .map((item, index) => ({
+        id: `rx-${index + 1}`,
+        accuracy: item.confidence ?? 0,
+        strength: item.strength,
+        doseAmount: item.dose_amount,
+        form: {
+          ...base,
+          name: item.drug_name ?? '',
+          category: item.category ?? '',
+          effect: item.effect ?? '',
+          reason: item.intake_reason ?? '',
+          displayName: item.custom_drug_name ?? '',
+          storageLocation: item.storage_location ?? '',
+          interval: INTERVAL_FROM_DAYS[item.interval_days ?? 1] ?? 'daily',
+          timesPerDay: toTimesPerDay(item.meal_time_slots, item.intake_timing),
+          timing: item.intake_timing
+            ? TIMING_FROM_API[item.intake_timing]
+            : null,
+        },
+      })),
   };
 };
 
