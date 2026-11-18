@@ -62,3 +62,26 @@ export const deleteGuardianLinks = async (linkIds: number[]) => {
   );
   return linkIds.filter((_, index) => results[index].status === 'rejected');
 };
+
+// 공동 보호자 초대 (문자는 보내지 않고 번호별 초대 링크를 돌려줌)
+export const inviteGuardians = async (
+  seniorId: number,
+  phoneNumbers: string[]
+) => {
+  const { data } = await apiClient.post<
+    BaseResponse<{
+      invitations: {
+        phone_number: string;
+        invite_url: string;
+        newly_created: boolean; // false면 이전에 만든 초대 링크
+      }[];
+    }>
+  >('/guardians/invitation', {
+    senior_profile_id: seniorId,
+    phone_numbers: phoneNumbers,
+  });
+  return data.data.invitations.map((item) => ({
+    phoneNumber: item.phone_number,
+    inviteUrl: item.invite_url,
+  }));
+};

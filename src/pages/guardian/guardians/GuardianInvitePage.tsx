@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
+import { inviteGuardians } from '@/apis/guardian';
 import BackHeader from '@/components/common/BackHeader';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import DropdownField from '@/components/common/DropdownField';
 import FormField from '@/components/common/FormField';
 import TextField from '@/components/common/TextField';
 import useGoBack from '@/hooks/useGoBack';
-import { inviteGuardians } from '@/mocks/guardians';
+import useLatestRequest from '@/hooks/useLatestRequest';
+import useSeniors from '@/hooks/useSeniors';
 import {
   formatPhoneNumber,
   isValidPhoneNumber,
@@ -28,7 +31,15 @@ const GuardianInvitePage = () => {
     keyof typeof PHONE_ERRORS | null
   >(null);
   const [isDiscardOpen, setIsDiscardOpen] = useState(false);
+  const { seniors } = useSeniors();
+  // 초대받은 보호자가 맡을 시니어 (고르기 전에는 첫 번째 시니어)
+  const [pickedSeniorId, setPickedSeniorId] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitError, setIsSubmitError] = useState(false);
+  const startRequest = useLatestRequest();
 
+  const seniorId = pickedSeniorId ?? seniors?.[0]?.id ?? null;
+  const hasSenior = (seniors ?? []).length > 0;
   const count = phoneNumbers.length;
   const isChanged = count > 0 || phoneInput !== '';
 
@@ -63,13 +74,26 @@ const GuardianInvitePage = () => {
     else goBack('/guardians');
   };
 
-  const handleSubmit = () => {
-    if (count === 0) return;
-    inviteGuardians(phoneNumbers);
-    navigate('/guardians/invite/complete', {
-      replace: true,
-      state: { invited: true },
-    });
+  // 초대 링크를 만들고 완료 화면에서 번호별 링크를 전달
+  const handleSubmit = async () => {
+    if (count === 0 || seniorId === null || isSubmitting) return;
+
+    const isLatest = startRequest();
+    setIsSubmitting(true);
+    setIsSubmitError(false);
+    try {
+      const invitations = await inviteGuardians(seniorId, phoneNumbers);
+      // 화면을 떠났으면 이동하지 않음
+      if (!isLatest()) return;
+      navigate('/guardians/invite/complete', {
+        replace: true,
+        state: { invitations },
+      });
+    } catch {
+      if (!isLatest()) return;
+      setIsSubmitError(true);
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -84,13 +108,37 @@ const GuardianInvitePage = () => {
             전화번호를 입력해주세요
           </h1>
           <p className="text-[14px] text-[#333D4B]">
-            입력된 번호로 가입이 완료되면 보호자 목록에
+            번호마다 초대 링크를 만들어 드려요.
             <br />
-            자동으로 추가돼요.
+            링크를 받은 보호자가 수락하면 목록에 추가돼요.
           </p>
         </section>
 
+        {/* 초대 API에 담당 시니어가 필요해 선택 칸 추가 (Figma에 없음) */}
         <div className="flex flex-col gap-3 px-5 pt-29.5">
+          <FormField label="담당 시니어">
+            {hasSenior ? (
+              <DropdownField
+                aria-label="담당 시니어"
+                placeholder="시니어를 선택해주세요."
+                options={(seniors ?? []).map(({ id, name }) => ({
+                  label: name,
+                  value: String(id),
+                }))}
+                value={seniorId === null ? '' : String(seniorId)}
+                onChange={(next) => setPickedSeniorId(Number(next))}
+              />
+            ) : (
+              seniors && (
+                <p className="text-[14px] text-[#6B7684]">
+                  먼저 시니어를 등록해주세요.
+                </p>
+              )
+            )}
+          </FormField>
+        </div>
+
+        <div className="flex flex-col gap-3 px-5 pt-6">
           <FormField label="전화번호" htmlFor="guardian-phone">
             <TextField
               id="guardian-phone"
@@ -129,6 +177,14 @@ const GuardianInvitePage = () => {
         </div>
       </main>
 
+      {isSubmitError && (
+        <p
+          role="alert"
+          className="shrink-0 bg-white px-5 pt-4 text-center text-[13px] text-[#E5484D]"
+        >
+          초대 링크를 만들지 못했어요. 다시 시도해주세요.
+        </p>
+      )}
       <div className="flex shrink-0 gap-3 bg-white px-5 pt-4 pb-10">
         <div className="w-29.25 shrink-0">
           <Button variant="secondary" onClick={handleCancel}>
@@ -136,7 +192,10 @@ const GuardianInvitePage = () => {
           </Button>
         </div>
         <div className="min-w-0 flex-1">
-          <Button disabled={count === 0} onClick={handleSubmit}>
+          <Button
+            disabled={count === 0 || seniorId === null || isSubmitting}
+            onClick={handleSubmit}
+          >
             {count > 0 ? `${count}명 초대하기` : '초대하기'}
           </Button>
         </div>
