@@ -95,11 +95,15 @@ const GuardianManagePage = () => {
         options.push({ id: seniorId, name: seniorName });
       }
     }
+    const original = getOriginalSeniorIds(group);
     return options.map((option) => {
       const isSelected = selected.includes(option.id);
       return {
         ...option,
-        disabled: isSelected ? selected.length === 1 : !isMine,
+        // 다른 계정 보호자도 원래 담당이던 시니어는 다시 체크할 수 있음
+        disabled: isSelected
+          ? selected.length === 1
+          : !isMine && !original.includes(option.id),
       };
     });
   };
@@ -147,43 +151,54 @@ const GuardianManagePage = () => {
   // 담당 시니어 변경 저장 (추가 → 연결, 뺀 시니어 → 연결 해제, 삭제할 보호자는 제외)
   // 하나라도 실패하면 true
   const saveSeniorChanges = async (excludeIds: number[]) => {
-    const added: Promise<unknown>[] = [];
-    const removedLinkIds: number[] = [];
-    for (const group of groups) {
+    const changes = groups.flatMap((group) => {
       const next = seniorSelections[group.profileId];
-      if (!next || excludeIds.includes(group.profileId)) continue;
-      for (const seniorId of next) {
-        if (!getOriginalSeniorIds(group).includes(seniorId)) {
-          added.push(linkGuardianSenior(group.profileId, seniorId));
-        }
-      }
-      for (const { linkId, seniorId } of group.assignments) {
-        if (!next.includes(seniorId)) removedLinkIds.push(linkId);
-      }
-    }
+      if (!next || excludeIds.includes(group.profileId)) return [];
+      const original = getOriginalSeniorIds(group);
+      return [
+        {
+          profileId: group.profileId,
+          addSeniorIds: next.filter((id) => !original.includes(id)),
+          removeLinkIds: group.assignments
+            .filter(({ seniorId }) => !next.includes(seniorId))
+            .map(({ linkId }) => linkId),
+        },
+      ];
+    });
     // 추가 먼저 (빼는 연결이 대표면 서버가 남은 연결에 대표를 넘김)
-    const addResults = await Promise.allSettled(added);
-    const failedRemovals = await deleteGuardianLinks(removedLinkIds);
-    return (
-      addResults.some(({ status }) => status === 'rejected') ||
-      failedRemovals.length > 0
+    const addResults = await Promise.all(
+      changes.map(({ profileId, addSeniorIds }) =>
+        Promise.allSettled(
+          addSeniorIds.map((id) => linkGuardianSenior(profileId, id))
+        )
+      )
     );
+    // 추가에 실패한 보호자는 기존 담당을 해제하지 않음 (담당이 모두 사라지는 것 방지)
+    const failedAddIndexes = addResults.flatMap((results, index) =>
+      results.some(({ status }) => status === 'rejected') ? [index] : []
+    );
+    const removeLinkIds = changes
+      .filter((_, index) => !failedAddIndexes.includes(index))
+      .flatMap(({ removeLinkIds: ids }) => ids);
+    const failedRemovals = await deleteGuardianLinks(removeLinkIds);
+    return failedAddIndexes.length > 0 || failedRemovals.length > 0;
   };
 
   // 일부 실패: 서버 상태와 맞추려고 목록을 다시 불러오고 안내
   const reloadAfterFailure = async () => {
+    setSeniorSelections({});
+    setSelectedIds([]);
+    setIsSaving(false);
     try {
       const { guardians: data, myGuardianIds: guardianIds } =
         await fetchGuardians();
       setLinks(data);
       setMyGuardianIds(guardianIds);
+      // 다시 불러오기에 성공했을 때만 안내 (실패하면 불러오기 실패 문구 표시)
+      setIsSaveError(true);
     } catch {
       setIsLoadError(true);
     }
-    setSeniorSelections({});
-    setSelectedIds([]);
-    setIsSaveError(true);
-    setIsSaving(false);
   };
 
   const handleSave = async () => {
