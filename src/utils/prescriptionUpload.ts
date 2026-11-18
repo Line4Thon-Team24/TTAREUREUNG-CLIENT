@@ -50,14 +50,11 @@ export const validatePrescriptionFile = async (
 // 만든 미리보기 주소 (쌓으며 이동할 때 한꺼번에 해제)
 const previewUrls = new Set<string>();
 
-// 지금 화면과 등록된 약이 쓰는 주소만 남기고 해제 (메모리 정리)
+// 지금 화면이 쓰는 주소만 남기고 해제 (메모리 정리, 등록된 약은 서버 사진 주소를 씀)
 // → 쌓으며 이동하면 앞쪽 기록이 지워져서, 해제한 주소로 다시 들어갈 수 없음
-export const releasePreviewUrls = (
-  keep: string | null,
-  isInUse: (url: string) => boolean
-) => {
+export const releasePreviewUrls = (keep: string | null) => {
   for (const url of previewUrls) {
-    if (url === keep || isInUse(url)) continue;
+    if (url === keep) continue;
     URL.revokeObjectURL(url);
     previewUrls.delete(url);
   }

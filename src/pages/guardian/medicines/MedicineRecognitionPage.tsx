@@ -8,7 +8,6 @@ import PrescriptionViewer from '@/components/medicines/PrescriptionViewer';
 import RecognizedMedicineList from '@/components/medicines/RecognizedMedicineList';
 import UploadErrorMessage from '@/components/medicines/UploadErrorMessage';
 import useLatestRequest from '@/hooks/useLatestRequest';
-import { isPrescriptionImageInUse } from '@/mocks/medicines';
 import type { MedicineFormState } from '@/types/medicine';
 import {
   releasePreviewUrls,
@@ -180,7 +179,7 @@ const MedicineRecognitionPage = () => {
             onClick={() => {
               if (!analysis) return;
               // 앞쪽 기록이 지워지므로 지금 사진 외 미리보기 주소 해제
-              releasePreviewUrls(state.imageUrl, isPrescriptionImageInUse);
+              releasePreviewUrls(state.imageUrl);
               navigate('/medicines/register/form', {
                 state: {
                   seniorId: state.seniorId,
