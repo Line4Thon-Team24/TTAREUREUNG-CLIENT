@@ -33,6 +33,7 @@ const sampleMedicines: Medicine[] = [
     interval: 'daily',
     timesPerDay: 2,
     timing: 'afterMeal',
+    doseAmount: '1정',
   },
   {
     id: 2,
@@ -52,6 +53,7 @@ const sampleMedicines: Medicine[] = [
     interval: 'daily',
     timesPerDay: 2,
     timing: 'afterMeal',
+    doseAmount: '1정',
   },
   {
     id: 3,
@@ -70,6 +72,7 @@ const sampleMedicines: Medicine[] = [
     interval: 'everyOtherDay',
     timesPerDay: 1,
     timing: 'afterMeal',
+    doseAmount: '1정',
   },
   {
     id: 4,
@@ -88,6 +91,7 @@ const sampleMedicines: Medicine[] = [
     interval: 'daily',
     timesPerDay: 2,
     timing: 'beforeMeal',
+    doseAmount: '1정',
   },
   {
     id: 5,
@@ -106,6 +110,7 @@ const sampleMedicines: Medicine[] = [
     interval: 'weekly',
     timesPerDay: 1,
     timing: 'bedtime',
+    doseAmount: '1정',
   },
 ];
 
