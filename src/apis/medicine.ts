@@ -5,6 +5,7 @@ import type {
   DoseTiming,
   Medicine,
   MedicationItemResponse,
+  MedicineForm,
   MedicineSummary,
   PrescriptionAnalysis,
   RecognitionResponse,
@@ -28,6 +29,48 @@ const TIMING_FROM_API: Record<
   RIGHT_AFTER_MEAL: 'withMeal',
   BEFORE_BED: 'bedtime',
 };
+
+const INTERVAL_TO_DAYS: Record<DoseInterval, number> = {
+  daily: 1,
+  everyOtherDay: 2,
+  weekly: 7,
+};
+
+const TIMING_TO_API: Record<
+  DoseTiming,
+  NonNullable<MedicationItemResponse['intake_timing']>
+> = {
+  beforeMeal: 'BEFORE_MEAL_30M',
+  afterMeal: 'AFTER_MEAL_30M',
+  withMeal: 'RIGHT_AFTER_MEAL',
+  bedtime: 'BEFORE_BED',
+};
+
+// 하루 복용 횟수 → 시간대 (취침 전이면 자기 전 하나)
+const toMealTimeSlots = (
+  form: MedicineForm
+): MedicationItemResponse['meal_time_slots'] => {
+  if (form.timing === 'bedtime') return ['BEFORE_SLEEP'];
+  if (form.timesPerDay >= 3) return ['MORNING', 'LUNCH', 'DINNER'];
+  if (form.timesPerDay === 2) return ['MORNING', 'DINNER'];
+  return ['MORNING'];
+};
+
+// 화면 입력값 → 약 등록·수정 요청 (빈 값은 보내지 않음)
+const toMedicationRequest = (form: MedicineForm) => ({
+  drug_name: form.name,
+  custom_drug_name: form.displayName || undefined,
+  category: form.category || undefined,
+  effect: form.effect || undefined,
+  intake_reason: form.reason || undefined,
+  storage_location: form.storageLocation,
+  start_date: form.startDate,
+  end_date: form.endDate,
+  cycle_type: 'DAILY',
+  interval_days: INTERVAL_TO_DAYS[form.interval],
+  intake_timing: form.timing ? TIMING_TO_API[form.timing] : undefined,
+  meal_time_slots: toMealTimeSlots(form),
+});
 
 // 약 목록 응답 → 화면용 약
 const toMedicine = (
@@ -181,4 +224,35 @@ export const analyzePrescription = async (file: File, signal?: AbortSignal) => {
     recognize(),
   ]);
   return toAnalysis(response, fileKey);
+};
+
+// AI 인식으로 등록할 약 (입력값 + 인식 결과에만 있는 값)
+export type RecognizedMedicineRequest = {
+  form: MedicineForm;
+  strength?: string | null;
+  doseAmount?: string | null;
+};
+
+// AI 인식 약 일괄 등록 (처방전 파일과 함께 저장, 등록된 약 id 반환)
+export const createRecognizedMedicines = async (
+  seniorId: number,
+  medicines: RecognizedMedicineRequest[],
+  prescription: { fileKey: string; fileName: string }
+) => {
+  const { data } = await apiClient.post<
+    BaseResponse<{ medication_ids: number[] }>
+  >('/medications/bulk', {
+    senior_profile_id: seniorId,
+    medications: medicines.map(({ form, strength, doseAmount }) => ({
+      ...toMedicationRequest(form),
+      strength: strength || undefined,
+      dose_amount: doseAmount || undefined,
+      image_url: prescription.fileKey,
+      prescription_file_name: prescription.fileName,
+      registration_type: 'AI',
+      // 서버 알림 로직에서 쓰지 않는 값이라 계정 기본값과 같이 켜 둠
+      notify_on_miss: true,
+    })),
+  });
+  return data.data.medication_ids;
 };

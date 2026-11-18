@@ -139,6 +139,7 @@ export type MedicineFormState = RegisterFlow &
         mode: 'recognized';
         medicines: RecognizedMedicine[];
         prescription: Prescription;
+        fileKey: string; // 업로드한 처방전 파일 (등록 시 image_url)
       }
     | { mode: 'manual' }
   );

@@ -1,13 +1,15 @@
 import { Fragment, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
+import { createRecognizedMedicines, deleteMedicines } from '@/apis/medicine';
 import Button from '@/components/common/Button';
 import StepHeader from '@/components/common/StepHeader';
 import MedicineInfoCard from '@/components/medicines/MedicineInfoCard';
+import useLatestRequest from '@/hooks/useLatestRequest';
 import {
   addMedicines,
   createEmptyMedicineForm,
-  deleteMedicines,
+  deleteMedicines as deleteMockMedicines,
 } from '@/mocks/medicines';
 import type { MedicineForm, MedicineFormState } from '@/types/medicine';
 import { formatDateTime } from '@/utils/date';
@@ -36,6 +38,9 @@ const MedicineInfoFormPage = () => {
     return [{ id: 'manual-1', form: createEmptyMedicineForm() }];
   });
   const [registeredAt] = useState(() => formatDateTime(new Date()));
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitError, setIsSubmitError] = useState(false);
+  const startRequest = useLatestRequest();
 
   // 이전 단계를 거치지 않았거나, 선택한 약이 없거나, 이미 등록을 마친 화면이면 복용 일정으로 이동
   if (!state || drafts.length === 0 || completedKeys.has(location.key)) {
@@ -53,19 +58,8 @@ const MedicineInfoFormPage = () => {
     );
   };
 
-  const handleSubmit = () => {
-    if (!isValid) return;
-
-    // 선택한 약만 등록 요청에 포함
-    addMedicines(
-      state.seniorId,
-      drafts.map(({ form }) => trimMedicineForm(form)),
-      state.mode === 'recognized' ? state.prescription : null
-    );
-    // 다시 등록하기면 기존 약 삭제
-    if (state.replaceMedicineId !== undefined) {
-      deleteMedicines([state.replaceMedicineId]);
-    }
+  // 등록을 마치면 흐름 시작 화면으로 이동
+  const finishRegister = () => {
     // 이동하기 전에 완료 표시 (등록 처리 중 다시 렌더링되어도 이동과 엇갈리지 않도록 state를 바꾸지 않음)
     completedKeys.add(location.key);
     // 약 등록 흐름(방법 선택 → AI 인식 결과 → 입력)을 기록에서 되돌려 시작 화면으로 이동
@@ -76,6 +70,56 @@ const MedicineInfoFormPage = () => {
     // 앱 안 기록이 모자라면(주소로 바로 들어온 경우) 약 목록으로
     if (getHistoryIndex() >= steps) navigate(-steps);
     else navigate(`/medicines?seniorId=${state.seniorId}`, { replace: true });
+  };
+
+  const handleSubmit = async () => {
+    if (!isValid || isSubmitting) return;
+
+    // TODO: 직접 입력 등록 API 연동 (지금은 목업)
+    if (state.mode === 'manual') {
+      addMedicines(
+        state.seniorId,
+        drafts.map(({ form }) => trimMedicineForm(form)),
+        null
+      );
+      if (state.replaceMedicineId !== undefined) {
+        deleteMockMedicines([state.replaceMedicineId]);
+      }
+      finishRegister();
+      return;
+    }
+
+    const isLatest = startRequest();
+    setIsSubmitting(true);
+    setIsSubmitError(false);
+    try {
+      // 선택한 약만 등록 (함량·복용량은 인식 결과에서 가져옴)
+      await createRecognizedMedicines(
+        state.seniorId,
+        drafts.map(({ id, form }) => {
+          const recognized = state.medicines.find(
+            (medicine) => medicine.id === id
+          );
+          return {
+            form: trimMedicineForm(form),
+            strength: recognized?.strength,
+            doseAmount: recognized?.doseAmount,
+          };
+        }),
+        { fileKey: state.fileKey, fileName: state.prescription.fileName }
+      );
+      // 다시 등록하기면 기존 약 삭제 (실패해도 새 약은 등록됐으므로 계속 진행)
+      if (state.replaceMedicineId !== undefined) {
+        await deleteMedicines([state.replaceMedicineId]).catch(() => {});
+      }
+      // 화면을 떠났으면 이동하지 않음
+      if (!isLatest()) return;
+      finishRegister();
+    } catch {
+      if (!isLatest()) return;
+      setIsSubmitError(true);
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -123,6 +167,14 @@ const MedicineInfoFormPage = () => {
         </div>
       </main>
 
+      {isSubmitError && (
+        <p
+          role="alert"
+          className="shrink-0 border-t border-[#E5E8EB] bg-white px-5 pt-4 text-center text-[13px] text-[#E5484D]"
+        >
+          약 등록에 실패했어요. 다시 시도해주세요.
+        </p>
+      )}
       <div className="z-10 flex shrink-0 gap-3 border-t border-[#E5E8EB] bg-white px-5 pt-4 pb-10">
         <div className="w-29.25 shrink-0">
           <Button variant="secondary" onClick={() => navigate(-1)}>
@@ -130,7 +182,7 @@ const MedicineInfoFormPage = () => {
           </Button>
         </div>
         <div className="min-w-0 flex-1">
-          <Button disabled={!isValid} onClick={handleSubmit}>
+          <Button disabled={!isValid || isSubmitting} onClick={handleSubmit}>
             {count}개 등록하기
           </Button>
         </div>

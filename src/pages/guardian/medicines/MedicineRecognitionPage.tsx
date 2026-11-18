@@ -178,6 +178,7 @@ const MedicineRecognitionPage = () => {
           <Button
             disabled={selectedMedicines.length === 0}
             onClick={() => {
+              if (!analysis) return;
               // 앞쪽 기록이 지워지므로 지금 사진 외 미리보기 주소 해제
               releasePreviewUrls(state.imageUrl, isPrescriptionImageInUse);
               navigate('/medicines/register/form', {
@@ -192,6 +193,7 @@ const MedicineRecognitionPage = () => {
                     fileName: state.fileName,
                     imageUrl: state.imageUrl,
                   },
+                  fileKey: analysis.fileKey,
                 } satisfies MedicineFormState,
               });
             }}
