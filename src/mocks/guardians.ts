@@ -4,6 +4,7 @@ import type { Guardian } from '@/types/guardian';
 const sampleGuardians: Guardian[] = [
   {
     id: 1,
+    profileId: 1,
     name: '나',
     birthDate: '2000-01-10',
     gender: 'female',
@@ -14,6 +15,7 @@ const sampleGuardians: Guardian[] = [
   },
   {
     id: 2,
+    profileId: 2,
     name: '박민수',
     birthDate: '1998-01-10',
     gender: 'male',
@@ -24,6 +26,7 @@ const sampleGuardians: Guardian[] = [
   },
   {
     id: 3,
+    profileId: 3,
     name: '이지훈',
     birthDate: '1995-05-21',
     gender: 'male',
@@ -34,6 +37,7 @@ const sampleGuardians: Guardian[] = [
   },
   {
     id: 4,
+    profileId: 4,
     name: '최유진',
     birthDate: '1992-09-03',
     gender: 'female',

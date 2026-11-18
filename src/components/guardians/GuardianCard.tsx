@@ -7,11 +7,19 @@ import type { Senior } from '@/types/senior';
 import { getAge } from '@/utils/birthDate';
 import { formatDotDate } from '@/utils/date';
 
+// 담당 시니어 1명 (대표 여부는 시니어마다 따로)
+export type GuardianAssignment = {
+  seniorId: number;
+  isRepresentative: boolean;
+};
+
 type GuardianCardProps = {
   guardian: Guardian;
   seniors: Senior[];
-  // 목록 화면: 대표 지정 깃발
-  onSetRepresentative?: () => void;
+  // 목록 화면: 한 보호자의 담당 시니어 전체 (없으면 guardian의 시니어 1명)
+  assignments?: GuardianAssignment[];
+  // 목록 화면: 대표 지정 깃발 (누른 시니어의 대표로 지정)
+  onSetRepresentative?: (seniorId: number) => void;
   // 편집 화면: 체크박스 선택 + 담당 시니어 변경
   selectable?: boolean;
   selected?: boolean;
@@ -23,15 +31,23 @@ type GuardianCardProps = {
 export default function GuardianCard({
   guardian,
   seniors,
+  assignments = [
+    {
+      seniorId: guardian.seniorId,
+      isRepresentative: guardian.isRepresentative,
+    },
+  ],
   onSetRepresentative,
   selectable = false,
   selected = false,
   onToggleSelect,
   onChangeSenior,
 }: GuardianCardProps) {
-  const seniorName =
-    seniors.find(({ id }) => id === guardian.seniorId)?.name ?? '-';
-  const isRepresentative = guardian.isRepresentative && !selectable;
+  const getSeniorName = (seniorId: number) =>
+    seniors.find(({ id }) => id === seniorId)?.name ?? '-';
+  // 한 명이라도 대표면 대표 보호자로 표시
+  const isRepresentative =
+    !selectable && assignments.some((item) => item.isRepresentative);
   const checkboxId = `guardian-select-${guardian.id}`;
 
   // 선택해도 테두리는 그대로 (체크박스로만 표시)
@@ -79,26 +95,37 @@ export default function GuardianCard({
             selectedId={guardian.seniorId}
             onSelect={onChangeSenior}
           />
-        ) : isRepresentative ? (
-          <span className="shrink-0 rounded-md bg-[#E7F6EC] px-2 py-1 text-[12px] font-semibold text-[#01A16A]">
-            {seniorName}
-          </span>
         ) : (
-          <div className="flex shrink-0 items-center gap-1">
-            <span className="rounded-md border border-[#E5E8EB] bg-[#FAFAFA] px-2.25 py-1.25 text-[12px] font-semibold text-[#6B7684]">
-              {seniorName}
-            </span>
-            {onSetRepresentative && (
-              <button
-                type="button"
-                aria-label={`${guardian.name}을(를) ${seniorName} 대표 보호자로 지정`}
-                onClick={onSetRepresentative}
-                className="flex size-6 items-center justify-center text-[#8B95A1]"
-              >
-                <Flag size={20} strokeWidth={1.75} aria-hidden />
-              </button>
-            )}
-          </div>
+          // 담당 시니어마다 칩 (대표면 초록, 아니면 회색 + 대표 지정 깃발)
+          <ul className="flex flex-wrap items-center justify-end gap-1">
+            {assignments.map(({ seniorId, isRepresentative: isPrimary }) => {
+              const seniorName = getSeniorName(seniorId);
+              return isPrimary ? (
+                <li
+                  key={seniorId}
+                  className="rounded-md bg-[#E7F6EC] px-2 py-1 text-[12px] font-semibold text-[#01A16A]"
+                >
+                  {seniorName}
+                </li>
+              ) : (
+                <li key={seniorId} className="flex items-center gap-1">
+                  <span className="rounded-md border border-[#E5E8EB] bg-[#FAFAFA] px-2.25 py-1.25 text-[12px] font-semibold text-[#6B7684]">
+                    {seniorName}
+                  </span>
+                  {onSetRepresentative && (
+                    <button
+                      type="button"
+                      aria-label={`${guardian.name}을(를) ${seniorName} 대표 보호자로 지정`}
+                      onClick={() => onSetRepresentative(seniorId)}
+                      className="flex size-6 items-center justify-center text-[#8B95A1]"
+                    >
+                      <Flag size={20} strokeWidth={1.75} aria-hidden />
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         )}
       </header>
 
@@ -107,16 +134,19 @@ export default function GuardianCard({
         <div className="flex flex-wrap gap-x-3 gap-y-2">
           <InfoRow label="생년월일">
             <InfoValue>
-              {formatDotDate(guardian.birthDate)}(만{' '}
-              {getAge(guardian.birthDate)}세)
+              {guardian.birthDate
+                ? `${formatDotDate(guardian.birthDate)}(만 ${getAge(guardian.birthDate)}세)`
+                : '-'}
             </InfoValue>
           </InfoRow>
           <InfoRow label="성별">
-            <InfoValue>{GENDER_SHORT_LABELS[guardian.gender]}</InfoValue>
+            <InfoValue>
+              {guardian.gender ? GENDER_SHORT_LABELS[guardian.gender] : '-'}
+            </InfoValue>
           </InfoRow>
         </div>
         <InfoRow label="전화번호">
-          <InfoValue>{guardian.phoneNumber}</InfoValue>
+          <InfoValue>{guardian.phoneNumber || '-'}</InfoValue>
         </InfoRow>
       </div>
     </article>
