@@ -4,12 +4,10 @@ import type { Guardian, GuardianSeniorResponse } from '@/types/guardian';
 import type { ProfileResponse } from '@/types/senior';
 
 // 연결 응답 → 화면용 보호자 (연결 1개 = 카드 1개)
-const toGuardian = ({
-  linkId,
-  isPrimary,
-  guardian,
-  senior,
-}: GuardianSeniorResponse): Guardian => ({
+const toGuardian = (
+  { linkId, isPrimary, guardian, senior }: GuardianSeniorResponse,
+  myProfileId: number | undefined
+): Guardian => ({
   id: linkId,
   profileId: guardian.profileId,
   name: guardian.name,
@@ -24,16 +22,22 @@ const toGuardian = ({
   seniorId: senior.profileId,
   seniorName: senior.name,
   isRepresentative: isPrimary,
-  isMe: false,
+  isMe: guardian.profileId === myProfileId,
 });
 
 // 보호자 목록 (계정 전체 연결, 다른 계정에서 초대로 들어온 보호자 포함)
+// 내 계정 보호자 id도 함께 반환 (편집 화면에서 다른 계정 보호자 구분)
 export const fetchGuardians = async () => {
-  const { data } =
-    await apiClient.get<BaseResponse<GuardianSeniorResponse[]>>(
-      '/guardian-seniors'
-    );
-  return data.data.map(toGuardian);
+  const [{ data }, myGuardianIds] = await Promise.all([
+    apiClient.get<BaseResponse<GuardianSeniorResponse[]>>('/guardian-seniors'),
+    fetchMyGuardianProfileIds(),
+  ]);
+  // TODO: 프로필 선택 연동 후 선택된 보호자 프로필로 교체 (지금은 계정의 첫 번째 보호자)
+  const myProfileId = myGuardianIds[0];
+  return {
+    guardians: data.data.map((link) => toGuardian(link, myProfileId)),
+    myGuardianIds,
+  };
 };
 
 // 시니어의 대표 보호자 지정 (같은 시니어의 기존 대표는 서버가 해제)

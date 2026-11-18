@@ -71,7 +71,8 @@ export default function GuardianCard({
             htmlFor={edit ? checkboxId : undefined}
             className="text-[16px] font-bold break-keep text-[#111827]"
           >
-            {guardian.name}
+            {/* 로그인한 본인은 '나'로 표시 */}
+            {guardian.isMe ? '나' : guardian.name}
           </label>
         </div>
 
@@ -101,7 +102,7 @@ export default function GuardianCard({
                     {onSetRepresentative && (
                       <button
                         type="button"
-                        aria-label={`${guardian.name}을(를) ${seniorName} 대표 보호자로 지정`}
+                        aria-label={`${guardian.isMe ? '나' : guardian.name}을(를) ${seniorName} 대표 보호자로 지정`}
                         onClick={() => onSetRepresentative(seniorId)}
                         className="flex size-6 items-center justify-center text-[#8B95A1]"
                       >

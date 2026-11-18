@@ -4,7 +4,6 @@ import { Search } from 'lucide-react';
 import {
   deleteGuardianLinks,
   fetchGuardians,
-  fetchMyGuardianProfileIds,
   linkGuardianSenior,
 } from '@/apis/guardian';
 import Button from '@/components/common/Button';
@@ -21,10 +20,6 @@ import { filterByName } from '@/utils/nameSearch';
 
 // 삭제 확인 / 변경 취소 확인
 type ModalStep = 'delete' | 'discard' | null;
-
-// 보호자 연결 + 내 계정 보호자 id (다른 계정 보호자는 시니어 추가 불가)
-const fetchManageData = () =>
-  Promise.all([fetchGuardians(), fetchMyGuardianProfileIds()]);
 
 const GuardianManagePage = () => {
   const goBack = useGoBack();
@@ -48,8 +43,8 @@ const GuardianManagePage = () => {
 
   useEffect(() => {
     let ignore = false;
-    fetchManageData()
-      .then(([data, guardianIds]) => {
+    fetchGuardians()
+      .then(({ guardians: data, myGuardianIds: guardianIds }) => {
         if (ignore) return;
         setLinks(data);
         setMyGuardianIds(guardianIds);
@@ -178,7 +173,8 @@ const GuardianManagePage = () => {
   // 일부 실패: 서버 상태와 맞추려고 목록을 다시 불러오고 안내
   const reloadAfterFailure = async () => {
     try {
-      const [data, guardianIds] = await fetchManageData();
+      const { guardians: data, myGuardianIds: guardianIds } =
+        await fetchGuardians();
       setLinks(data);
       setMyGuardianIds(guardianIds);
     } catch {

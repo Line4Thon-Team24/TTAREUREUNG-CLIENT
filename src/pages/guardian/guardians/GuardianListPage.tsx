@@ -23,11 +23,14 @@ const isAnyRepresentative = ({ assignments }: GuardianGroup) =>
   assignments.some((item) => item.isRepresentative);
 
 // 대표 등록순: 대표 먼저, 나머지는 등록순 / 나이순: 나이 많은 순 (생년월일 없으면 뒤로)
+// 본인('나')은 정렬과 상관없이 맨 위
 const sortGuardians = (guardians: GuardianGroup[], sort: Sort) =>
   [...guardians].sort((a, b) =>
-    sort === 'representative'
-      ? Number(isAnyRepresentative(b)) - Number(isAnyRepresentative(a))
-      : (a.birthDate || '9999').localeCompare(b.birthDate || '9999')
+    a.isMe !== b.isMe
+      ? Number(b.isMe) - Number(a.isMe)
+      : sort === 'representative'
+        ? Number(isAnyRepresentative(b)) - Number(isAnyRepresentative(a))
+        : (a.birthDate || '9999').localeCompare(b.birthDate || '9999')
   );
 
 const GuardianListPage = () => {
@@ -42,7 +45,7 @@ const GuardianListPage = () => {
   useEffect(() => {
     let ignore = false;
     fetchGuardians()
-      .then((data) => {
+      .then(({ guardians: data }) => {
         if (!ignore) setGuardians(data);
       })
       .catch(() => {
