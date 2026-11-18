@@ -17,7 +17,7 @@ const toSenior = (profile: ProfileResponse): Senior => ({
 });
 
 // 화면용 시니어 입력값 → 프로필 요청
-const toProfileRequest = (form: SeniorForm) => ({
+export const toProfileRequest = (form: SeniorForm) => ({
   name: form.name,
   birthDate: form.birthDate,
   gender: form.gender ? GENDER_TO_API[form.gender] : undefined,
