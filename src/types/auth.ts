@@ -37,3 +37,15 @@ export type SignupContextValue = {
   guardian: GuardianInfo;
   setGuardian: (guardian: GuardianInfo) => void;
 };
+
+// 회원가입 응답
+export type SignupResponse = {
+  accountId: number;
+};
+
+// 로그인 응답
+export type TokenResponse = {
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+};
