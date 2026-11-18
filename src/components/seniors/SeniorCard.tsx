@@ -54,7 +54,10 @@ export default function SeniorCard({
             </h2>
           </div>
           <p className="text-[11px] text-[#9CA3AF]">
-            등록 날짜: {formatDate(new Date(senior.registeredAt))}
+            등록 날짜:{' '}
+            {senior.registeredAt
+              ? formatDate(new Date(senior.registeredAt))
+              : '-'}
           </p>
         </div>
         {!selectable && (

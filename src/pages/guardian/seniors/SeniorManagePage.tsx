@@ -15,7 +15,9 @@ const SeniorManagePage = () => {
   const goBack = useGoBack();
   // 목록과 같은 최근 추가순
   const [seniors] = useState(() =>
-    getSeniors().sort((a, b) => b.registeredAt.localeCompare(a.registeredAt))
+    getSeniors().sort((a, b) =>
+      (b.registeredAt ?? '').localeCompare(a.registeredAt ?? '')
+    )
   );
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
