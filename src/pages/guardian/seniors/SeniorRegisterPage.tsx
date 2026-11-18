@@ -9,9 +9,10 @@ import FormField from '@/components/common/FormField';
 import SelectField from '@/components/common/SelectField';
 import TextField from '@/components/common/TextField';
 import useGoBack from '@/hooks/useGoBack';
+import useLatestRequest from '@/hooks/useLatestRequest';
 import BrandBadge from '@/components/common/BrandBadge';
 import { GENDER_OPTIONS } from '@/constants/senior';
-import { addSenior } from '@/mocks/seniors';
+import { createSenior } from '@/apis/senior';
 import type { Gender } from '@/types/senior';
 import { isValidBirthDate } from '@/utils/birthDate';
 import {
@@ -28,6 +29,7 @@ const SeniorRegisterPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const goBack = useGoBack();
+  const startRequest = useLatestRequest();
   // 등록을 시작한 화면 (없으면 회원가입 직후 등록 → 복용 일정)
   const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
   const [step, setStep] = useState<number>(STEP.NAME);
@@ -39,6 +41,8 @@ const SeniorRegisterPage = () => {
   });
   const [gender, setGender] = useState<Gender | ''>('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isError, setIsError] = useState(false);
 
   const nameRef = useRef<HTMLInputElement>(null);
   const birthDateRef = useRef<HTMLSelectElement>(null);
@@ -67,20 +71,31 @@ const SeniorRegisterPage = () => {
     gender !== '' &&
     isValidPhoneNumber(phoneNumber);
 
-  const handleSubmit = () => {
-    if (!isValid) return;
+  const handleSubmit = async () => {
+    if (!isValid || isSubmitting) return;
 
-    const senior = addSenior({
-      name: name.trim(),
-      birthDate: `${birthDate.year}-${pad(birthDate.month)}-${pad(birthDate.day)}`,
-      gender,
-      phoneNumber,
-    });
-    // 완료 화면은 등록을 거쳐 온 경우에만 보이도록 state 전달 (약 등록에 시니어 id 사용)
-    navigate('/seniors/register/complete', {
-      replace: true,
-      state: { seniorId: senior.id, returnTo },
-    });
+    const isLatest = startRequest();
+    setIsSubmitting(true);
+    setIsError(false);
+    try {
+      const senior = await createSenior({
+        name: name.trim(),
+        birthDate: `${birthDate.year}-${pad(birthDate.month)}-${pad(birthDate.day)}`,
+        gender,
+        phoneNumber,
+      });
+      // 화면을 떠났으면 이동하지 않음
+      if (!isLatest()) return;
+      // 완료 화면은 등록을 거쳐 온 경우에만 보이도록 state 전달 (약 등록에 시니어 id 사용)
+      navigate('/seniors/register/complete', {
+        replace: true,
+        state: { seniorId: senior.id, returnTo },
+      });
+    } catch {
+      if (!isLatest()) return;
+      setIsError(true);
+      setIsSubmitting(false);
+    }
   };
 
   // 단계 순서대로 정의하고, 화면에는 최신 입력칸이 위로 오도록 역순 표시
@@ -213,7 +228,15 @@ const SeniorRegisterPage = () => {
       </div>
 
       <div className="sticky bottom-0 bg-white px-5 pt-4 pb-10">
-        <Button disabled={!isValid} onClick={handleSubmit}>
+        {isError && (
+          <p
+            role="alert"
+            className="pb-3 text-center text-[13px] text-[#E5484D]"
+          >
+            시니어 등록에 실패했어요. 다시 시도해주세요.
+          </p>
+        )}
+        <Button disabled={!isValid || isSubmitting} onClick={handleSubmit}>
           시니어 등록하기
         </Button>
       </div>

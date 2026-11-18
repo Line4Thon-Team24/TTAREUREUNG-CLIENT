@@ -54,7 +54,10 @@ export default function SeniorCard({
             </h2>
           </div>
           <p className="text-[11px] text-[#9CA3AF]">
-            등록 날짜: {formatDate(new Date(senior.registeredAt))}
+            등록 날짜:{' '}
+            {senior.registeredAt
+              ? formatDate(new Date(senior.registeredAt))
+              : '-'}
           </p>
         </div>
         {!selectable && (
@@ -89,11 +92,15 @@ export default function SeniorCard({
         <div className="flex flex-wrap gap-x-3 gap-y-2">
           <InfoRow label="생년월일">
             <InfoValue>
-              {formatDotDate(senior.birthDate)}(만 {getAge(senior.birthDate)}세)
+              {senior.birthDate
+                ? `${formatDotDate(senior.birthDate)}(만 ${getAge(senior.birthDate)}세)`
+                : '-'}
             </InfoValue>
           </InfoRow>
           <InfoRow label="성별">
-            <InfoValue>{GENDER_SHORT_LABELS[senior.gender]}</InfoValue>
+            <InfoValue>
+              {senior.gender ? GENDER_SHORT_LABELS[senior.gender] : '-'}
+            </InfoValue>
           </InfoRow>
         </div>
         <InfoRow label="전화번호">

@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, SquarePen } from 'lucide-react';
+import { fetchSeniors } from '@/apis/senior';
 import EmptyState from '@/components/common/EmptyState';
 import FilterChips from '@/components/common/FilterChips';
 import SearchField from '@/components/common/SearchField';
 import SeniorCard from '@/components/seniors/SeniorCard';
 import { getMedicines } from '@/mocks/medicines';
-import { getSeniors, toggleFavorite } from '@/mocks/seniors';
+import type { Senior } from '@/types/senior';
 import { filterByName } from '@/utils/nameSearch';
 
 const ICON_BUTTON_CLASS =
@@ -21,26 +22,49 @@ const FILTERS: { label: string; value: Filter }[] = [
 
 const SeniorListPage = () => {
   const navigate = useNavigate();
-  const [seniors, setSeniors] = useState(getSeniors);
+  // null이면 불러오는 중
+  const [seniors, setSeniors] = useState<Senior[] | null>(null);
+  const [isError, setIsError] = useState(false);
   const [filter, setFilter] = useState<Filter>('recent');
   const [isSearching, setIsSearching] = useState(false);
   const [keyword, setKeyword] = useState('');
 
-  const hasSenior = seniors.length > 0;
+  useEffect(() => {
+    let ignore = false;
+    fetchSeniors()
+      .then((data) => {
+        if (!ignore) setSeniors(data);
+      })
+      .catch(() => {
+        if (!ignore) setIsError(true);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
-  // 최근 추가순 정렬 (즐겨찾기는 그중 별 표시한 시니어만)
-  const visibleSeniors = filterByName(seniors, keyword)
-    .filter((senior) => filter === 'recent' || senior.isFavorite)
-    .sort((a, b) => b.registeredAt.localeCompare(a.registeredAt));
+  const seniorList = seniors ?? [];
+  const hasSenior = seniorList.length > 0;
+
+  // 최근 추가순 (즐겨찾기는 그중 별 표시한 시니어만)
+  const visibleSeniors = filterByName(seniorList, keyword).filter(
+    (senior) => filter === 'recent' || senior.isFavorite
+  );
 
   const toggleSearch = () => {
     setIsSearching((prev) => !prev);
     setKeyword('');
   };
 
+  // 즐겨찾기 API 추가 전까지 화면 상태로만 유지
   const handleToggleFavorite = (id: number) => {
-    toggleFavorite(id);
-    setSeniors(getSeniors());
+    setSeniors((prev) =>
+      (prev ?? []).map((senior) =>
+        senior.id === id
+          ? { ...senior, isFavorite: !senior.isFavorite }
+          : senior
+      )
+    );
   };
 
   return (
@@ -49,7 +73,7 @@ const SeniorListPage = () => {
         <div className="flex items-center gap-2">
           <h1 className="text-[22px] font-bold text-black">시니어 목록</h1>
           <span className="rounded-full border border-[#DCF2E4] bg-[#F0F9F4] px-2.25 py-0.75 text-[12px] font-semibold text-[#0E6E3B]">
-            총 {seniors.length}명
+            총 {seniorList.length}명
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -99,7 +123,13 @@ const SeniorListPage = () => {
         <FilterChips options={FILTERS} value={filter} onChange={setFilter} />
       )}
 
-      {!hasSenior ? (
+      {isError ? (
+        <p className="flex flex-1 items-center justify-center text-[14px] text-[#6B7684]">
+          시니어 목록을 불러오지 못했어요.
+        </p>
+      ) : seniors === null ? (
+        <div className="flex-1" />
+      ) : !hasSenior ? (
         <div className="flex flex-1 items-center justify-center">
           <EmptyState
             message="등록된 시니어가 없어요!"
