@@ -8,12 +8,14 @@ import SearchField from '@/components/common/SearchField';
 import StepHeader from '@/components/common/StepHeader';
 import SeniorCard from '@/components/seniors/SeniorCard';
 import useGoBack from '@/hooks/useGoBack';
+import useLatestRequest from '@/hooks/useLatestRequest';
 import { getMedicines } from '@/mocks/medicines';
 import type { Senior } from '@/types/senior';
 import { filterByName } from '@/utils/nameSearch';
 
 const SeniorManagePage = () => {
   const goBack = useGoBack();
+  const startRequest = useLatestRequest();
   // 목록과 같은 최근 추가순 (null이면 불러오는 중)
   const [seniors, setSeniors] = useState<Senior[] | null>(null);
   const [isLoadError, setIsLoadError] = useState(false);
@@ -22,7 +24,8 @@ const SeniorManagePage = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isDeleteError, setIsDeleteError] = useState(false);
+  // 삭제에 실패한 인원 (0이면 알림 숨김)
+  const [failedCount, setFailedCount] = useState(0);
 
   useEffect(() => {
     let ignore = false;
@@ -76,10 +79,13 @@ const SeniorManagePage = () => {
   const handleDelete = async () => {
     if (isDeleting) return;
 
+    const isLatest = startRequest();
     setIsDeleting(true);
-    setIsDeleteError(false);
+    setFailedCount(0);
     setIsConfirmOpen(false);
     const failedIds = await deleteSeniors(selectedIds);
+    // 화면을 떠났으면 처리하지 않음
+    if (!isLatest()) return;
     if (failedIds.length === 0) {
       goBack('/seniors');
       return;
@@ -92,7 +98,7 @@ const SeniorManagePage = () => {
       )
     );
     setSelectedIds(failedIds);
-    setIsDeleteError(true);
+    setFailedCount(failedIds.length);
     setIsDeleting(false);
   };
 
@@ -160,12 +166,12 @@ const SeniorManagePage = () => {
         )}
       </main>
 
-      {isDeleteError && (
+      {failedCount > 0 && (
         <p
           role="alert"
           className="shrink-0 border-t border-[#E5E8EB] bg-white px-5 pt-4 text-center text-[13px] text-[#E5484D]"
         >
-          {selectedIds.length}명을 삭제하지 못했어요. 다시 시도해주세요.
+          {failedCount}명을 삭제하지 못했어요. 다시 시도해주세요.
         </p>
       )}
       <div className="z-10 flex shrink-0 gap-3 border-t border-[#E5E8EB] bg-white px-5 pt-4 pb-10">

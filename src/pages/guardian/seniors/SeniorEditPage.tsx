@@ -64,8 +64,9 @@ const SeniorEditContent = ({ seniorId }: { seniorId: number }) => {
   const canSubmit =
     isChanged && !!form && isSeniorFormValid(form) && !isSubmitting;
 
-  // 바꾼 내용이 있으면 버릴지 먼저 확인
+  // 바꾼 내용이 있으면 버릴지 먼저 확인 (저장 중에는 막음)
   const handleCancel = () => {
+    if (isSubmitting) return;
     if (isChanged) setIsDiscardOpen(true);
     else goBack('/seniors');
   };
