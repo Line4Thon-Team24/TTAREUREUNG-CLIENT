@@ -239,7 +239,7 @@ export default function MedicineInfoCard({
                 aria-label="복용 시점"
                 placeholder="복용 시점"
                 options={TIMING_OPTIONS}
-                value={value.timing}
+                value={value.timing ?? ''}
                 onChange={(e) =>
                   update({ timing: e.target.value as DoseTiming })
                 }

@@ -26,7 +26,32 @@ export type Medicine = {
   endDate: string; // YYYY-MM-DD
   interval: DoseInterval;
   timesPerDay: number; // 하루 복용 횟수 (1~3)
-  timing: DoseTiming;
+  timing: DoseTiming | null; // 미입력이면 null
+};
+
+// 약 목록 API 응답 항목
+export type MedicationItemResponse = {
+  medication_id: number;
+  drug_name: string;
+  custom_drug_name: string | null;
+  category: string | null;
+  image_url: string | null;
+  prescription_file_name: string | null;
+  registration_type: 'AI' | 'MANUAL' | null;
+  effect: string | null;
+  storage_location: string | null;
+  intake_reason: string | null;
+  interval_days: number | null;
+  intake_timing:
+    | 'BEFORE_MEAL_30M'
+    | 'AFTER_MEAL_30M'
+    | 'RIGHT_AFTER_MEAL'
+    | 'BEFORE_BED'
+    | null;
+  meal_time_slots: ('MORNING' | 'LUNCH' | 'DINNER' | 'BEFORE_SLEEP')[];
+  start_date: string;
+  end_date: string;
+  created_at: string;
 };
 
 // 입력 화면에서 다루는 값 (등록 시 시스템이 정하는 값 제외)
