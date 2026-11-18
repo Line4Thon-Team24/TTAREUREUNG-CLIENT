@@ -1,5 +1,5 @@
 import { useState, type SubmitEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import BackHeader from '@/components/common/BackHeader';
 import FormField from '@/components/common/FormField';
 import InputField from '@/components/auth/InputField';
@@ -11,16 +11,23 @@ import { isValidEmail } from '@/utils/auth';
 
 const SignupEmailPage = () => {
   const navigate = useNavigate();
+  const serverError = (useLocation().state as { emailError?: string } | null)
+    ?.emailError;
   const { account, setAccount } = useSignupForm();
   const keyboardStyle = useKeyboardViewportStyle();
   const [email, setEmail] = useState(account.email);
   const [touched, setTouched] = useState(false);
+  const [showServerError, setShowServerError] = useState(!!serverError);
 
   const trimmed = email.trim();
   const isValid = isValidEmail(trimmed);
 
   const error =
-    touched && trimmed !== '' && !isValid ? SIGNUP_MESSAGE.email : '';
+    touched && trimmed !== '' && !isValid
+      ? SIGNUP_MESSAGE.email
+      : showServerError
+        ? serverError
+        : '';
 
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -58,7 +65,10 @@ const SignupEmailPage = () => {
               autoFocus
               placeholder="이메일을 입력해주세요."
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setShowServerError(false);
+              }}
               onBlur={() => setTouched(true)}
               error={error}
             />
