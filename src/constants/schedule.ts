@@ -95,6 +95,7 @@ export const MEAL_TIME_LABELS = {
   morning: '아침',
   lunch: '점심',
   dinner: '저녁',
+  night: '밤',
 } as const;
 
 // 요일 이름 (일요일 시작)
