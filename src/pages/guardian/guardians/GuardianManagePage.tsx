@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
-import { changeGuardianSenior, fetchGuardians } from '@/apis/guardian';
+import {
+  changeGuardianSenior,
+  deleteGuardianLinks,
+  fetchGuardians,
+} from '@/apis/guardian';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import SearchField from '@/components/common/SearchField';
@@ -10,7 +14,6 @@ import GuardianCard from '@/components/guardians/GuardianCard';
 import useGoBack from '@/hooks/useGoBack';
 import useLatestRequest from '@/hooks/useLatestRequest';
 import useSeniors from '@/hooks/useSeniors';
-import { deleteGuardians } from '@/mocks/guardians';
 import type { Guardian } from '@/types/guardian';
 import { filterByName } from '@/utils/nameSearch';
 
@@ -120,6 +123,28 @@ const GuardianManagePage = () => {
       .map(([id]) => id);
   };
 
+  // 일부 실패: 성공한 변경·해제는 반영하고, 실패한 것만 남겨 다시 시도할 수 있게 함
+  const keepFailed = (failedChangeIds: number[], deletedIds: number[]) => {
+    setSavedGuardians((prev) =>
+      (prev ?? [])
+        .filter((guardian) => !deletedIds.includes(guardian.id))
+        .map((guardian) =>
+          guardian.id in seniorChanges && !failedChangeIds.includes(guardian.id)
+            ? { ...guardian, seniorId: seniorChanges[guardian.id] }
+            : guardian
+        )
+    );
+    setSeniorChanges((prev) =>
+      Object.fromEntries(
+        Object.entries(prev).filter(([id]) =>
+          failedChangeIds.includes(Number(id))
+        )
+      )
+    );
+    setIsSaveError(true);
+    setIsSaving(false);
+  };
+
   const handleSave = async () => {
     if (isSaving) return;
 
@@ -133,29 +158,34 @@ const GuardianManagePage = () => {
       goBack('/guardians');
       return;
     }
-    // 저장된 변경은 반영하고, 실패한 변경만 남겨 다시 시도할 수 있게 함
-    setSavedGuardians((prev) =>
-      (prev ?? []).map((guardian) =>
-        guardian.id in seniorChanges && !failedIds.includes(guardian.id)
-          ? { ...guardian, seniorId: seniorChanges[guardian.id] }
-          : guardian
-      )
-    );
-    setSeniorChanges((prev) =>
-      Object.fromEntries(
-        Object.entries(prev).filter(([id]) => failedIds.includes(Number(id)))
-      )
-    );
-    setIsSaveError(true);
-    setIsSaving(false);
+    keepFailed(failedIds, []);
   };
 
-  // TODO: 연결 해제 API 연동 (다음 단계)
+  // 선택한 연결 해제 + 나머지 담당 시니어 변경 저장
   const handleDelete = async () => {
-    await saveChanges();
-    deleteGuardians(selectedIds);
+    if (isSaving) return;
+
+    const isLatest = startRequest();
+    const deleteIds = selectedIds;
     setModalStep(null);
-    goBack('/guardians');
+    setIsSaving(true);
+    setIsSaveError(false);
+    const [failedChangeIds, failedDeleteIds] = await Promise.all([
+      saveChanges(),
+      deleteGuardianLinks(deleteIds),
+    ]);
+    // 화면을 떠났으면 처리하지 않음
+    if (!isLatest()) return;
+    if (failedChangeIds.length === 0 && failedDeleteIds.length === 0) {
+      goBack('/guardians');
+      return;
+    }
+    keepFailed(
+      failedChangeIds,
+      deleteIds.filter((id) => !failedDeleteIds.includes(id))
+    );
+    // 해제에 실패한 보호자만 선택 상태로 남김
+    setSelectedIds(failedDeleteIds);
   };
 
   // 같은 보호자가 이미 맡은 시니어는 고를 수 없음 (서버가 거부)
@@ -247,7 +277,7 @@ const GuardianManagePage = () => {
           role="alert"
           className="shrink-0 border-t border-[#E5E8EB] bg-white px-5 pt-4 text-center text-[13px] text-[#E5484D]"
         >
-          담당 시니어를 바꾸지 못한 보호자가 있어요. 다시 시도해주세요.
+          처리하지 못한 보호자가 있어요. 다시 시도해주세요.
         </p>
       )}
       <div className="z-10 flex shrink-0 gap-3 border-t border-[#E5E8EB] bg-white px-5 pt-4 pb-10">
@@ -265,7 +295,7 @@ const GuardianManagePage = () => {
           ) : (
             <Button
               variant="danger"
-              disabled={!hasSelection}
+              disabled={!hasSelection || isSaving}
               onClick={() => setModalStep('delete')}
             >
               {hasSelection ? `${selectedIds.length}명 삭제하기` : '삭제하기'}

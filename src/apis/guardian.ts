@@ -54,3 +54,11 @@ export const changeGuardianSenior = async (
     seniorProfileId: seniorId,
   });
 };
+
+// 보호자-시니어 연결 여러 개 해제 (프로필은 남음, 실패한 연결 id 반환)
+export const deleteGuardianLinks = async (linkIds: number[]) => {
+  const results = await Promise.allSettled(
+    linkIds.map((id) => apiClient.delete(`/guardian-seniors/${id}`))
+  );
+  return linkIds.filter((_, index) => results[index].status === 'rejected');
+};
