@@ -189,7 +189,12 @@ const MedicineListPage = () => {
             <li key={medicine.id}>
               <MedicineCard
                 medicine={medicine}
-                onEdit={() => navigate(`/medicines/${medicine.id}/edit`)}
+                // 약 단건 조회 API가 없어 시니어 id로 목록에서 찾음
+                onEdit={() =>
+                  navigate(
+                    `/medicines/${medicine.id}/edit?seniorId=${medicine.seniorId}`
+                  )
+                }
               />
             </li>
           ))}

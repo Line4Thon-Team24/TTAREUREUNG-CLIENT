@@ -269,3 +269,17 @@ export const createMedicine = async (seniorId: number, form: MedicineForm) => {
   });
   return data.data.medication_id;
 };
+
+// 약 정보 수정 (지운 항목도 반영되도록 선택 항목은 빈 값 그대로 보냄)
+export const updateMedicine = async (
+  medicineId: number,
+  form: MedicineForm
+) => {
+  await apiClient.put(`/medications/${medicineId}`, {
+    ...toMedicationRequest(form),
+    custom_drug_name: form.displayName,
+    category: form.category,
+    effect: form.effect,
+    intake_reason: form.reason,
+  });
+};

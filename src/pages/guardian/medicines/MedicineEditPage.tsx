@@ -1,13 +1,20 @@
-import { useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import {
+  Navigate,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
+import { fetchMedicines, updateMedicine } from '@/apis/medicine';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import StepHeader from '@/components/common/StepHeader';
 import MedicineInfoCard from '@/components/medicines/MedicineInfoCard';
 import PrescriptionSummary from '@/components/medicines/PrescriptionSummary';
 import useGoBack from '@/hooks/useGoBack';
-import { getMedicine, updateMedicine } from '@/mocks/medicines';
-import type { RegisterFlow } from '@/types/medicine';
+import useLatestRequest from '@/hooks/useLatestRequest';
+import type { ApiError } from '@/types/api';
+import type { Medicine, MedicineForm, RegisterFlow } from '@/types/medicine';
 import { formatDateTime } from '@/utils/date';
 import {
   isMedicineFormChanged,
@@ -22,21 +29,84 @@ type ModalStep = 'doctor' | 'confirm' | 'discard' | null;
 // 변경 내용을 버리고 이동할 곳: 이전 화면 / 약 다시 등록하기
 type LeaveTarget = 'back' | 'reRegister';
 
+// 약이 바뀌면 이전 상태가 남지 않도록 새로 그림
 const MedicineEditPage = () => {
+  const { medicineId } = useParams();
+  const [searchParams] = useSearchParams();
+  const seniorId = searchParams.get('seniorId');
+  return (
+    <MedicineEditContent
+      key={`${seniorId}/${medicineId}`}
+      medicineId={Number(medicineId)}
+      seniorId={Number(seniorId)}
+    />
+  );
+};
+
+const MedicineEditContent = ({
+  medicineId,
+  seniorId,
+}: {
+  medicineId: number;
+  seniorId: number;
+}) => {
   const navigate = useNavigate();
   const goBack = useGoBack();
-  const { medicineId } = useParams();
+  const startRequest = useLatestRequest();
 
-  const [medicine] = useState(() => getMedicine(Number(medicineId)));
-  const [form, setForm] = useState(() =>
-    medicine ? toMedicineForm(medicine) : null
-  );
+  // null이면 불러오는 중 (약 단건 조회 API가 없어 시니어의 약 목록에서 찾음)
+  const [medicine, setMedicine] = useState<Medicine | null>(null);
+  const [form, setForm] = useState<MedicineForm | null>(null);
+  const [isNotFound, setIsNotFound] = useState(false);
+  const [isLoadError, setIsLoadError] = useState(false);
   const [modalStep, setModalStep] = useState<ModalStep>(null);
   const [leaveTarget, setLeaveTarget] = useState<LeaveTarget>('back');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitError, setIsSubmitError] = useState(false);
+
+  useEffect(() => {
+    let ignore = false;
+    fetchMedicines(seniorId)
+      .then((medicines) => {
+        if (ignore) return;
+        const found = medicines.find(({ id }) => id === medicineId);
+        if (!found) {
+          setIsNotFound(true);
+          return;
+        }
+        setMedicine(found);
+        setForm(toMedicineForm(found));
+      })
+      .catch((error: ApiError) => {
+        if (ignore) return;
+        // 없는 시니어(404)·잘못된 주소(400)면 약 목록으로
+        if (error.status === 404 || error.status === 400) setIsNotFound(true);
+        else setIsLoadError(true);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [seniorId, medicineId]);
 
   // 없는 약이면 약 목록으로 이동
-  if (!medicine || !form) {
+  if (isNotFound) {
     return <Navigate to="/medicines" replace />;
+  }
+
+  if (!medicine || !form) {
+    return (
+      <div className="flex h-dvh flex-col">
+        <StepHeader
+          title="약 정보 수정"
+          onBack={() => goBack(`/medicines?seniorId=${seniorId}`)}
+        />
+        {isLoadError && (
+          <p className="pt-20 text-center text-[14px] text-[#6B7684]">
+            약 정보를 불러오지 못했어요.
+          </p>
+        )}
+      </div>
+    );
   }
 
   const isManual = medicine.source === 'manual';
@@ -68,12 +138,28 @@ const MedicineEditPage = () => {
     }
   };
 
-  const handleCancel = () => requestLeave('back');
+  // 저장 중에는 이동을 막음 (저장이 계속 진행되므로)
+  const handleCancel = () => {
+    if (!isSubmitting) requestLeave('back');
+  };
 
-  const handleSubmit = () => {
-    updateMedicine(medicine.id, trimMedicineForm(form));
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+
+    const isLatest = startRequest();
     setModalStep(null);
-    goBack(`/medicines?seniorId=${medicine.seniorId}`);
+    setIsSubmitting(true);
+    setIsSubmitError(false);
+    try {
+      await updateMedicine(medicine.id, trimMedicineForm(form));
+      // 화면을 떠났으면 이동하지 않음
+      if (!isLatest()) return;
+      goBack(`/medicines?seniorId=${medicine.seniorId}`);
+    } catch {
+      if (!isLatest()) return;
+      setIsSubmitError(true);
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -84,7 +170,7 @@ const MedicineEditPage = () => {
       <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pt-8 pb-12">
         <PrescriptionSummary
           prescription={medicine.prescription}
-          onReRegister={() => requestLeave('reRegister')}
+          onReRegister={() => !isSubmitting && requestLeave('reRegister')}
         />
 
         <div className="relative flex items-center justify-center py-2">
@@ -104,6 +190,14 @@ const MedicineEditPage = () => {
         />
       </main>
 
+      {isSubmitError && (
+        <p
+          role="alert"
+          className="shrink-0 border-t border-[#E5E8EB] bg-white px-5 pt-4 text-center text-[13px] text-[#E5484D]"
+        >
+          약 정보 수정에 실패했어요. 다시 시도해주세요.
+        </p>
+      )}
       <div className="z-10 flex shrink-0 gap-3 border-t border-[#E5E8EB] bg-white px-5 pt-4 pb-10">
         <div className="w-29.25 shrink-0">
           <Button variant="secondary" onClick={handleCancel}>
@@ -111,7 +205,10 @@ const MedicineEditPage = () => {
           </Button>
         </div>
         <div className="min-w-0 flex-1">
-          <Button disabled={!canSubmit} onClick={() => setModalStep('doctor')}>
+          <Button
+            disabled={!canSubmit || isSubmitting}
+            onClick={() => setModalStep('doctor')}
+          >
             수정하기
           </Button>
         </div>
