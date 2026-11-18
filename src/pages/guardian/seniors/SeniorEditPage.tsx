@@ -6,6 +6,7 @@ import ConfirmModal from '@/components/common/ConfirmModal';
 import StepHeader from '@/components/common/StepHeader';
 import SeniorInfoForm from '@/components/seniors/SeniorInfoForm';
 import useGoBack from '@/hooks/useGoBack';
+import useLatestRequest from '@/hooks/useLatestRequest';
 import type { ApiError } from '@/types/api';
 import type { Senior } from '@/types/senior';
 import {
@@ -16,9 +17,15 @@ import {
   type SeniorFormValue,
 } from '@/utils/seniorForm';
 
+// 시니어가 바뀌면 이전 상태가 남지 않도록 새로 그림
 const SeniorEditPage = () => {
-  const goBack = useGoBack();
   const { seniorId } = useParams();
+  return <SeniorEditContent key={seniorId} seniorId={Number(seniorId)} />;
+};
+
+const SeniorEditContent = ({ seniorId }: { seniorId: number }) => {
+  const goBack = useGoBack();
+  const startRequest = useLatestRequest();
 
   // null이면 불러오는 중
   const [senior, setSenior] = useState<Senior | null>(null);
@@ -31,7 +38,7 @@ const SeniorEditPage = () => {
 
   useEffect(() => {
     let ignore = false;
-    fetchSenior(Number(seniorId))
+    fetchSenior(seniorId)
       .then((data) => {
         if (ignore) return;
         setSenior(data);
@@ -66,12 +73,16 @@ const SeniorEditPage = () => {
   const handleSubmit = async () => {
     if (!canSubmit || !senior || !form) return;
 
+    const isLatest = startRequest();
     setIsSubmitting(true);
     setIsSubmitError(false);
     try {
       await updateSenior(senior.id, toSeniorForm(form));
+      // 화면을 떠났으면 이동하지 않음
+      if (!isLatest()) return;
       goBack('/seniors');
     } catch {
+      if (!isLatest()) return;
       setIsSubmitError(true);
       setIsSubmitting(false);
     }

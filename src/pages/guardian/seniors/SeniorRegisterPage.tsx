@@ -9,6 +9,7 @@ import FormField from '@/components/common/FormField';
 import SelectField from '@/components/common/SelectField';
 import TextField from '@/components/common/TextField';
 import useGoBack from '@/hooks/useGoBack';
+import useLatestRequest from '@/hooks/useLatestRequest';
 import BrandBadge from '@/components/common/BrandBadge';
 import { GENDER_OPTIONS } from '@/constants/senior';
 import { createSenior } from '@/apis/senior';
@@ -28,6 +29,7 @@ const SeniorRegisterPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const goBack = useGoBack();
+  const startRequest = useLatestRequest();
   // 등록을 시작한 화면 (없으면 회원가입 직후 등록 → 복용 일정)
   const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
   const [step, setStep] = useState<number>(STEP.NAME);
@@ -72,6 +74,7 @@ const SeniorRegisterPage = () => {
   const handleSubmit = async () => {
     if (!isValid || isSubmitting) return;
 
+    const isLatest = startRequest();
     setIsSubmitting(true);
     setIsError(false);
     try {
@@ -81,12 +84,15 @@ const SeniorRegisterPage = () => {
         gender,
         phoneNumber,
       });
+      // 화면을 떠났으면 이동하지 않음
+      if (!isLatest()) return;
       // 완료 화면은 등록을 거쳐 온 경우에만 보이도록 state 전달 (약 등록에 시니어 id 사용)
       navigate('/seniors/register/complete', {
         replace: true,
         state: { seniorId: senior.id, returnTo },
       });
     } catch {
+      if (!isLatest()) return;
       setIsError(true);
       setIsSubmitting(false);
     }

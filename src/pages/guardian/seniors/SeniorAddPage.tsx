@@ -5,6 +5,7 @@ import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import SeniorInfoForm from '@/components/seniors/SeniorInfoForm';
 import useGoBack from '@/hooks/useGoBack';
+import useLatestRequest from '@/hooks/useLatestRequest';
 import { createSenior } from '@/apis/senior';
 import {
   EMPTY_SENIOR_FORM,
@@ -16,6 +17,7 @@ import {
 const SeniorAddPage = () => {
   const navigate = useNavigate();
   const goBack = useGoBack();
+  const startRequest = useLatestRequest();
   const location = useLocation();
   // 완료 화면에서 '건너뛰기' 시 돌아갈 곳 (기본: 시니어 목록)
   const returnTo =
@@ -38,15 +40,19 @@ const SeniorAddPage = () => {
   const handleSubmit = async () => {
     if (!canSubmit || isSubmitting) return;
 
+    const isLatest = startRequest();
     setIsSubmitting(true);
     setIsError(false);
     try {
       const senior = await createSenior(toSeniorForm(form));
+      // 화면을 떠났으면 이동하지 않음
+      if (!isLatest()) return;
       navigate('/seniors/register/complete', {
         replace: true,
         state: { seniorId: senior.id, returnTo },
       });
     } catch {
+      if (!isLatest()) return;
       setIsError(true);
       setIsSubmitting(false);
     }
