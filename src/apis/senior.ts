@@ -2,12 +2,15 @@ import { apiClient } from '@/apis/client';
 import type { BaseResponse } from '@/types/api';
 import type { ProfileResponse, Senior, SeniorForm } from '@/types/senior';
 
+const GENDER_FROM_API = { MALE: 'male', FEMALE: 'female' } as const;
+const GENDER_TO_API = { male: 'MALE', female: 'FEMALE' } as const;
+
 // 프로필 응답 → 화면용 시니어
 const toSenior = (profile: ProfileResponse): Senior => ({
   id: profile.profileId,
   name: profile.name,
   birthDate: profile.birthDate ?? '',
-  gender: profile.gender === 'MALE' ? 'male' : 'female',
+  gender: profile.gender ? GENDER_FROM_API[profile.gender] : null,
   phoneNumber: profile.phoneNumber ?? '',
   registeredAt: null, // TODO: 등록일 필드 추가 시 연동
   isFavorite: false, // TODO: 즐겨찾기 필드 추가 시 연동
@@ -17,7 +20,7 @@ const toSenior = (profile: ProfileResponse): Senior => ({
 const toProfileRequest = (form: SeniorForm) => ({
   name: form.name,
   birthDate: form.birthDate,
-  gender: form.gender === 'male' ? 'MALE' : 'FEMALE',
+  gender: form.gender ? GENDER_TO_API[form.gender] : undefined,
   phoneNumber: form.phoneNumber,
 });
 

@@ -4,7 +4,7 @@ export type Senior = {
   id: number;
   name: string;
   birthDate: string; // YYYY-MM-DD
-  gender: Gender;
+  gender: Gender | null; // 미입력이면 null
   phoneNumber: string;
   registeredAt: string | null; // 등록 일시 (ISO 문자열, API 미제공 시 null)
   isFavorite: boolean;

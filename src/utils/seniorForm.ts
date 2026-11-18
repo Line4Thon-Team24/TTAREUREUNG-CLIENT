@@ -30,7 +30,7 @@ export const toSeniorFormValue = (senior: Senior): SeniorFormValue => {
     birthDate: senior.birthDate
       ? { year, month: String(Number(month)), day: String(Number(day)) }
       : EMPTY_BIRTH_DATE,
-    gender: senior.gender,
+    gender: senior.gender ?? '',
     phoneNumber: senior.phoneNumber,
   };
 };
