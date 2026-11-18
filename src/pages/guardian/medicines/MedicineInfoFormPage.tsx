@@ -102,6 +102,8 @@ const MedicineInfoFormPage = () => {
           { fileKey: state.fileKey, fileName: state.prescription.fileName }
         );
       }
+      // 등록되면 화면을 떠났어도 완료 표시 (앞으로가기로 다시 들어와 중복 등록 방지)
+      completedKeys.add(location.key);
       // 다시 등록하기면 기존 약 삭제 (실패해도 새 약은 등록됐으므로 계속 진행)
       if (state.replaceMedicineId !== undefined) {
         await deleteMedicines([state.replaceMedicineId]).catch(() => {});
