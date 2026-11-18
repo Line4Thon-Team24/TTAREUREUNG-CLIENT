@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
+import { deleteSeniors, fetchSeniors } from '@/apis/senior';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import SearchField from '@/components/common/SearchField';
@@ -8,28 +9,41 @@ import StepHeader from '@/components/common/StepHeader';
 import SeniorCard from '@/components/seniors/SeniorCard';
 import useGoBack from '@/hooks/useGoBack';
 import { getMedicines } from '@/mocks/medicines';
-import { deleteSeniors, getSeniors } from '@/mocks/seniors';
+import type { Senior } from '@/types/senior';
 import { filterByName } from '@/utils/nameSearch';
 
 const SeniorManagePage = () => {
   const goBack = useGoBack();
-  // 목록과 같은 최근 추가순
-  const [seniors] = useState(() =>
-    getSeniors().sort((a, b) =>
-      (b.registeredAt ?? '').localeCompare(a.registeredAt ?? '')
-    )
-  );
+  // 목록과 같은 최근 추가순 (null이면 불러오는 중)
+  const [seniors, setSeniors] = useState<Senior[] | null>(null);
+  const [isLoadError, setIsLoadError] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [keyword, setKeyword] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteError, setIsDeleteError] = useState(false);
+
+  useEffect(() => {
+    let ignore = false;
+    fetchSeniors()
+      .then((data) => {
+        if (!ignore) setSeniors(data);
+      })
+      .catch(() => {
+        if (!ignore) setIsLoadError(true);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   // 편집할 시니어가 없으면 목록으로
-  if (seniors.length === 0) {
+  if (seniors?.length === 0) {
     return <Navigate to="/seniors" replace />;
   }
 
-  const visibleSeniors = filterByName(seniors, keyword);
+  const visibleSeniors = filterByName(seniors ?? [], keyword);
   const visibleIds = visibleSeniors.map(({ id }) => id);
   const isAllSelected =
     visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
@@ -59,10 +73,27 @@ const SeniorManagePage = () => {
     setKeyword('');
   };
 
-  const handleDelete = () => {
-    deleteSeniors(selectedIds);
+  const handleDelete = async () => {
+    if (isDeleting) return;
+
+    setIsDeleting(true);
+    setIsDeleteError(false);
     setIsConfirmOpen(false);
-    goBack('/seniors');
+    const failedIds = await deleteSeniors(selectedIds);
+    if (failedIds.length === 0) {
+      goBack('/seniors');
+      return;
+    }
+    // 일부만 실패하면 삭제된 시니어는 빼고, 실패한 시니어만 선택 상태로 유지
+    setSeniors((prev) =>
+      (prev ?? []).filter(
+        (senior) =>
+          !selectedIds.includes(senior.id) || failedIds.includes(senior.id)
+      )
+    );
+    setSelectedIds(failedIds);
+    setIsDeleteError(true);
+    setIsDeleting(false);
   };
 
   return (
@@ -104,7 +135,11 @@ const SeniorManagePage = () => {
       )}
 
       <main className="min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-12">
-        {visibleSeniors.length === 0 ? (
+        {isLoadError ? (
+          <p className="pt-20 text-center text-[14px] text-[#6B7684]">
+            시니어 목록을 불러오지 못했어요.
+          </p>
+        ) : seniors === null ? null : visibleSeniors.length === 0 ? (
           <p className="pt-20 text-center text-[14px] text-[#6B7684]">
             검색 결과가 없어요.
           </p>
@@ -125,6 +160,14 @@ const SeniorManagePage = () => {
         )}
       </main>
 
+      {isDeleteError && (
+        <p
+          role="alert"
+          className="shrink-0 border-t border-[#E5E8EB] bg-white px-5 pt-4 text-center text-[13px] text-[#E5484D]"
+        >
+          {selectedIds.length}명을 삭제하지 못했어요. 다시 시도해주세요.
+        </p>
+      )}
       <div className="z-10 flex shrink-0 gap-3 border-t border-[#E5E8EB] bg-white px-5 pt-4 pb-10">
         <div className="w-29.25 shrink-0">
           <Button variant="secondary" onClick={() => goBack('/seniors')}>
@@ -134,7 +177,7 @@ const SeniorManagePage = () => {
         <div className="min-w-0 flex-1">
           <Button
             variant="danger"
-            disabled={selectedIds.length === 0}
+            disabled={selectedIds.length === 0 || isDeleting}
             onClick={() => setIsConfirmOpen(true)}
           >
             {selectedIds.length > 0

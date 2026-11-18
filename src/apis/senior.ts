@@ -50,6 +50,14 @@ export const updateSenior = async (seniorId: number, form: SeniorForm) => {
   await apiClient.patch(`/profiles/${seniorId}`, toProfileRequest(form));
 };
 
+// 시니어 여러 명 삭제 (삭제에 실패한 id 반환)
+export const deleteSeniors = async (seniorIds: number[]) => {
+  const results = await Promise.allSettled(
+    seniorIds.map((id) => apiClient.delete(`/profiles/${id}`))
+  );
+  return seniorIds.filter((_, index) => results[index].status === 'rejected');
+};
+
 // TODO: 프로필 선택 연동 후 선택된 보호자 프로필로 교체
 const fetchGuardianProfileId = async () => {
   const profiles = await fetchProfiles();
