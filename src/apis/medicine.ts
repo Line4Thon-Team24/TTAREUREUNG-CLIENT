@@ -56,3 +56,11 @@ export const fetchMedicines = async (seniorId: number) => {
   >('/medications', { params: { senior_id: seniorId } });
   return data.data.medications.map((item) => toMedicine(item, seniorId));
 };
+
+// 약 일괄 삭제 (하나라도 실패하면 전체가 삭제되지 않음)
+export const deleteMedicines = async (medicineIds: number[]) => {
+  await apiClient.delete('/medications', {
+    // 서버가 받는 형식: medication_ids=1,2,3
+    params: { medication_ids: medicineIds.join(',') },
+  });
+};
