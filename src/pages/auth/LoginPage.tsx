@@ -1,7 +1,10 @@
 import { useState, type SubmitEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { login } from '@/apis/auth';
 import InputField from '@/components/auth/InputField';
 import Button from '@/components/auth/Button';
+import { AUTH_ERROR_CODE, LOGIN_ERROR_MESSAGE } from '@/constants/auth';
+import type { ApiError } from '@/types/api';
 import type { LoginForm, LoginErrors } from '@/types/auth';
 import { validateLogin } from '@/utils/auth';
 
@@ -9,6 +12,8 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState<LoginForm>({ email: '', password: '' });
   const [errors, setErrors] = useState<LoginErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const hasError = Boolean(errors.email || errors.password);
   const canSubmit = form.email !== '' && form.password !== '' && !hasError;
@@ -17,11 +22,12 @@ const LoginPage = () => {
   const handleChange = (key: keyof LoginForm, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     setErrors({});
+    setSubmitError('');
   };
 
-  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit || isSubmitting) return;
 
     const nextErrors = validateLogin(form);
     if (Object.keys(nextErrors).length > 0) {
@@ -29,7 +35,22 @@ const LoginPage = () => {
       return;
     }
 
-    navigate('/profile/select', { replace: true });
+    setIsSubmitting(true);
+    setSubmitError('');
+    try {
+      await login({ email: form.email.trim(), password: form.password });
+      navigate('/profile/select', { replace: true });
+    } catch (error) {
+      const { code } = error as ApiError;
+      if (code === AUTH_ERROR_CODE.invalidCredentials) {
+        setSubmitError(LOGIN_ERROR_MESSAGE.invalidCredentials);
+      } else if (code === AUTH_ERROR_CODE.inactive) {
+        setSubmitError(LOGIN_ERROR_MESSAGE.inactive);
+      } else {
+        setSubmitError(LOGIN_ERROR_MESSAGE.failed);
+      }
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -68,7 +89,17 @@ const LoginPage = () => {
           />
         </div>
 
-        <Button type="submit" disabled={!canSubmit} className="mt-8">
+        {submitError && (
+          <p role="alert" className="mt-3 px-1 text-[12px] text-red-500">
+            {submitError}
+          </p>
+        )}
+
+        <Button
+          type="submit"
+          disabled={!canSubmit || isSubmitting}
+          className="mt-8"
+        >
           로그인하기
         </Button>
 

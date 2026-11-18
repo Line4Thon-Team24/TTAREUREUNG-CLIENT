@@ -7,10 +7,18 @@ import FormField from '@/components/common/FormField';
 import SelectField from '@/components/common/SelectField';
 import TextField from '@/components/common/TextField';
 import Button from '@/components/auth/Button';
-import { GENDER_OPTIONS } from '@/constants/auth';
+import { login, signup } from '@/apis/auth';
+import { createGuardian } from '@/apis/guardian';
+import {
+  AUTH_ERROR_CODE,
+  GENDER_OPTIONS,
+  SIGNUP_MESSAGE,
+} from '@/constants/auth';
 import { useSignupForm } from '@/hooks/useSignupForm';
+import type { ApiError } from '@/types/api';
 import type { Gender } from '@/types/senior';
 import { isValidBirthDate } from '@/utils/birthDate';
+import { toSeniorForm } from '@/utils/seniorForm';
 import {
   formatPhoneNumber,
   isValidPhoneNumber,
@@ -33,6 +41,11 @@ const SignupGuardianPage = () => {
   const [birthDate, setBirthDate] = useState(guardian.birthDate);
   const [gender, setGender] = useState<Gender | ''>(guardian.gender);
   const [phoneNumber, setPhoneNumber] = useState(guardian.phoneNumber);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+
+  // 계정이 이미 생성된 경우, 재시도 시 계정 가입 과정을 건너뜀
+  const isAccountCreated = useRef(false);
 
   const nameRef = useRef<HTMLInputElement>(null);
   const birthDateRef = useRef<HTMLSelectElement>(null);
@@ -70,11 +83,36 @@ const SignupGuardianPage = () => {
     gender !== '' &&
     isValidPhoneNumber(phoneNumber);
 
-  const handleSubmit = () => {
-    if (!isValid) return;
+  const handleSubmit = async () => {
+    if (!isValid || isSubmitting) return;
 
     setGuardian({ name: name.trim(), birthDate, gender, phoneNumber });
-    navigate('/signup/complete', { replace: true });
+    setIsSubmitting(true);
+    setSubmitError('');
+    try {
+      if (!isAccountCreated.current) {
+        await signup(account);
+        isAccountCreated.current = true;
+      }
+      // 프로필 생성에 Access Token이 필요하므로 가입 직후 로그인
+      await login(account);
+      await createGuardian(
+        toSeniorForm({ name, birthDate, gender, phoneNumber })
+      );
+      navigate('/signup/complete', { replace: true });
+    } catch (error) {
+      const { code } = error as ApiError;
+      if (code === AUTH_ERROR_CODE.emailDuplicate) {
+        // 이메일을 다시 입력하도록 첫 단계로 이동
+        navigate('/signup', {
+          replace: true,
+          state: { emailError: SIGNUP_MESSAGE.emailDuplicate },
+        });
+        return;
+      }
+      setSubmitError(SIGNUP_MESSAGE.failed);
+      setIsSubmitting(false);
+    }
   };
 
   // 단계 순서대로 정의하고, 화면에는 최신 입력칸이 위로 오도록 역순 표시
@@ -209,7 +247,12 @@ const SignupGuardianPage = () => {
       </div>
 
       <div className="sticky bottom-0 bg-white px-5 pt-4 pb-10">
-        <Button disabled={!isValid} onClick={handleSubmit}>
+        {submitError && (
+          <p role="alert" className="mb-2 text-center text-[13px] text-red-500">
+            {submitError}
+          </p>
+        )}
+        <Button disabled={!isValid || isSubmitting} onClick={handleSubmit}>
           회원가입
         </Button>
       </div>
