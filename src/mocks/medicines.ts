@@ -5,7 +5,7 @@ import type {
   RecognizedArea,
   RecognizedMedicine,
 } from '@/types/medicine';
-import { addDaysToDateString, toDateString } from '@/utils/date';
+import { createEmptyMedicineForm } from '@/utils/medicineForm';
 import prescriptionSampleImage from '@/assets/images/prescription-sample.png';
 
 const samplePrescription = {
@@ -162,23 +162,8 @@ export const deleteMedicines = (ids: number[]) => {
   }
 };
 
-// 빈 약 정보 (직접 입력용, 오늘부터 일주일)
-export const createEmptyMedicineForm = (): MedicineForm => {
-  const today = toDateString(new Date());
-  return {
-    name: '',
-    category: '',
-    effect: '',
-    reason: '',
-    displayName: '',
-    storageLocation: '',
-    startDate: today,
-    endDate: addDaysToDateString(today, 6),
-    interval: 'daily',
-    timesPerDay: 3,
-    timing: 'afterMeal',
-  };
-};
+// 빈 약 정보는 utils로 옮김 (기존 import 유지용)
+export { createEmptyMedicineForm };
 
 // AI 인식 API 연동 전 고정 결과
 export const RECOGNITION_CONFIDENCE = 98.5;
