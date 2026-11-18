@@ -44,3 +44,13 @@ export const setPrimaryGuardian = async (
     guardian_id: guardianProfileId,
   });
 };
+
+// 담당 시니어 변경 (연결 id는 유지, 대표 승계는 서버가 처리)
+export const changeGuardianSenior = async (
+  linkId: number,
+  seniorId: number
+) => {
+  await apiClient.patch(`/guardian-seniors/${linkId}`, {
+    seniorProfileId: seniorId,
+  });
+};

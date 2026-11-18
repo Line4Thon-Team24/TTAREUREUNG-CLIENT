@@ -1,18 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
+import { changeGuardianSenior, fetchGuardians } from '@/apis/guardian';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import SearchField from '@/components/common/SearchField';
 import StepHeader from '@/components/common/StepHeader';
 import GuardianCard from '@/components/guardians/GuardianCard';
 import useGoBack from '@/hooks/useGoBack';
-import {
-  changeGuardianSenior,
-  deleteGuardians,
-  getGuardians,
-} from '@/mocks/guardians';
-import { getSeniors } from '@/mocks/seniors';
+import useLatestRequest from '@/hooks/useLatestRequest';
+import useSeniors from '@/hooks/useSeniors';
+import { deleteGuardians } from '@/mocks/guardians';
+import type { Guardian } from '@/types/guardian';
 import { filterByName } from '@/utils/nameSearch';
 
 // 삭제 확인 / 변경 취소 확인
@@ -20,8 +19,13 @@ type ModalStep = 'delete' | 'discard' | null;
 
 const GuardianManagePage = () => {
   const goBack = useGoBack();
-  const [savedGuardians] = useState(getGuardians);
-  const [seniors] = useState(getSeniors);
+  const startRequest = useLatestRequest();
+  // 편집은 연결(보호자-시니어) 단위 카드 (null이면 불러오는 중)
+  const [savedGuardians, setSavedGuardians] = useState<Guardian[] | null>(null);
+  const [isLoadError, setIsLoadError] = useState(false);
+  const { seniors } = useSeniors();
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaveError, setIsSaveError] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   // 저장 전 담당 시니어 변경 (보호자 id → 시니어 id)
   const [seniorChanges, setSeniorChanges] = useState<Record<number, number>>(
@@ -31,13 +35,27 @@ const GuardianManagePage = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [keyword, setKeyword] = useState('');
 
+  useEffect(() => {
+    let ignore = false;
+    fetchGuardians()
+      .then((data) => {
+        if (!ignore) setSavedGuardians(data);
+      })
+      .catch(() => {
+        if (!ignore) setIsLoadError(true);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   // 편집할 보호자가 없으면 목록으로
-  if (savedGuardians.length === 0) {
+  if (savedGuardians?.length === 0) {
     return <Navigate to="/guardians" replace />;
   }
 
   // 화면에는 변경 내용을 반영해서 표시 (담당 시니어가 바뀌면 대표 해제)
-  const guardians = savedGuardians.map((guardian) =>
+  const guardians = (savedGuardians ?? []).map((guardian) =>
     guardian.id in seniorChanges
       ? {
           ...guardian,
@@ -80,7 +98,7 @@ const GuardianManagePage = () => {
 
   // 담당 시니어 변경은 저장 전까지 화면에만 반영 (원래 값으로 돌리면 변경 없음)
   const handleChangeSenior = (id: number, seniorId: number) => {
-    const original = savedGuardians.find((guardian) => guardian.id === id);
+    const original = savedGuardians?.find((guardian) => guardian.id === id);
     setSeniorChanges((prev) => {
       const next = { ...prev };
       if (original?.seniorId === seniorId) delete next[id];
@@ -89,25 +107,66 @@ const GuardianManagePage = () => {
     });
   };
 
-  // 삭제할 보호자를 빼고 담당 시니어 변경 저장
-  const saveChanges = () => {
-    for (const [id, seniorId] of Object.entries(seniorChanges)) {
-      if (!selectedIds.includes(Number(id))) {
-        changeGuardianSenior(Number(id), seniorId);
-      }
+  // 삭제할 보호자를 빼고 담당 시니어 변경 저장 (실패한 연결 id 반환)
+  const saveChanges = async () => {
+    const changes = Object.entries(seniorChanges)
+      .map(([id, seniorId]) => [Number(id), seniorId] as const)
+      .filter(([id]) => !selectedIds.includes(id));
+    const results = await Promise.allSettled(
+      changes.map(([id, seniorId]) => changeGuardianSenior(id, seniorId))
+    );
+    return changes
+      .filter((_, index) => results[index].status === 'rejected')
+      .map(([id]) => id);
+  };
+
+  const handleSave = async () => {
+    if (isSaving) return;
+
+    const isLatest = startRequest();
+    setIsSaving(true);
+    setIsSaveError(false);
+    const failedIds = await saveChanges();
+    // 화면을 떠났으면 처리하지 않음
+    if (!isLatest()) return;
+    if (failedIds.length === 0) {
+      goBack('/guardians');
+      return;
     }
+    // 저장된 변경은 반영하고, 실패한 변경만 남겨 다시 시도할 수 있게 함
+    setSavedGuardians((prev) =>
+      (prev ?? []).map((guardian) =>
+        guardian.id in seniorChanges && !failedIds.includes(guardian.id)
+          ? { ...guardian, seniorId: seniorChanges[guardian.id] }
+          : guardian
+      )
+    );
+    setSeniorChanges((prev) =>
+      Object.fromEntries(
+        Object.entries(prev).filter(([id]) => failedIds.includes(Number(id)))
+      )
+    );
+    setIsSaveError(true);
+    setIsSaving(false);
   };
 
-  const handleSave = () => {
-    saveChanges();
-    goBack('/guardians');
-  };
-
-  const handleDelete = () => {
-    saveChanges();
+  // TODO: 연결 해제 API 연동 (다음 단계)
+  const handleDelete = async () => {
+    await saveChanges();
     deleteGuardians(selectedIds);
     setModalStep(null);
     goBack('/guardians');
+  };
+
+  // 같은 보호자가 이미 맡은 시니어는 고를 수 없음 (서버가 거부)
+  const getSelectableSeniors = (target: Guardian) => {
+    const taken = guardians
+      .filter(
+        (guardian) =>
+          guardian.profileId === target.profileId && guardian.id !== target.id
+      )
+      .map((guardian) => guardian.seniorId);
+    return (seniors ?? []).filter(({ id }) => !taken.includes(id));
   };
 
   // 바꾼 내용이 있으면 버릴지 먼저 확인
@@ -155,7 +214,11 @@ const GuardianManagePage = () => {
       )}
 
       <main className="min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-12">
-        {visibleGuardians.length === 0 ? (
+        {isLoadError ? (
+          <p className="pt-20 text-center text-[14px] text-[#6B7684]">
+            보호자 목록을 불러오지 못했어요.
+          </p>
+        ) : savedGuardians === null ? null : visibleGuardians.length === 0 ? (
           <p className="pt-20 text-center text-[14px] text-[#6B7684]">
             검색 결과가 없어요.
           </p>
@@ -165,7 +228,7 @@ const GuardianManagePage = () => {
               <li key={guardian.id}>
                 <GuardianCard
                   guardian={guardian}
-                  seniors={seniors}
+                  seniors={getSelectableSeniors(guardian)}
                   selectable
                   selected={selectedIds.includes(guardian.id)}
                   onToggleSelect={() => toggleGuardian(guardian.id)}
@@ -179,6 +242,14 @@ const GuardianManagePage = () => {
         )}
       </main>
 
+      {isSaveError && (
+        <p
+          role="alert"
+          className="shrink-0 border-t border-[#E5E8EB] bg-white px-5 pt-4 text-center text-[13px] text-[#E5484D]"
+        >
+          담당 시니어를 바꾸지 못한 보호자가 있어요. 다시 시도해주세요.
+        </p>
+      )}
       <div className="z-10 flex shrink-0 gap-3 border-t border-[#E5E8EB] bg-white px-5 pt-4 pb-10">
         <div className="w-29.25 shrink-0">
           <Button variant="secondary" onClick={handleCancel}>
@@ -188,7 +259,9 @@ const GuardianManagePage = () => {
         <div className="min-w-0 flex-1">
           {/* 선택한 보호자가 없고 담당 시니어만 바꿨으면 저장 버튼 */}
           {!hasSelection && hasChanges ? (
-            <Button onClick={handleSave}>저장하기</Button>
+            <Button disabled={isSaving} onClick={handleSave}>
+              저장하기
+            </Button>
           ) : (
             <Button
               variant="danger"
