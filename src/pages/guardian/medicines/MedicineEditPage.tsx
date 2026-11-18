@@ -151,7 +151,11 @@ const MedicineEditContent = ({
     setIsSubmitting(true);
     setIsSubmitError(false);
     try {
-      await updateMedicine(medicine.id, trimMedicineForm(form));
+      await updateMedicine(
+        medicine.id,
+        trimMedicineForm(form),
+        toMedicineForm(medicine)
+      );
       // 화면을 떠났으면 이동하지 않음
       if (!isLatest()) return;
       goBack(`/medicines?seniorId=${medicine.seniorId}`);

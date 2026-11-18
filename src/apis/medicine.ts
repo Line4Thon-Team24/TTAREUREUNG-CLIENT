@@ -281,15 +281,25 @@ export const createMedicine = async (seniorId: number, form: MedicineForm) => {
 };
 
 // 약 정보 수정 (지운 항목도 반영되도록 선택 항목은 빈 값 그대로 보냄)
+// 횟수·시점·간격을 바꾸지 않았으면 시간대·간격은 보내지 않음
+// → 서버의 기존 값을 유지 (다르게 보내면 오늘 이후 복용 기록이 다시 만들어짐)
 export const updateMedicine = async (
   medicineId: number,
-  form: MedicineForm
+  form: MedicineForm,
+  before: MedicineForm
 ) => {
+  const isSlotChanged =
+    form.timesPerDay !== before.timesPerDay || form.timing !== before.timing;
+  const isIntervalChanged = form.interval !== before.interval;
   await apiClient.put(`/medications/${medicineId}`, {
     ...toMedicationRequest(form),
     custom_drug_name: form.displayName,
     category: form.category,
     effect: form.effect,
     intake_reason: form.reason,
+    meal_time_slots: isSlotChanged ? toMealTimeSlots(form) : undefined,
+    interval_days: isIntervalChanged
+      ? INTERVAL_TO_DAYS[form.interval]
+      : undefined,
   });
 };
