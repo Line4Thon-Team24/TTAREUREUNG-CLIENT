@@ -19,6 +19,8 @@ export type ProfileResponse = {
   phoneNumber: string | null;
   relationship: string | null;
   role: 'GUARDIAN' | 'SENIOR';
+  isFavorite: boolean;
+  createdAt: string;
   linkedProfiles: {
     profileId: number;
     name: string;

@@ -12,7 +12,7 @@ const toSenior = (profile: ProfileResponse): Senior => ({
   birthDate: profile.birthDate ?? '',
   gender: profile.gender ? GENDER_FROM_API[profile.gender] : null,
   phoneNumber: profile.phoneNumber ?? '',
-  registeredAt: null, // TODO: 등록일 필드 추가 시 연동
+  registeredAt: profile.createdAt,
   isFavorite: false, // TODO: 즐겨찾기 필드 추가 시 연동
 });
 
@@ -33,11 +33,11 @@ const fetchProfiles = async () => {
 // 시니어 목록 조회 (최근 추가순)
 export const fetchSeniors = async () => {
   const profiles = await fetchProfiles();
-  // 생성 순서대로 오므로 뒤집어서 최근 추가순
+  // 등록일 기준 최근 추가순
   return profiles
     .filter((profile) => profile.role === 'SENIOR')
-    .map(toSenior)
-    .reverse();
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .map(toSenior);
 };
 
 // 시니어 상세 조회
