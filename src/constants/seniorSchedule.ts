@@ -27,7 +27,7 @@ type SeniorSlotStyle = {
   alert?: {
     Icon: LucideIcon;
     title: string;
-    description: string;
+    description?: string; // 일정 연장 안내 (API에 연장 정보가 없어 지금은 비움)
     className: string;
   };
 };
@@ -70,7 +70,6 @@ export const SENIOR_SLOT_STYLES: Record<SlotStatus, SeniorSlotStyle> = {
     alert: {
       Icon: CircleAlert,
       title: '복용 전화를 받지 않으셨습니다.',
-      description: '미복용에 따라 복용 일정이 연장되었습니다.',
       className: 'border-[#E5484D] bg-[#FFEEEE] text-[#E5484D]',
     },
   },
@@ -92,7 +91,6 @@ export const SENIOR_SLOT_STYLES: Record<SlotStatus, SeniorSlotStyle> = {
     alert: {
       Icon: TriangleAlert,
       title: '약 중 일부만 복용하셨습니다.',
-      description: '일부 복용에 따라 복용 일정이 연장되었습니다.',
       className: 'border-[#D97706] bg-[#FFF4E0] text-[#D97706]',
     },
   },
