@@ -1,4 +1,4 @@
-import type { RegisterFlow } from '@/types/medicine';
+import type { PrescriptionAnalysis, RegisterFlow } from '@/types/medicine';
 
 export type UploadSource = 'gallery' | 'file' | 'camera';
 
@@ -7,6 +7,8 @@ export type RecognitionState = RegisterFlow & {
   source: UploadSource;
   fileName: string;
   imageUrl: string | null; // PDF는 미리보기 없음
+  file?: File; // 업로드·인식에 보낼 파일
+  analysis?: PrescriptionAnalysis; // 인식 결과 (뒤로 돌아왔을 때 다시 요청하지 않음)
   selectedIds?: string[]; // 선택한 약 ID (뒤로 돌아왔을 때 선택 유지)
 };
 
@@ -48,14 +50,11 @@ export const validatePrescriptionFile = async (
 // 만든 미리보기 주소 (쌓으며 이동할 때 한꺼번에 해제)
 const previewUrls = new Set<string>();
 
-// 지금 화면과 등록된 약이 쓰는 주소만 남기고 해제 (메모리 정리)
+// 지금 화면이 쓰는 주소만 남기고 해제 (메모리 정리, 등록된 약은 서버 사진 주소를 씀)
 // → 쌓으며 이동하면 앞쪽 기록이 지워져서, 해제한 주소로 다시 들어갈 수 없음
-export const releasePreviewUrls = (
-  keep: string | null,
-  isInUse: (url: string) => boolean
-) => {
+export const releasePreviewUrls = (keep: string | null) => {
   for (const url of previewUrls) {
-    if (url === keep || isInUse(url)) continue;
+    if (url === keep) continue;
     URL.revokeObjectURL(url);
     previewUrls.delete(url);
   }
@@ -78,6 +77,6 @@ export const toRecognitionState = (
   extraBackSteps,
   source,
   fileName: file.name,
-  // API 연동 전에는 미리보기 주소만 넘김
   imageUrl: file.type.startsWith('image/') ? createPreviewUrl(file) : null,
+  file,
 });

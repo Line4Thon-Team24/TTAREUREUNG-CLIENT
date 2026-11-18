@@ -3,7 +3,7 @@ import { Check } from 'lucide-react';
 import Button from '@/components/common/Button';
 import BrandBadge from '@/components/common/BrandBadge';
 import useGoBack from '@/hooks/useGoBack';
-import { getMedicines } from '@/mocks/medicines';
+import useSeniorMedicines from '@/hooks/useSeniorMedicines';
 import type { RegisterFlow } from '@/types/medicine';
 import { getHistoryIndex } from '@/utils/history';
 
@@ -17,6 +17,7 @@ const SeniorRegisterCompletePage = () => {
     returnTo?: string; // 건너뛰기 시 돌아갈 곳 (기본: 복용 일정)
   } | null;
   const seniorId = state?.seniorId;
+  const { medicines, isError } = useSeniorMedicines(seniorId ?? null);
 
   // 등록을 거치지 않고 주소로 바로 들어온 경우 복용 일정으로 이동
   if (seniorId === undefined) {
@@ -24,8 +25,13 @@ const SeniorRegisterCompletePage = () => {
   }
 
   // 회원가입 직후 약 등록을 마치고 돌아오면 복용 일정으로
-  if (getMedicines(seniorId).length > 0) {
+  if (medicines && medicines.length > 0) {
     return <Navigate to={state?.returnTo ?? '/schedule'} replace />;
+  }
+
+  // 약 목록을 확인하는 동안은 빈 화면 (실패하면 약이 없다고 보고 그대로 표시)
+  if (medicines === null && !isError) {
+    return <div className="min-h-dvh" />;
   }
 
   return (

@@ -80,6 +80,48 @@ export type RecognizedMedicine = {
   id: string; // 인식 결과 내 고유 ID (선택 상태 관리용)
   form: MedicineForm;
   accuracy: number; // 정확도 (%)
+  // 입력 화면에 없지만 등록할 때 함께 저장하는 값
+  strength?: string | null; // 함량 (예: 5mg)
+  doseAmount?: string | null; // 1회 복용량 (예: 1정)
+};
+
+// 처방전 업로드·AI 인식 결과
+export type PrescriptionAnalysis = {
+  fileKey: string; // 등록 시 image_url로 저장
+  confidence: number; // 전체 신뢰도 (%)
+  areas: RecognizedArea[];
+  medicines: RecognizedMedicine[];
+};
+
+// AI 인식 API 응답
+type RecognitionRegion = {
+  field: string;
+  x: number; // 0~1 비율, 왼쪽 위 기준
+  y: number;
+  width: number;
+  height: number;
+};
+
+export type RecognitionResponse = {
+  file_name: string;
+  document_type: string | null;
+  document_region: RecognitionRegion | null;
+  overall_confidence: number | null;
+  medications: {
+    drug_name: string | null;
+    custom_drug_name: string | null;
+    category: string | null;
+    strength: string | null;
+    effect: string | null;
+    intake_reason: string | null;
+    storage_location: string | null;
+    dose_amount: string | null;
+    interval_days: number | null;
+    intake_timing: MedicationItemResponse['intake_timing'];
+    meal_time_slots: MedicationItemResponse['meal_time_slots'];
+    confidence: number | null;
+    regions: RecognitionRegion[];
+  }[];
 };
 
 // 약 등록 흐름 전체에 넘기는 값 (방법 선택 → AI 인식 → 입력)
@@ -97,6 +139,7 @@ export type MedicineFormState = RegisterFlow &
         mode: 'recognized';
         medicines: RecognizedMedicine[];
         prescription: Prescription;
+        fileKey: string; // 업로드한 처방전 파일 (등록 시 image_url)
       }
     | { mode: 'manual' }
   );

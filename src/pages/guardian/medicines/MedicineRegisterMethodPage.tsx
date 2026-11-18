@@ -12,7 +12,6 @@ import BrandBadge from '@/components/common/BrandBadge';
 import MethodOptionCard from '@/components/medicines/MethodOptionCard';
 import UploadErrorMessage from '@/components/medicines/UploadErrorMessage';
 import useLatestRequest from '@/hooks/useLatestRequest';
-import { isPrescriptionImageInUse } from '@/mocks/medicines';
 import type { MedicineFormState, RegisterFlow } from '@/types/medicine';
 import {
   releasePreviewUrls,
@@ -56,7 +55,7 @@ const MedicineRegisterMethodPage = () => {
 
       const next = toRecognitionState({ ...flow, seniorId }, source, file);
       // 앞쪽 기록이 지워지므로 새 사진 외 미리보기 주소 해제
-      releasePreviewUrls(next.imageUrl, isPrescriptionImageInUse);
+      releasePreviewUrls(next.imageUrl);
       navigate('/medicines/register/recognition', { state: next });
     };
 

@@ -1,4 +1,23 @@
 import type { Medicine, MedicineForm } from '@/types/medicine';
+import { addDaysToDateString, toDateString } from '@/utils/date';
+
+// 빈 약 정보 (직접 입력용, 오늘부터 일주일)
+export const createEmptyMedicineForm = (): MedicineForm => {
+  const today = toDateString(new Date());
+  return {
+    name: '',
+    category: '',
+    effect: '',
+    reason: '',
+    displayName: '',
+    storageLocation: '',
+    startDate: today,
+    endDate: addDaysToDateString(today, 6),
+    interval: 'daily',
+    timesPerDay: 3,
+    timing: 'afterMeal',
+  };
+};
 
 // 필수 입력값이 모두 채워졌는지 검사 (직접 입력은 약 이름도 필수)
 export const isMedicineFormValid = (form: MedicineForm, isManual: boolean) =>
