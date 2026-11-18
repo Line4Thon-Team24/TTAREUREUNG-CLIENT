@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { logout } from '@/apis/auth';
+import ConfirmModal from '@/components/common/ConfirmModal';
 import AlertSettings from '@/components/profile/AlertSettings';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileRow from '@/components/profile/ProfileRow';
@@ -17,6 +19,13 @@ const ProfilePage = () => {
   const [alert, setAlert] = useState(profile.alert);
   const [seniors] = useState(getSeniors);
   const [guardians] = useState(getGuardians);
+  const [isLogoutOpen, setIsLogoutOpen] = useState(false);
+
+  const handleLogout = async () => {
+    // 서버 요청에 실패해도 로그인 화면으로 이동
+    await logout().catch(() => {});
+    navigate('/login', { replace: true });
+  };
 
   const coGuardians = getCoGuardianSummaries(guardians, seniors);
 
@@ -89,6 +98,25 @@ const ProfilePage = () => {
       <ProfileSection title="알림">
         <AlertSettings value={alert} onChange={setAlert} />
       </ProfileSection>
+
+      <div className="flex justify-center pb-4">
+        <button
+          type="button"
+          onClick={() => setIsLogoutOpen(true)}
+          className="p-2 text-[14px] text-text-sub underline underline-offset-2 active:opacity-60"
+        >
+          로그아웃
+        </button>
+      </div>
+
+      <ConfirmModal
+        open={isLogoutOpen}
+        message="로그아웃 하시겠어요?"
+        cancelLabel="취소"
+        confirmLabel="로그아웃"
+        onCancel={() => setIsLogoutOpen(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 };
