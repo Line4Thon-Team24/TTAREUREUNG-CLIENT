@@ -5,7 +5,7 @@ export type DoseStatus = 'taken' | 'missed' | 'taking' | 'scheduled';
 export type SlotStatus = DoseStatus | 'partial';
 
 // 복용 시간대
-export type MealTime = 'morning' | 'lunch' | 'dinner';
+export type MealTime = 'morning' | 'lunch' | 'dinner' | 'night';
 
 // 약 모양 (카드 아이콘)
 export type MedicineShape = 'capsule' | 'tablet' | 'powder';
@@ -30,4 +30,28 @@ export type ScheduleSlot = {
   timingLabel: string; // 예: 아침 식후
   callConfirmedAt?: string; // 복용 확인 전화 받은 시각 (HH:mm)
   medicines: ScheduleMedicine[];
+};
+
+// 날짜별 복용 일정 API 응답
+export type ScheduleResponse = {
+  date: string;
+  today: boolean;
+  takenCount: number;
+  totalCount: number;
+  sessions: {
+    sessionId: number | null;
+    timeSlot: 'MORNING' | 'LUNCH' | 'DINNER' | 'BEFORE_SLEEP';
+    slotName: string;
+    doseTime: string; // HH:mm
+    status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'PARTIAL' | 'MISSED';
+    answeredAt: string | null;
+    medications: {
+      medicationId: number;
+      name: string;
+      strength: string | null;
+      doseAmount: string | null;
+      imageUrl: string | null;
+      status: 'PENDING' | 'TAKEN' | 'MISSED';
+    }[];
+  }[];
 };

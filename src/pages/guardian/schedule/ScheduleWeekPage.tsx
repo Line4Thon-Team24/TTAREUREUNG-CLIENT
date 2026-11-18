@@ -5,30 +5,30 @@ import SeniorDropdown from '@/components/common/SeniorDropdown';
 import MedicineDetailModal from '@/components/schedule/MedicineDetailModal';
 import ScheduleTimeline from '@/components/schedule/ScheduleTimeline';
 import WeekStrip from '@/components/schedule/WeekStrip';
+import useDailySchedule from '@/hooks/useDailySchedule';
 import useDateParam from '@/hooks/useDateParam';
 import useGoBack from '@/hooks/useGoBack';
+import useSeniorMedicines from '@/hooks/useSeniorMedicines';
+import useSeniors from '@/hooks/useSeniors';
 import useSelectedSeniorParam from '@/hooks/useSelectedSeniorParam';
 import { SCHEDULE_SENIOR_KEY } from '@/constants/schedule';
-import { getMedicine } from '@/mocks/medicines';
-import { getDailySchedule } from '@/mocks/schedule';
-import { getSeniors } from '@/mocks/seniors';
 import type { Medicine } from '@/types/medicine';
 
 const ScheduleWeekPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const goBackOr = useGoBack();
-  const [seniors] = useState(getSeniors);
+  const { seniors, isError: isSeniorError } = useSeniors();
   // 월 달력과 시니어·날짜 공유 (주소에 저장)
   const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(
-    seniors,
+    seniors ?? [],
     SCHEDULE_SENIOR_KEY
   );
   const [date, setDate] = useDateParam();
+  // 약 상세 팝업용
+  const { medicines } = useSeniorMedicines(selectedSeniorId);
+  const { slots, isError } = useDailySchedule(selectedSeniorId, date);
   const [detailMedicine, setDetailMedicine] = useState<Medicine | null>(null);
-
-  const slots =
-    selectedSeniorId === null ? [] : getDailySchedule(selectedSeniorId, date);
 
   // 월 달력에서 들어왔으면 뒤로, 바로 들어왔으면 월 달력으로
   const goBack = () => goBackOr(`/schedule/month${location.search}`);
@@ -43,7 +43,7 @@ const ScheduleWeekPage = () => {
           <h1 className="text-[24px] font-bold">{date.getMonth() + 1}월</h1>
         </div>
 
-        {seniors.length > 0 ? (
+        {seniors === null ? null : seniors.length > 0 ? (
           <SeniorDropdown
             seniors={seniors}
             selectedId={selectedSeniorId}
@@ -68,12 +68,22 @@ const ScheduleWeekPage = () => {
 
       <WeekStrip date={date} onSelect={setDate} />
 
-      {slots.length > 0 ? (
+      {isSeniorError || isError ? (
+        <p className="flex flex-1 items-center justify-center text-[14px] text-[#6B7684]">
+          {isSeniorError
+            ? '시니어 목록을 불러오지 못했어요.'
+            : '복용 일정을 불러오지 못했어요.'}
+        </p>
+      ) : seniors === null || (selectedSeniorId !== null && slots === null) ? (
+        <div className="flex-1" />
+      ) : slots && slots.length > 0 ? (
         <ScheduleTimeline
           slots={slots}
           // 삭제된 약이면 열지 않음
           onMedicineClick={({ medicineId }) =>
-            setDetailMedicine(getMedicine(medicineId) ?? null)
+            setDetailMedicine(
+              medicines?.find(({ id }) => id === medicineId) ?? null
+            )
           }
         />
       ) : (
