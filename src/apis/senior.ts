@@ -13,7 +13,7 @@ const toSenior = (profile: ProfileResponse): Senior => ({
   gender: profile.gender ? GENDER_FROM_API[profile.gender] : null,
   phoneNumber: profile.phoneNumber ?? '',
   registeredAt: profile.createdAt,
-  isFavorite: false, // TODO: 즐겨찾기 필드 추가 시 연동
+  isFavorite: profile.isFavorite,
 });
 
 // 화면용 시니어 입력값 → 프로필 요청
@@ -51,6 +51,14 @@ export const fetchSenior = async (seniorId: number) => {
 // 시니어 정보 수정
 export const updateSenior = async (seniorId: number, form: SeniorForm) => {
   await apiClient.patch(`/profiles/${seniorId}`, toProfileRequest(form));
+};
+
+// 즐겨찾기 설정·해제 (가족 계정 공통 값)
+export const updateSeniorFavorite = async (
+  seniorId: number,
+  isFavorite: boolean
+) => {
+  await apiClient.patch(`/profiles/${seniorId}`, { isFavorite });
 };
 
 // 시니어 여러 명 삭제 (삭제에 실패한 id 반환)
