@@ -10,9 +10,11 @@ export type SeniorFormValue = {
   phoneNumber: string;
 };
 
+const EMPTY_BIRTH_DATE: BirthDate = { year: '', month: '', day: '' };
+
 export const EMPTY_SENIOR_FORM: SeniorFormValue = {
   name: '',
-  birthDate: { year: '', month: '', day: '' },
+  birthDate: EMPTY_BIRTH_DATE,
   gender: '',
   phoneNumber: '',
 };
@@ -24,7 +26,10 @@ export const toSeniorFormValue = (senior: Senior): SeniorFormValue => {
   const [year, month, day] = senior.birthDate.split('-');
   return {
     name: senior.name,
-    birthDate: { year, month: String(Number(month)), day: String(Number(day)) },
+    // 생년월일이 없으면 빈 선택값
+    birthDate: senior.birthDate
+      ? { year, month: String(Number(month)), day: String(Number(day)) }
+      : EMPTY_BIRTH_DATE,
     gender: senior.gender,
     phoneNumber: senior.phoneNumber,
   };

@@ -1,35 +1,61 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
+import { fetchSenior, updateSenior } from '@/apis/senior';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import StepHeader from '@/components/common/StepHeader';
 import SeniorInfoForm from '@/components/seniors/SeniorInfoForm';
 import useGoBack from '@/hooks/useGoBack';
-import { getSenior, updateSenior } from '@/mocks/seniors';
+import type { ApiError } from '@/types/api';
+import type { Senior } from '@/types/senior';
 import {
   isSeniorFormChanged,
   isSeniorFormValid,
   toSeniorForm,
   toSeniorFormValue,
+  type SeniorFormValue,
 } from '@/utils/seniorForm';
 
 const SeniorEditPage = () => {
   const goBack = useGoBack();
   const { seniorId } = useParams();
 
-  const [senior] = useState(() => getSenior(Number(seniorId)));
-  const [form, setForm] = useState(() =>
-    senior ? toSeniorFormValue(senior) : null
-  );
+  // null이면 불러오는 중
+  const [senior, setSenior] = useState<Senior | null>(null);
+  const [form, setForm] = useState<SeniorFormValue | null>(null);
+  const [isNotFound, setIsNotFound] = useState(false);
+  const [isLoadError, setIsLoadError] = useState(false);
   const [isDiscardOpen, setIsDiscardOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitError, setIsSubmitError] = useState(false);
 
-  // 없는 시니어면 목록으로
-  if (!senior || !form) {
+  useEffect(() => {
+    let ignore = false;
+    fetchSenior(Number(seniorId))
+      .then((data) => {
+        if (ignore) return;
+        setSenior(data);
+        setForm(toSeniorFormValue(data));
+      })
+      .catch((error: ApiError) => {
+        if (ignore) return;
+        // 없는 시니어(404)·잘못된 주소(400)면 목록으로
+        if (error.status === 404 || error.status === 400) setIsNotFound(true);
+        else setIsLoadError(true);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [seniorId]);
+
+  if (isNotFound) {
     return <Navigate to="/seniors" replace />;
   }
 
-  const isChanged = isSeniorFormChanged(toSeniorFormValue(senior), form);
-  const canSubmit = isChanged && isSeniorFormValid(form);
+  const isChanged =
+    !!senior && !!form && isSeniorFormChanged(toSeniorFormValue(senior), form);
+  const canSubmit =
+    isChanged && !!form && isSeniorFormValid(form) && !isSubmitting;
 
   // 바꾼 내용이 있으면 버릴지 먼저 확인
   const handleCancel = () => {
@@ -37,10 +63,18 @@ const SeniorEditPage = () => {
     else goBack('/seniors');
   };
 
-  const handleSubmit = () => {
-    if (!canSubmit) return;
-    updateSenior(senior.id, toSeniorForm(form));
-    goBack('/seniors');
+  const handleSubmit = async () => {
+    if (!canSubmit || !senior || !form) return;
+
+    setIsSubmitting(true);
+    setIsSubmitError(false);
+    try {
+      await updateSenior(senior.id, toSeniorForm(form));
+      goBack('/seniors');
+    } catch {
+      setIsSubmitError(true);
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -48,13 +82,29 @@ const SeniorEditPage = () => {
       <StepHeader title="시니어 정보 수정" onBack={handleCancel} />
 
       <main className="min-h-0 flex-1 overflow-y-auto px-5 pt-6 pb-10">
-        <SeniorInfoForm
-          value={form}
-          onChange={setForm}
-          onSubmit={handleSubmit}
-        />
+        {isLoadError ? (
+          <p className="pt-20 text-center text-[14px] text-[#6B7684]">
+            시니어 정보를 불러오지 못했어요.
+          </p>
+        ) : (
+          form && (
+            <SeniorInfoForm
+              value={form}
+              onChange={setForm}
+              onSubmit={handleSubmit}
+            />
+          )
+        )}
       </main>
 
+      {isSubmitError && (
+        <p
+          role="alert"
+          className="shrink-0 bg-white px-5 pt-4 text-center text-[13px] text-[#E5484D]"
+        >
+          시니어 정보 수정에 실패했어요. 다시 시도해주세요.
+        </p>
+      )}
       <div className="flex shrink-0 gap-3 bg-white px-5 pt-4 pb-10">
         <div className="w-29.25 shrink-0">
           <Button variant="secondary" onClick={handleCancel}>

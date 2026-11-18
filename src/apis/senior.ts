@@ -37,6 +37,19 @@ export const fetchSeniors = async () => {
     .reverse();
 };
 
+// 시니어 상세 조회
+export const fetchSenior = async (seniorId: number) => {
+  const { data } = await apiClient.get<BaseResponse<ProfileResponse>>(
+    `/profiles/${seniorId}`
+  );
+  return toSenior(data.data);
+};
+
+// 시니어 정보 수정
+export const updateSenior = async (seniorId: number, form: SeniorForm) => {
+  await apiClient.patch(`/profiles/${seniorId}`, toProfileRequest(form));
+};
+
 // TODO: 프로필 선택 연동 후 선택된 보호자 프로필로 교체
 const fetchGuardianProfileId = async () => {
   const profiles = await fetchProfiles();
