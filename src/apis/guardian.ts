@@ -1,6 +1,7 @@
 import { apiClient } from '@/apis/client';
 import type { BaseResponse } from '@/types/api';
 import type { Guardian, GuardianSeniorResponse } from '@/types/guardian';
+import type { ProfileResponse } from '@/types/senior';
 
 // 연결 응답 → 화면용 보호자 (연결 1개 = 카드 1개)
 const toGuardian = ({
@@ -46,16 +47,6 @@ export const setPrimaryGuardian = async (
   });
 };
 
-// 담당 시니어 변경 (연결 id는 유지, 대표 승계는 서버가 처리)
-export const changeGuardianSenior = async (
-  linkId: number,
-  seniorId: number
-) => {
-  await apiClient.patch(`/guardian-seniors/${linkId}`, {
-    seniorProfileId: seniorId,
-  });
-};
-
 // 보호자-시니어 연결 여러 개 해제 (프로필은 남음, 실패한 연결 id 반환)
 export const deleteGuardianLinks = async (linkIds: number[]) => {
   const results = await Promise.allSettled(
@@ -85,4 +76,24 @@ export const inviteGuardians = async (
     phoneNumber: item.phone_number,
     inviteUrl: item.invite_url,
   }));
+};
+
+// 내 계정의 보호자 프로필 id (다른 계정 보호자와 구분)
+export const fetchMyGuardianProfileIds = async () => {
+  const { data } =
+    await apiClient.get<BaseResponse<ProfileResponse[]>>('/profiles');
+  return data.data
+    .filter((profile) => profile.role === 'GUARDIAN')
+    .map((profile) => profile.profileId);
+};
+
+// 같은 계정의 보호자를 시니어에 연결 (시니어의 첫 연결이면 서버가 대표로 지정)
+export const linkGuardianSenior = async (
+  guardianProfileId: number,
+  seniorId: number
+) => {
+  await apiClient.post('/guardian-seniors', {
+    guardianProfileId,
+    seniorProfileId: seniorId,
+  });
 };

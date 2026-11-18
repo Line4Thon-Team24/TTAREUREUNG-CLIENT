@@ -4,10 +4,9 @@ import { Plus, Search, SquarePen } from 'lucide-react';
 import { fetchGuardians, setPrimaryGuardian } from '@/apis/guardian';
 import FilterChips from '@/components/common/FilterChips';
 import SearchField from '@/components/common/SearchField';
-import GuardianCard, {
-  type GuardianAssignment,
-} from '@/components/guardians/GuardianCard';
-import type { Guardian } from '@/types/guardian';
+import GuardianCard from '@/components/guardians/GuardianCard';
+import type { Guardian, GuardianGroup } from '@/types/guardian';
+import { groupByGuardian } from '@/utils/guardian';
 import { filterByName } from '@/utils/nameSearch';
 
 const ICON_BUTTON_CLASS =
@@ -19,24 +18,6 @@ const SORTS: { label: string; value: Sort }[] = [
   { label: '대표 등록순', value: 'representative' },
   { label: '나이순', value: 'age' },
 ];
-
-// 같은 보호자의 연결을 카드 1장으로 묶음 (담당 시니어는 칩으로 나열)
-type GuardianGroup = Guardian & { assignments: GuardianAssignment[] };
-
-const groupByGuardian = (links: Guardian[]) => {
-  const groups = new Map<number, GuardianGroup>();
-  for (const link of links) {
-    const assignment = {
-      seniorId: link.seniorId,
-      seniorName: link.seniorName,
-      isRepresentative: link.isRepresentative,
-    };
-    const group = groups.get(link.profileId);
-    if (group) group.assignments.push(assignment);
-    else groups.set(link.profileId, { ...link, assignments: [assignment] });
-  }
-  return [...groups.values()];
-};
 
 const isAnyRepresentative = ({ assignments }: GuardianGroup) =>
   assignments.some((item) => item.isRepresentative);

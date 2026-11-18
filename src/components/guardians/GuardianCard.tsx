@@ -1,62 +1,45 @@
 import { Flag } from 'lucide-react';
 import InfoRow, { InfoValue } from '@/components/common/InfoRow';
-import SeniorDropdown from '@/components/common/SeniorDropdown';
+import SeniorMultiDropdown from '@/components/common/SeniorMultiDropdown';
 import { GENDER_SHORT_LABELS } from '@/constants/senior';
-import type { Guardian } from '@/types/guardian';
+import type { Guardian, GuardianAssignment } from '@/types/guardian';
 import type { Senior } from '@/types/senior';
-
-type SeniorOption = Pick<Senior, 'id' | 'name'>;
 import { getAge } from '@/utils/birthDate';
 import { formatDotDate } from '@/utils/date';
 
-// 담당 시니어 1명 (대표 여부는 시니어마다 따로)
-export type GuardianAssignment = {
-  seniorId: number;
-  seniorName: string;
-  isRepresentative: boolean;
+type SeniorOption = Pick<Senior, 'id' | 'name'> & { disabled?: boolean };
+
+// 편집 화면: 보호자 선택(삭제) + 담당 시니어 여러 명 선택
+type EditOptions = {
+  selected: boolean;
+  onToggleSelect: () => void;
+  seniorOptions: SeniorOption[];
+  selectedSeniorIds: number[];
+  onToggleSenior: (seniorId: number) => void;
 };
 
 type GuardianCardProps = {
-  guardian: Guardian;
-  // 편집 화면: 담당 시니어 드롭다운 선택지
-  seniors?: SeniorOption[];
-  // 목록 화면: 한 보호자의 담당 시니어 전체 (없으면 guardian의 시니어 1명)
-  assignments?: GuardianAssignment[];
+  guardian: Guardian; // 보호자 정보 (이름·생년월일 등)
+  assignments: GuardianAssignment[];
   // 목록 화면: 대표 지정 깃발 (누른 시니어의 대표로 지정)
   onSetRepresentative?: (seniorId: number) => void;
-  // 편집 화면: 체크박스 선택 + 담당 시니어 변경
-  selectable?: boolean;
-  selected?: boolean;
-  onToggleSelect?: () => void;
-  onChangeSenior?: (seniorId: number) => void;
+  edit?: EditOptions;
 };
 
-// 보호자 카드 (보호자 목록 / 보호자 목록 편집)
+// 보호자 카드 (보호자 1명 = 카드 1장, 보호자 목록 / 보호자 목록 편집)
 export default function GuardianCard({
   guardian,
-  seniors = [],
-  assignments = [
-    {
-      seniorId: guardian.seniorId,
-      seniorName: guardian.seniorName,
-      isRepresentative: guardian.isRepresentative,
-    },
-  ],
+  assignments,
   onSetRepresentative,
-  selectable = false,
-  selected = false,
-  onToggleSelect,
-  onChangeSenior,
+  edit,
 }: GuardianCardProps) {
   // 한 명이라도 대표면 대표 보호자로 표시
-  const isRepresentative =
-    !selectable && assignments.some((item) => item.isRepresentative);
-  const checkboxId = `guardian-select-${guardian.id}`;
+  const isRepresentative = assignments.some((item) => item.isRepresentative);
 
   // 선택해도 테두리는 그대로 (체크박스로만 표시)
-  const borderClass = isRepresentative
-    ? 'border-[#CDEBD8]'
-    : 'border-[#E5E8EB]';
+  const borderClass =
+    isRepresentative && !edit ? 'border-[#CDEBD8]' : 'border-[#E5E8EB]';
+  const checkboxId = `guardian-select-${guardian.profileId}`;
 
   return (
     // 드롭다운이 열리면 아래 카드보다 위에 보이도록
@@ -66,18 +49,18 @@ export default function GuardianCard({
       <header className="flex items-center justify-between gap-3">
         {/* 체크박스 ↔ 이름 8px, 대표 깃발 ↔ 이름 4px */}
         <div
-          className={`flex min-w-0 items-center ${selectable ? 'gap-2' : 'gap-1'}`}
+          className={`flex min-w-0 items-center ${edit ? 'gap-2' : 'gap-1'}`}
         >
-          {selectable && (
+          {edit && (
             <input
               id={checkboxId}
               type="checkbox"
-              checked={selected}
-              onChange={onToggleSelect}
+              checked={edit.selected}
+              onChange={edit.onToggleSelect}
               className="size-4 shrink-0 accent-[#01A16A]"
             />
           )}
-          {isRepresentative && (
+          {isRepresentative && !edit && (
             <Flag
               size={20}
               aria-label="대표 보호자"
@@ -85,25 +68,25 @@ export default function GuardianCard({
             />
           )}
           <label
-            htmlFor={selectable ? checkboxId : undefined}
+            htmlFor={edit ? checkboxId : undefined}
             className="text-[16px] font-bold break-keep text-[#111827]"
           >
             {guardian.name}
           </label>
         </div>
 
-        {selectable && onChangeSenior ? (
-          <SeniorDropdown
-            seniors={seniors}
-            selectedId={guardian.seniorId}
-            onSelect={onChangeSenior}
+        {edit ? (
+          <SeniorMultiDropdown
+            seniors={edit.seniorOptions}
+            selectedIds={edit.selectedSeniorIds}
+            onToggle={edit.onToggleSenior}
           />
         ) : (
           // 담당 시니어마다 칩 (대표면 초록, 아니면 회색 + 대표 지정 깃발)
           <ul className="flex flex-wrap items-center justify-end gap-1">
             {assignments.map(
-              ({ seniorId, seniorName, isRepresentative: isPrimary }) => {
-                return isPrimary ? (
+              ({ seniorId, seniorName, isRepresentative: isPrimary }) =>
+                isPrimary ? (
                   <li
                     key={seniorId}
                     className="rounded-md bg-[#E7F6EC] px-2 py-1 text-[12px] font-semibold text-[#01A16A]"
@@ -126,8 +109,7 @@ export default function GuardianCard({
                       </button>
                     )}
                   </li>
-                );
-              }
+                )
             )}
           </ul>
         )}

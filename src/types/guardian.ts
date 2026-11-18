@@ -13,6 +13,17 @@ export type Guardian = {
   isMe: boolean; // 로그인한 본인 (보호자 탭에서는 쓰지 않음)
 };
 
+// 담당 시니어 1명 = 보호자-시니어 연결 1개 (대표 여부는 시니어마다 따로)
+export type GuardianAssignment = {
+  linkId: number;
+  seniorId: number;
+  seniorName: string;
+  isRepresentative: boolean;
+};
+
+// 보호자 1명과 담당 시니어 전체 (카드 1장)
+export type GuardianGroup = Guardian & { assignments: GuardianAssignment[] };
+
 // 보호자-시니어 연결 API 응답
 type ProfileSummaryResponse = {
   profileId: number;
