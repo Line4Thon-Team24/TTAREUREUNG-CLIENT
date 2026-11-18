@@ -1,6 +1,6 @@
 import { apiClient } from '@/apis/client';
 import type { BaseResponse } from '@/types/api';
-import type { ProfileResponse, Senior } from '@/types/senior';
+import type { ProfileResponse, Senior, SeniorForm } from '@/types/senior';
 
 // 프로필 응답 → 화면용 시니어
 const toSenior = (profile: ProfileResponse): Senior => ({
@@ -13,13 +13,44 @@ const toSenior = (profile: ProfileResponse): Senior => ({
   isFavorite: false, // TODO: 즐겨찾기 필드 추가 시 연동
 });
 
-// 시니어 목록 조회 (최근 추가순)
-export const fetchSeniors = async () => {
+// 화면용 시니어 입력값 → 프로필 요청
+const toProfileRequest = (form: SeniorForm) => ({
+  name: form.name,
+  birthDate: form.birthDate,
+  gender: form.gender === 'male' ? 'MALE' : 'FEMALE',
+  phoneNumber: form.phoneNumber,
+});
+
+const fetchProfiles = async () => {
   const { data } =
     await apiClient.get<BaseResponse<ProfileResponse[]>>('/profiles');
+  return data.data;
+};
+
+// 시니어 목록 조회 (최근 추가순)
+export const fetchSeniors = async () => {
+  const profiles = await fetchProfiles();
   // 생성 순서대로 오므로 뒤집어서 최근 추가순
-  return data.data
+  return profiles
     .filter((profile) => profile.role === 'SENIOR')
     .map(toSenior)
     .reverse();
+};
+
+// TODO: 프로필 선택 연동 후 선택된 보호자 프로필로 교체
+const fetchGuardianProfileId = async () => {
+  const profiles = await fetchProfiles();
+  const guardian = profiles.find((profile) => profile.role === 'GUARDIAN');
+  if (!guardian) throw new Error('보호자 프로필이 없습니다.');
+  return guardian.profileId;
+};
+
+// 시니어 등록 (보호자와 바로 연결)
+export const createSenior = async (form: SeniorForm) => {
+  const guardianProfileId = await fetchGuardianProfileId();
+  const { data } = await apiClient.post<BaseResponse<ProfileResponse>>(
+    '/profiles',
+    { ...toProfileRequest(form), role: 'SENIOR', guardianProfileId }
+  );
+  return toSenior(data.data);
 };

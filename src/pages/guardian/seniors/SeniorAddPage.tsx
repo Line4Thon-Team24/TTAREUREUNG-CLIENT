@@ -5,7 +5,7 @@ import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import SeniorInfoForm from '@/components/seniors/SeniorInfoForm';
 import useGoBack from '@/hooks/useGoBack';
-import { addSenior } from '@/mocks/seniors';
+import { createSenior } from '@/apis/senior';
 import {
   EMPTY_SENIOR_FORM,
   isSeniorFormChanged,
@@ -23,6 +23,8 @@ const SeniorAddPage = () => {
 
   const [form, setForm] = useState(EMPTY_SENIOR_FORM);
   const [isDiscardOpen, setIsDiscardOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isError, setIsError] = useState(false);
 
   const isChanged = isSeniorFormChanged(EMPTY_SENIOR_FORM, form);
   const canSubmit = isSeniorFormValid(form);
@@ -33,13 +35,21 @@ const SeniorAddPage = () => {
     else goBack(returnTo);
   };
 
-  const handleSubmit = () => {
-    if (!canSubmit) return;
-    const senior = addSenior(toSeniorForm(form));
-    navigate('/seniors/register/complete', {
-      replace: true,
-      state: { seniorId: senior.id, returnTo },
-    });
+  const handleSubmit = async () => {
+    if (!canSubmit || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setIsError(false);
+    try {
+      const senior = await createSenior(toSeniorForm(form));
+      navigate('/seniors/register/complete', {
+        replace: true,
+        state: { seniorId: senior.id, returnTo },
+      });
+    } catch {
+      setIsError(true);
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -68,6 +78,14 @@ const SeniorAddPage = () => {
         </div>
       </main>
 
+      {isError && (
+        <p
+          role="alert"
+          className="shrink-0 bg-white px-5 pt-4 text-center text-[13px] text-[#E5484D]"
+        >
+          시니어 추가에 실패했어요. 다시 시도해주세요.
+        </p>
+      )}
       <div className="flex shrink-0 gap-3 bg-white px-5 pt-4 pb-10">
         <div className="w-29.25 shrink-0">
           <Button variant="secondary" onClick={handleCancel}>
@@ -75,7 +93,7 @@ const SeniorAddPage = () => {
           </Button>
         </div>
         <div className="min-w-0 flex-1">
-          <Button disabled={!canSubmit} onClick={handleSubmit}>
+          <Button disabled={!canSubmit || isSubmitting} onClick={handleSubmit}>
             추가하기
           </Button>
         </div>
