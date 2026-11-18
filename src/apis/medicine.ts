@@ -6,7 +6,11 @@ import type {
   Medicine,
   MedicationItemResponse,
   MedicineSummary,
+  PrescriptionAnalysis,
+  RecognitionResponse,
+  RecognizedArea,
 } from '@/types/medicine';
+import { createEmptyMedicineForm } from '@/utils/medicineForm';
 
 // 복용 간격 일수 → 화면 값 (없으면 매일)
 const INTERVAL_FROM_DAYS: Record<number, DoseInterval> = {
@@ -85,4 +89,96 @@ export const deleteMedicines = async (medicineIds: number[]) => {
     // 서버가 받는 형식: medication_ids=1,2,3
     params: { medication_ids: medicineIds.join(',') },
   });
+};
+
+// 처방전 파일 업로드 (등록 시 image_url로 쓸 fileKey 반환)
+const uploadPrescriptionFile = async (file: File, signal?: AbortSignal) => {
+  const body = new FormData();
+  body.append('file', file);
+  const { data } = await apiClient.post<BaseResponse<{ fileKey: string }>>(
+    '/files',
+    body,
+    { signal }
+  );
+  return data.data.fileKey;
+};
+
+const REGION_LABELS: Record<string, string> = {
+  DRUG_NAME: '약품명',
+  INTAKE_METHOD: '복용법',
+  FREQUENCY: '복용 횟수',
+};
+
+type Region = NonNullable<RecognitionResponse['document_region']>;
+
+// 0~1 비율 위치 → 사진 기준 % 위치
+const toArea = (label: string, region: Region): RecognizedArea => ({
+  label,
+  top: region.y * 100,
+  left: region.x * 100,
+  right: (1 - region.x - region.width) * 100,
+  bottom: (1 - region.y - region.height) * 100,
+});
+
+// 인식 응답 → 화면용 결과 (복용 기간은 인식되지 않아 오늘부터 일주일)
+const toAnalysis = (
+  response: RecognitionResponse,
+  fileKey: string
+): PrescriptionAnalysis => {
+  const base = createEmptyMedicineForm();
+  const areas = [
+    ...(response.document_region
+      ? [toArea('문서유형', response.document_region)]
+      : []),
+    ...response.medications.flatMap(({ regions }) =>
+      regions.map((region) =>
+        toArea(REGION_LABELS[region.field] ?? region.field, region)
+      )
+    ),
+  ];
+
+  return {
+    fileKey,
+    confidence: response.overall_confidence ?? 0,
+    areas,
+    medicines: response.medications.map((item, index) => ({
+      id: `rx-${index + 1}`,
+      accuracy: item.confidence ?? 0,
+      strength: item.strength,
+      doseAmount: item.dose_amount,
+      form: {
+        ...base,
+        name: item.drug_name ?? '',
+        category: item.category ?? '',
+        effect: item.effect ?? '',
+        reason: item.intake_reason ?? '',
+        displayName: item.custom_drug_name ?? '',
+        storageLocation: item.storage_location ?? '',
+        interval: INTERVAL_FROM_DAYS[item.interval_days ?? 1] ?? 'daily',
+        // 시간대를 못 읽었으면 1회, 화면 선택지는 최대 3회
+        timesPerDay: Math.min(Math.max(item.meal_time_slots.length, 1), 3),
+        timing: item.intake_timing ? TIMING_FROM_API[item.intake_timing] : null,
+      },
+    })),
+  };
+};
+
+// 처방전 업로드와 AI 인식을 함께 요청 (둘 중 하나라도 실패하면 실패)
+// signal: 화면을 떠나면 요청 취소
+export const analyzePrescription = async (file: File, signal?: AbortSignal) => {
+  const recognize = async () => {
+    const body = new FormData();
+    body.append('file', file);
+    const { data } = await apiClient.post<BaseResponse<RecognitionResponse>>(
+      '/medications/recognition',
+      body,
+      { signal }
+    );
+    return data.data;
+  };
+  const [fileKey, response] = await Promise.all([
+    uploadPrescriptionFile(file, signal),
+    recognize(),
+  ]);
+  return toAnalysis(response, fileKey);
 };

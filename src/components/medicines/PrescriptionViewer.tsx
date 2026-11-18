@@ -4,7 +4,7 @@ import type { RecognizedArea } from '@/types/medicine';
 type PrescriptionViewerProps = {
   fileName: string;
   imageUrl: string | null;
-  confidence: number;
+  confidence: number | null; // 인식 전이면 null (신뢰도 숨김)
   areas: RecognizedArea[];
 };
 
@@ -31,7 +31,6 @@ export default function PrescriptionViewer({
               alt="업로드한 처방전 사진"
               className="block max-h-59.5 max-w-full"
             />
-            {/* API 연동 전에는 정해진 위치에 인식 영역을 표시 */}
             {areas.map((area, index) => (
               <div
                 key={index}
@@ -63,9 +62,11 @@ export default function PrescriptionViewer({
           <Image size={11} aria-hidden className="shrink-0" />
           <span className="truncate">{fileName}</span>
         </p>
-        <span className="shrink-0 rounded-full bg-[#E7F6EC] px-2 py-1 text-[12px] font-medium text-[#01A16A]">
-          신뢰도 {confidence}%
-        </span>
+        {confidence !== null && (
+          <span className="shrink-0 rounded-full bg-[#E7F6EC] px-2 py-1 text-[12px] font-medium text-[#01A16A]">
+            신뢰도 {confidence}%
+          </span>
+        )}
       </div>
     </section>
   );

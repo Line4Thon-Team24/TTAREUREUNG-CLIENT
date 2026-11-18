@@ -1,4 +1,4 @@
-import type { RegisterFlow } from '@/types/medicine';
+import type { PrescriptionAnalysis, RegisterFlow } from '@/types/medicine';
 
 export type UploadSource = 'gallery' | 'file' | 'camera';
 
@@ -7,6 +7,8 @@ export type RecognitionState = RegisterFlow & {
   source: UploadSource;
   fileName: string;
   imageUrl: string | null; // PDF는 미리보기 없음
+  file?: File; // 업로드·인식에 보낼 파일
+  analysis?: PrescriptionAnalysis; // 인식 결과 (뒤로 돌아왔을 때 다시 요청하지 않음)
   selectedIds?: string[]; // 선택한 약 ID (뒤로 돌아왔을 때 선택 유지)
 };
 
@@ -78,6 +80,6 @@ export const toRecognitionState = (
   extraBackSteps,
   source,
   fileName: file.name,
-  // API 연동 전에는 미리보기 주소만 넘김
   imageUrl: file.type.startsWith('image/') ? createPreviewUrl(file) : null,
+  file,
 });
