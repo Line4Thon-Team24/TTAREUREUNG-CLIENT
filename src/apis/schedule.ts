@@ -16,13 +16,21 @@ const MEAL_TIME_FROM_API: Record<Session['timeSlot'], MealTime> = {
   BEFORE_SLEEP: 'night',
 };
 
-// 약 상태 (전화 받고 약 찾는 중인 회차의 미복용 약은 복용 중)
+const FINISHED_SESSION: Session['status'][] = [
+  'COMPLETED',
+  'PARTIAL',
+  'MISSED',
+];
+
+// 약 상태 (끝난 회차의 미복용 약은 미복용, 전화 받고 약 찾는 중이면 복용 중)
 const toDoseStatus = (
   status: Session['medications'][number]['status'],
   sessionStatus: Session['status']
 ): DoseStatus => {
   if (status === 'TAKEN') return 'taken';
-  if (status === 'MISSED') return 'missed';
+  if (status === 'MISSED' || FINISHED_SESSION.includes(sessionStatus)) {
+    return 'missed';
+  }
   return sessionStatus === 'IN_PROGRESS' ? 'taking' : 'scheduled';
 };
 
