@@ -31,6 +31,7 @@ export default function useDailySchedule(seniorId: number | null, date: Date) {
   }, [seniorId, day]);
 
   const slots = loaded?.key === key ? loaded.slots : null;
-  const isError = slots === null && errorKey === key;
+  // 시니어가 없으면(key가 null) 오류가 아님
+  const isError = key !== null && slots === null && errorKey === key;
   return { slots, isError };
 }

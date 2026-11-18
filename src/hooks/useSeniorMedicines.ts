@@ -27,6 +27,8 @@ export default function useSeniorMedicines(seniorId: number | null) {
   }, [seniorId]);
 
   const medicines = loaded?.seniorId === seniorId ? loaded.medicines : null;
-  const isError = medicines === null && errorSeniorId === seniorId;
+  // 시니어가 없으면 오류가 아님
+  const isError =
+    seniorId !== null && medicines === null && errorSeniorId === seniorId;
   return { medicines, isError };
 }
