@@ -33,3 +33,14 @@ export const fetchGuardians = async () => {
     );
   return data.data.map(toGuardian);
 };
+
+// 시니어의 대표 보호자 지정 (같은 시니어의 기존 대표는 서버가 해제)
+export const setPrimaryGuardian = async (
+  seniorId: number,
+  guardianProfileId: number
+) => {
+  await apiClient.patch('/guardians/primary', {
+    senior_profile_id: seniorId,
+    guardian_id: guardianProfileId,
+  });
+};

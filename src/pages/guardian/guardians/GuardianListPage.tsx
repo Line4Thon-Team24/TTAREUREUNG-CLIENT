@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, SquarePen } from 'lucide-react';
-import { fetchGuardians } from '@/apis/guardian';
+import { fetchGuardians, setPrimaryGuardian } from '@/apis/guardian';
 import FilterChips from '@/components/common/FilterChips';
 import SearchField from '@/components/common/SearchField';
 import GuardianCard, {
@@ -86,9 +86,22 @@ const GuardianListPage = () => {
     setKeyword('');
   };
 
-  // 그 시니어의 보호자 중 이 보호자만 대표로 표시
-  // TODO: 대표 보호자 설정 API 연동 (다음 단계)
+  // 그 시니어의 보호자 중 이 보호자만 대표로 (화면에 먼저 반영, 저장 실패 시 원래대로)
   const handleSetRepresentative = (profileId: number, seniorId: number) => {
+    const before = new Map(
+      (guardians ?? [])
+        .filter((link) => link.seniorId === seniorId)
+        .map((link) => [link.id, link.isRepresentative])
+    );
+    const restore = () =>
+      setGuardians((prev) =>
+        (prev ?? []).map((link) =>
+          before.has(link.id)
+            ? { ...link, isRepresentative: before.get(link.id) ?? false }
+            : link
+        )
+      );
+
     setGuardians((prev) =>
       (prev ?? []).map((link) =>
         link.seniorId === seniorId
@@ -96,6 +109,7 @@ const GuardianListPage = () => {
           : link
       )
     );
+    setPrimaryGuardian(seniorId, profileId).catch(restore);
   };
 
   return (
