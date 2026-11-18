@@ -29,6 +29,12 @@ export type Medicine = {
   timing: DoseTiming | null; // 미입력이면 null
 };
 
+// 시니어 카드용 약 요약
+export type MedicineSummary = {
+  registered: boolean; // 약을 한 번이라도 등록했는지
+  count: number; // 복용 중인 약 개수 (종료일이 오늘 이후)
+};
+
 // 약 목록 API 응답 항목
 export type MedicationItemResponse = {
   medication_id: number;

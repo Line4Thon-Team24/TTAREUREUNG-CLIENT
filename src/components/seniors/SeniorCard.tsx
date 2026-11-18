@@ -1,13 +1,15 @@
 import { Star } from 'lucide-react';
 import InfoRow, { InfoValue } from '@/components/common/InfoRow';
 import { GENDER_SHORT_LABELS } from '@/constants/senior';
+import type { MedicineSummary } from '@/types/medicine';
 import type { Senior } from '@/types/senior';
 import { getAge } from '@/utils/birthDate';
 import { formatDate, formatDotDate } from '@/utils/date';
 
 type SeniorCardProps = {
   senior: Senior;
-  medicineCount: number;
+  // 불러오는 중이거나 실패하면 null ('-' 표시)
+  medicineSummary: MedicineSummary | null;
   // 목록 편집 화면에서 체크박스 노출 (즐겨찾기·편집 버튼은 숨김)
   selectable?: boolean;
   selected?: boolean;
@@ -20,7 +22,7 @@ type SeniorCardProps = {
 // 시니어 카드 (시니어 목록)
 export default function SeniorCard({
   senior,
-  medicineCount,
+  medicineSummary,
   selectable = false,
   selected = false,
   onToggleSelect,
@@ -108,10 +110,18 @@ export default function SeniorCard({
         </InfoRow>
         <div className="flex flex-wrap gap-x-3 gap-y-2">
           <InfoRow label="약 등록 여부" tone="green">
-            <InfoValue>{medicineCount > 0 ? '등록됨' : '미등록'}</InfoValue>
+            <InfoValue>
+              {medicineSummary
+                ? medicineSummary.registered
+                  ? '등록됨'
+                  : '미등록'
+                : '-'}
+            </InfoValue>
           </InfoRow>
           <InfoRow label="약 복용 개수" tone="green">
-            <InfoValue>{medicineCount}개</InfoValue>
+            <InfoValue>
+              {medicineSummary ? `${medicineSummary.count}개` : '-'}
+            </InfoValue>
             {!selectable && (
               <button
                 type="button"

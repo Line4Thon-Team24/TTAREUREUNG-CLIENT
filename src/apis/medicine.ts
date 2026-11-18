@@ -5,6 +5,7 @@ import type {
   DoseTiming,
   Medicine,
   MedicationItemResponse,
+  MedicineSummary,
 } from '@/types/medicine';
 
 // 복용 간격 일수 → 화면 값 (없으면 매일)
@@ -55,6 +56,27 @@ export const fetchMedicines = async (seniorId: number) => {
     BaseResponse<{ medications: MedicationItemResponse[] }>
   >('/medications', { params: { senior_id: seniorId } });
   return data.data.medications.map((item) => toMedicine(item, seniorId));
+};
+
+// 시니어별 약 요약 (시니어 id → 등록 여부·복용 중인 약 개수)
+export const fetchMedicineSummaries = async (seniorIds: number[]) => {
+  const { data } = await apiClient.get<
+    BaseResponse<{
+      seniors: {
+        senior_id: number;
+        registered: boolean;
+        medication_count: number;
+      }[];
+    }>
+  >('/medications/summary', {
+    params: { senior_ids: seniorIds.join(',') },
+  });
+  return Object.fromEntries(
+    data.data.seniors.map((item): [number, MedicineSummary] => [
+      item.senior_id,
+      { registered: item.registered, count: item.medication_count },
+    ])
+  );
 };
 
 // 약 일괄 삭제 (하나라도 실패하면 전체가 삭제되지 않음)
