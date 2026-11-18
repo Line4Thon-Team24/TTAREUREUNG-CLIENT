@@ -16,10 +16,14 @@ import {
   isValidPhoneNumber,
 } from '@/utils/formatPhoneNumber';
 
+// 한 번에 초대할 수 있는 번호 수 (서버 제한)
+const MAX_INVITES = 10;
+
 // 번호 입력 안내 문구
 const PHONE_ERRORS = {
   duplicate: '이미 추가한 번호예요.',
   tooLong: '전화번호는 숫자 11자리까지 입력할 수 있어요.',
+  tooMany: `한 번에 ${MAX_INVITES}명까지 초대할 수 있어요.`,
 };
 
 const GuardianInvitePage = () => {
@@ -56,6 +60,13 @@ const GuardianInvitePage = () => {
     const isComplete = isValidPhoneNumber(formatted);
     const isDup = isComplete && phoneNumbers.includes(formatted);
 
+    // 최대 개수면 추가하지 않고 입력값은 그대로 둠
+    if (isComplete && !isDup && phoneNumbers.length >= MAX_INVITES) {
+      setPhoneError('tooMany');
+      setPhoneInput(formatted);
+      return;
+    }
+
     setPhoneError(isDup ? 'duplicate' : null);
     if (isComplete && !isDup) {
       setPhoneNumbers((prev) => [...prev, formatted]);
@@ -65,7 +76,10 @@ const GuardianInvitePage = () => {
 
   const removePhoneNumber = (target: string) => {
     setPhoneNumbers((prev) => prev.filter((phone) => phone !== target));
-    setPhoneError((prev) => (prev === 'duplicate' ? null : prev));
+    // 번호를 지우면 중복·개수 초과 안내는 해제
+    setPhoneError((prev) =>
+      prev === 'duplicate' || prev === 'tooMany' ? null : prev
+    );
   };
 
   // 입력한 내용이 있으면 버릴지 먼저 확인
