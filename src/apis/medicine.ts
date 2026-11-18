@@ -76,6 +76,7 @@ const toMedicationRequest = (form: MedicineForm) => ({
   interval_days: INTERVAL_TO_DAYS[form.interval],
   intake_timing: form.timing ? TIMING_TO_API[form.timing] : undefined,
   meal_time_slots: toMealTimeSlots(form),
+  dose_amount: form.doseAmount || undefined,
 });
 
 // 약 목록 응답 → 화면용 약
@@ -101,6 +102,7 @@ const toMedicine = (
   interval: INTERVAL_FROM_DAYS[item.interval_days ?? 1] ?? 'daily',
   timesPerDay: toTimesPerDay(item.meal_time_slots, item.intake_timing),
   timing: item.intake_timing ? TIMING_FROM_API[item.intake_timing] : null,
+  doseAmount: item.dose_amount ?? '',
 });
 
 // 시니어의 약 목록 조회
@@ -197,7 +199,6 @@ const toAnalysis = (
         id: `rx-${index + 1}`,
         accuracy: item.confidence ?? 0,
         strength: item.strength,
-        doseAmount: item.dose_amount,
         form: {
           ...base,
           name: item.drug_name ?? '',
@@ -211,6 +212,7 @@ const toAnalysis = (
           timing: item.intake_timing
             ? TIMING_FROM_API[item.intake_timing]
             : null,
+          doseAmount: item.dose_amount ?? '',
         },
       })),
   };
@@ -240,7 +242,6 @@ export const analyzePrescription = async (file: File, signal?: AbortSignal) => {
 export type RecognizedMedicineRequest = {
   form: MedicineForm;
   strength?: string | null;
-  doseAmount?: string | null;
 };
 
 // AI 인식 약 일괄 등록 (처방전 파일과 함께 저장, 등록된 약 id 반환)
@@ -253,10 +254,9 @@ export const createRecognizedMedicines = async (
     BaseResponse<{ medication_ids: number[] }>
   >('/medications/bulk', {
     senior_profile_id: seniorId,
-    medications: medicines.map(({ form, strength, doseAmount }) => ({
+    medications: medicines.map(({ form, strength }) => ({
       ...toMedicationRequest(form),
       strength: strength || undefined,
-      dose_amount: doseAmount || undefined,
       image_url: prescription.fileKey,
       prescription_file_name: prescription.fileName,
       registration_type: 'AI',

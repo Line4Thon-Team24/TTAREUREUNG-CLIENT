@@ -86,7 +86,7 @@ const MedicineInfoFormPage = () => {
         // 직접 입력은 약 1개
         await createMedicine(state.seniorId, trimMedicineForm(drafts[0].form));
       } else {
-        // 선택한 약만 등록 (함량·복용량은 인식 결과에서 가져옴)
+        // 선택한 약만 등록 (함량은 인식 결과에서 가져옴)
         await createRecognizedMedicines(
           state.seniorId,
           drafts.map(({ id, form }) => {
@@ -96,7 +96,6 @@ const MedicineInfoFormPage = () => {
             return {
               form: trimMedicineForm(form),
               strength: recognized?.strength,
-              doseAmount: recognized?.doseAmount,
             };
           }),
           { fileKey: state.fileKey, fileName: state.prescription.fileName }

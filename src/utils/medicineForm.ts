@@ -1,4 +1,5 @@
 import type { Medicine, MedicineForm } from '@/types/medicine';
+import { DOSE_COUNT_OPTIONS, DOSE_UNITS } from '@/constants/medicine';
 import { addDaysToDateString, toDateString } from '@/utils/date';
 
 // 빈 약 정보 (직접 입력용, 오늘부터 일주일)
@@ -16,6 +17,7 @@ export const createEmptyMedicineForm = (): MedicineForm => {
     interval: 'daily',
     timesPerDay: 3,
     timing: 'afterMeal',
+    doseAmount: '1정',
   };
 };
 
@@ -47,6 +49,7 @@ export const toMedicineForm = (medicine: Medicine): MedicineForm => ({
   interval: medicine.interval,
   timesPerDay: medicine.timesPerDay,
   timing: medicine.timing,
+  doseAmount: medicine.doseAmount,
 });
 
 // 입력값이 처음과 달라졌는지 비교
@@ -57,3 +60,14 @@ export const isMedicineFormChanged = (
   (Object.keys(before) as (keyof MedicineForm)[]).some(
     (key) => before[key] !== after[key]
   );
+
+// '2정' → { count: '2', unit: '정' } (선택지에 없는 형식이면 null)
+export const parseDoseAmount = (value: string) => {
+  const match = /^(\d+)\s*(.+)$/.exec(value.trim());
+  if (!match) return null;
+  const [, count, unit] = match;
+  const isOption =
+    DOSE_COUNT_OPTIONS.some((option) => option.value === count) &&
+    DOSE_UNITS.some((option) => option === unit);
+  return isOption ? { count, unit } : null;
+};
