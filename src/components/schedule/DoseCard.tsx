@@ -1,16 +1,13 @@
-import {
-  CircleMinus,
-  Package,
-  Pill,
-  Tablets,
-  type LucideIcon,
-} from 'lucide-react';
+import { CircleMinus, Package, Pill, type LucideIcon } from 'lucide-react';
+import tabletIcon from '@/assets/icons/tablet.svg';
+import pillAssortedImage from '@/assets/images/pill-assorted.jpg';
+import pillBlisterImage from '@/assets/images/pill-blister.jpg';
 import { DOSE_STATUS_STYLES } from '@/constants/schedule';
 import type { MedicineShape, ScheduleMedicine } from '@/types/schedule';
 
-const SHAPE_ICONS: Record<MedicineShape, LucideIcon> = {
+// 알약은 피그마 아이콘 사용
+const SHAPE_ICONS: Record<Exclude<MedicineShape, 'tablet'>, LucideIcon> = {
   capsule: Pill,
-  tablet: Tablets,
   powder: Package,
 };
 
@@ -25,8 +22,10 @@ export default function DoseCard({ medicine, onClick }: DoseCardProps) {
   const { label, Icon, textColor, amountClassName } =
     DOSE_STATUS_STYLES[status];
   const isMissed = status === 'missed';
-  // 미복용은 경고 아이콘
-  const ShapeIcon = isMissed ? CircleMinus : SHAPE_ICONS[shape];
+  // 약 사진이 없으면 피그마의 기본 사진 (미복용은 다른 사진)
+  const backgroundUrl =
+    imageUrl || (isMissed ? pillAssortedImage : pillBlisterImage);
+  const ShapeIcon = shape === 'tablet' ? null : SHAPE_ICONS[shape];
 
   return (
     <button
@@ -37,13 +36,11 @@ export default function DoseCard({ medicine, onClick }: DoseCardProps) {
         isMissed ? 'ring-2 ring-[#F43F5E]' : ''
       }`}
     >
-      {imageUrl && (
-        <img
-          src={imageUrl}
-          alt=""
-          className="pointer-events-none absolute inset-0 size-full object-cover"
-        />
-      )}
+      <img
+        src={backgroundUrl}
+        alt=""
+        className="pointer-events-none absolute inset-0 size-full object-cover"
+      />
       {/* 사진 위 그라데이션 */}
       <span
         aria-hidden
@@ -62,9 +59,23 @@ export default function DoseCard({ medicine, onClick }: DoseCardProps) {
               : 'bg-white/20 text-white'
           }`}
         >
-          <ShapeIcon size={16} aria-hidden />
+          {/* 미복용은 경고 아이콘 */}
+          {isMissed ? (
+            <CircleMinus size={16} aria-hidden />
+          ) : shape === 'tablet' ? (
+            <img
+              src={tabletIcon}
+              alt=""
+              width={16}
+              height={16}
+              className="rotate-90"
+            />
+          ) : (
+            ShapeIcon && <ShapeIcon size={16} aria-hidden />
+          )}
         </span>
-        {amountClassName && (
+        {/* 복용량이 없으면 배지 숨김 */}
+        {amountClassName && amount && (
           <span
             className={`rounded-full border px-1.75 py-0.75 text-[10px] font-semibold ${amountClassName}`}
           >

@@ -1,16 +1,19 @@
 import { useRef, type ReactNode } from 'react';
 import { Bell, Info, Pencil } from 'lucide-react';
 import DateField from '@/components/common/DateField';
-import SelectField from '@/components/common/SelectField';
+import DropdownField from '@/components/common/DropdownField';
 import TextField from '@/components/common/TextField';
 import {
   INTERVAL_OPTIONS,
   BEDTIME_NOTIFICATION_TIMES,
+  DOSE_COUNT_OPTIONS,
+  DOSE_UNIT_OPTIONS,
   NOTIFICATION_TIMES,
   TIMES_PER_DAY_OPTIONS,
   TIMING_OPTIONS,
 } from '@/constants/medicine';
 import type { DoseInterval, DoseTiming, MedicineForm } from '@/types/medicine';
+import { parseDoseAmount } from '@/utils/medicineForm';
 
 type MedicineInfoCardProps = {
   index: number;
@@ -104,6 +107,8 @@ export default function MedicineInfoCard({
   const id = `medicine-${index}`;
   const update = (next: Partial<MedicineForm>) =>
     onChange({ ...value, ...next });
+  // 선택지에 없는 형식(예: AI가 읽은 '5ml')이면 선택 안 된 상태로 표시하고 값은 유지
+  const dose = parseDoseAmount(value.doseAmount);
 
   return (
     <article className="flex w-full flex-col gap-6">
@@ -208,29 +213,25 @@ export default function MedicineInfoCard({
         <div className="flex flex-col gap-2">
           <div className="flex flex-col gap-1">
             <SubLabel>복용 간격</SubLabel>
-            <SelectField
+            <DropdownField
               aria-label="복용 간격"
               placeholder="복용 간격"
               options={INTERVAL_OPTIONS}
               value={value.interval}
-              onChange={(e) =>
-                update({ interval: e.target.value as DoseInterval })
-              }
+              onChange={(next) => update({ interval: next as DoseInterval })}
             />
           </div>
           <div className="flex flex-col gap-1">
             <SubLabel>복용 빈도</SubLabel>
             <div className="flex items-center gap-4">
-              <SelectField
+              <DropdownField
                 aria-label="하루 복용 횟수"
                 placeholder="복용 횟수"
                 options={TIMES_PER_DAY_OPTIONS}
                 value={String(value.timesPerDay)}
                 // 취침 전은 하루 1회로 고정
                 disabled={value.timing === 'bedtime'}
-                onChange={(e) =>
-                  update({ timesPerDay: Number(e.target.value) })
-                }
+                onChange={(next) => update({ timesPerDay: Number(next) })}
               />
               <span
                 className="text-[16px] font-bold text-[#94A3B8]"
@@ -238,19 +239,50 @@ export default function MedicineInfoCard({
               >
                 /
               </span>
-              <SelectField
+              <DropdownField
                 aria-label="복용 시점"
                 placeholder="복용 시점"
                 options={TIMING_OPTIONS}
                 value={value.timing ?? ''}
-                onChange={(e) => {
-                  const timing = e.target.value as DoseTiming;
+                onChange={(next) => {
+                  const timing = next as DoseTiming;
                   update(
                     timing === 'bedtime'
                       ? { timing, timesPerDay: 1 }
                       : { timing }
                   );
                 }}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1">
+            <SubLabel>1회 복용량</SubLabel>
+            <div className="flex items-center gap-4">
+              <DropdownField
+                aria-label="1회 복용 개수"
+                placeholder="개수"
+                options={DOSE_COUNT_OPTIONS}
+                value={dose?.count ?? ''}
+                onChange={(next) =>
+                  update({
+                    doseAmount: `${next}${dose?.unit ?? '정'}`,
+                  })
+                }
+              />
+              {/* 위 줄의 '/' 자리만큼 띄워 칸 너비를 맞춤 */}
+              <span className="invisible text-[16px] font-bold" aria-hidden>
+                /
+              </span>
+              <DropdownField
+                aria-label="복용 단위"
+                placeholder="단위"
+                options={DOSE_UNIT_OPTIONS}
+                value={dose?.unit ?? ''}
+                onChange={(next) =>
+                  update({
+                    doseAmount: `${dose?.count ?? '1'}${next}`,
+                  })
+                }
               />
             </div>
           </div>

@@ -18,6 +18,19 @@ export const TIMING_OPTIONS: { label: string; value: DoseTiming }[] = [
   { label: '취침 전', value: 'bedtime' },
 ];
 
+// 1회 복용량 (개수 + 단위, 저장 값 예: '1정')
+export const DOSE_COUNT_OPTIONS = [1, 2, 3, 4, 5].map((count) => ({
+  label: `${count}개`,
+  value: String(count),
+}));
+
+export const DOSE_UNITS = ['정', '캡슐', '포'] as const;
+
+export const DOSE_UNIT_OPTIONS = DOSE_UNITS.map((unit) => ({
+  label: unit,
+  value: unit,
+}));
+
 // 하루 복용 횟수별 자동 알림 시간
 const MORNING = { label: '아침', time: '09:00', color: '#FBBF24' };
 const LUNCH = { label: '점심', time: '13:00', color: '#FB923C' };

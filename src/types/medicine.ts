@@ -27,6 +27,7 @@ export type Medicine = {
   interval: DoseInterval;
   timesPerDay: number; // 하루 복용 횟수 (1~3)
   timing: DoseTiming | null; // 미입력이면 null
+  doseAmount: string; // 1회 복용량 (예: 1정, 미입력이면 빈 값)
 };
 
 // 시니어 카드용 약 요약
@@ -46,6 +47,7 @@ export type MedicationItemResponse = {
   registration_type: 'AI' | 'MANUAL' | null;
   effect: string | null;
   storage_location: string | null;
+  dose_amount: string | null;
   intake_reason: string | null;
   interval_days: number | null;
   intake_timing:
@@ -82,7 +84,6 @@ export type RecognizedMedicine = {
   accuracy: number; // 정확도 (%)
   // 입력 화면에 없지만 등록할 때 함께 저장하는 값
   strength?: string | null; // 함량 (예: 5mg)
-  doseAmount?: string | null; // 1회 복용량 (예: 1정)
 };
 
 // 처방전 업로드·AI 인식 결과

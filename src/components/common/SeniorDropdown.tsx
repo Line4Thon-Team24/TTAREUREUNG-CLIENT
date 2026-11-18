@@ -3,7 +3,7 @@ import { Check, ChevronDown } from 'lucide-react';
 import type { Senior } from '@/types/senior';
 
 type SeniorDropdownProps = {
-  seniors: Senior[];
+  seniors: Pick<Senior, 'id' | 'name'>[];
   selectedId: number | null;
   onSelect: (id: number) => void;
   label?: string; // 스크린리더용 이름
