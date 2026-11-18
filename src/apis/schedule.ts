@@ -46,6 +46,27 @@ const toSlot = (session: Session): ScheduleSlot => ({
   })),
 });
 
+// 월별 복용률 (month: YYYY-MM, 모두 %)
+export const fetchMonthlyAdherence = async (
+  seniorId: number,
+  month: string
+) => {
+  const { data } = await apiClient.get<
+    BaseResponse<{
+      rate: number;
+      completed_rate: number;
+      partial_rate: number;
+      missed_rate: number;
+    }>
+  >('/medications/calendar', { params: { senior_id: seniorId, month } });
+  return {
+    rate: data.data.rate,
+    taken: data.data.completed_rate,
+    partial: data.data.partial_rate,
+    missed: data.data.missed_rate,
+  };
+};
+
 // 날짜별 복용 일정 (date: YYYY-MM-DD, 약이 없는 회차는 제외)
 export const fetchDailySchedule = async (seniorId: number, date: string) => {
   const { data } = await apiClient.get<BaseResponse<ScheduleResponse>>(

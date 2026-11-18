@@ -1,35 +1,62 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { fetchMonthlyAdherence } from '@/apis/schedule';
 import SeniorDropdown from '@/components/common/SeniorDropdown';
 import AdherenceSummary from '@/components/schedule/AdherenceSummary';
 import MonthCalendar from '@/components/schedule/MonthCalendar';
 import useDateParam from '@/hooks/useDateParam';
 import useGoBack from '@/hooks/useGoBack';
+import useSeniorMedicines from '@/hooks/useSeniorMedicines';
+import useSeniors from '@/hooks/useSeniors';
 import useSelectedSeniorParam from '@/hooks/useSelectedSeniorParam';
 import { SCHEDULE_SENIOR_KEY } from '@/constants/schedule';
-import { getMedicines } from '@/mocks/medicines';
-import { getMonthlyAdherence } from '@/mocks/schedule';
-import { getSeniors } from '@/mocks/seniors';
 import { toDateString } from '@/utils/date';
+
+type Adherence = Awaited<ReturnType<typeof fetchMonthlyAdherence>>;
 
 const ScheduleMonthPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const goBackOr = useGoBack();
-  const [seniors] = useState(getSeniors);
+  const { seniors } = useSeniors();
   const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(
-    seniors,
+    seniors ?? [],
     SCHEDULE_SENIOR_KEY
   );
   const [date, setDate] = useDateParam();
+  const { medicines } = useSeniorMedicines(selectedSeniorId);
 
   const year = date.getFullYear();
   const month = date.getMonth();
-  const medicines =
-    selectedSeniorId === null ? [] : getMedicines(selectedSeniorId);
-  const hasSenior = seniors.length > 0;
-  const hasMedicine = medicines.length > 0;
+  const hasSenior = (seniors ?? []).length > 0;
+  const hasMedicine = (medicines ?? []).length > 0;
+
+  // 시니어·달별 복용률 (불러오는 중이거나 실패하면 요약 숨김)
+  const monthKey = toDateString(date).slice(0, 7);
+  const adherenceKey =
+    selectedSeniorId === null ? null : `${selectedSeniorId}/${monthKey}`;
+  const [adherence, setAdherence] = useState<{
+    key: string;
+    value: Adherence;
+  } | null>(null);
+
+  useEffect(() => {
+    if (selectedSeniorId === null) return;
+    const requestKey = `${selectedSeniorId}/${monthKey}`;
+    let ignore = false;
+    fetchMonthlyAdherence(selectedSeniorId, monthKey)
+      .then((value) => {
+        if (!ignore) setAdherence({ key: requestKey, value });
+      })
+      .catch(() => {});
+    return () => {
+      ignore = true;
+    };
+  }, [selectedSeniorId, monthKey]);
+
+  const monthlyAdherence =
+    adherence?.key === adherenceKey ? adherence.value : null;
 
   const moveMonth = (offset: number) =>
     setDate(new Date(year, month + offset, 1));
@@ -78,7 +105,7 @@ const ScheduleMonthPage = () => {
         </div>
 
         <div className="justify-self-end">
-          {hasSenior ? (
+          {seniors === null ? null : hasSenior ? (
             <SeniorDropdown
               seniors={seniors}
               selectedId={selectedSeniorId}
@@ -102,16 +129,18 @@ const ScheduleMonthPage = () => {
         </div>
       </header>
 
-      {hasMedicine && <AdherenceSummary {...getMonthlyAdherence()} />}
+      {hasMedicine && monthlyAdherence && (
+        <AdherenceSummary {...monthlyAdherence} />
+      )}
 
       <MonthCalendar
         year={year}
         month={month}
-        medicines={medicines}
+        medicines={medicines ?? []}
         onDateClick={goToDate}
-        // 시니어는 있는데 약이 없을 때만
+        // 시니어는 있는데 약이 없을 때만 (약 목록을 불러온 뒤)
         onRegisterMedicine={
-          hasSenior && !hasMedicine
+          hasSenior && medicines !== null && !hasMedicine
             ? () =>
                 navigate('/medicines/register', {
                   state: { seniorId: selectedSeniorId },
