@@ -9,7 +9,8 @@ import StepHeader from '@/components/common/StepHeader';
 import SeniorCard from '@/components/seniors/SeniorCard';
 import useGoBack from '@/hooks/useGoBack';
 import useLatestRequest from '@/hooks/useLatestRequest';
-import { getMedicines } from '@/mocks/medicines';
+import { fetchMedicineSummaries } from '@/apis/medicine';
+import type { MedicineSummary } from '@/types/medicine';
 import type { Senior } from '@/types/senior';
 import { filterByName } from '@/utils/nameSearch';
 
@@ -19,6 +20,9 @@ const SeniorManagePage = () => {
   // 목록과 같은 최근 추가순 (null이면 불러오는 중)
   const [seniors, setSeniors] = useState<Senior[] | null>(null);
   const [isLoadError, setIsLoadError] = useState(false);
+  const [summaries, setSummaries] = useState<Record<number, MedicineSummary>>(
+    {}
+  );
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -31,7 +35,15 @@ const SeniorManagePage = () => {
     let ignore = false;
     fetchSeniors()
       .then((data) => {
-        if (!ignore) setSeniors(data);
+        if (ignore) return;
+        setSeniors(data);
+        // 약 요약은 실패해도 목록은 표시 ('-')
+        if (data.length === 0) return;
+        fetchMedicineSummaries(data.map(({ id }) => id))
+          .then((result) => {
+            if (!ignore) setSummaries(result);
+          })
+          .catch(() => {});
       })
       .catch(() => {
         if (!ignore) setIsLoadError(true);
@@ -155,7 +167,7 @@ const SeniorManagePage = () => {
               <li key={senior.id}>
                 <SeniorCard
                   senior={senior}
-                  medicineCount={getMedicines(senior.id).length}
+                  medicineSummary={summaries[senior.id] ?? null}
                   selectable
                   selected={selectedIds.includes(senior.id)}
                   onToggleSelect={() => toggleSenior(senior.id)}

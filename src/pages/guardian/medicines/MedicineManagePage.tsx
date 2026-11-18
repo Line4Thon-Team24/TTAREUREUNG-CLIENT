@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
+import { deleteMedicines, fetchMedicines } from '@/apis/medicine';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import SearchField from '@/components/common/SearchField';
 import StepHeader from '@/components/common/StepHeader';
 import MedicineCard from '@/components/medicines/MedicineCard';
 import useGoBack from '@/hooks/useGoBack';
-import { deleteMedicines, getMedicines } from '@/mocks/medicines';
+import useLatestRequest from '@/hooks/useLatestRequest';
+import type { ApiError } from '@/types/api';
+import type { Medicine } from '@/types/medicine';
 import { filterMedicines } from '@/utils/medicineSearch';
 
 // 삭제 전 팝업 단계: 의사 확인 → 삭제 확인
@@ -14,20 +17,43 @@ type ModalStep = 'doctor' | 'confirm' | null;
 
 const MedicineManagePage = () => {
   const goBack = useGoBack();
+  const startRequest = useLatestRequest();
   const [searchParams] = useSearchParams();
   const seniorId = Number(searchParams.get('seniorId'));
 
-  const [medicines] = useState(() => getMedicines(seniorId));
+  // null이면 불러오는 중
+  const [medicines, setMedicines] = useState<Medicine[] | null>(null);
+  const [isNotFound, setIsNotFound] = useState(false);
+  const [isLoadError, setIsLoadError] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [keyword, setKeyword] = useState('');
   const [modalStep, setModalStep] = useState<ModalStep>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteError, setIsDeleteError] = useState(false);
+
+  useEffect(() => {
+    let ignore = false;
+    fetchMedicines(seniorId)
+      .then((data) => {
+        if (!ignore) setMedicines(data);
+      })
+      .catch((error: ApiError) => {
+        if (ignore) return;
+        // 없는 시니어(404)·잘못된 주소(400)면 약 목록으로
+        if (error.status === 404 || error.status === 400) setIsNotFound(true);
+        else setIsLoadError(true);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [seniorId]);
 
   // 편집할 약이 없으면 약 목록으로 이동
-  if (medicines.length === 0) {
+  if (isNotFound || medicines?.length === 0) {
     return <Navigate to="/medicines" replace />;
   }
 
-  const visibleMedicines = filterMedicines(medicines, keyword);
+  const visibleMedicines = filterMedicines(medicines ?? [], keyword);
   const visibleIds = visibleMedicines.map(({ id }) => id);
   const isAllSelected =
     visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
@@ -48,10 +74,23 @@ const MedicineManagePage = () => {
     );
   };
 
-  const handleDelete = () => {
-    deleteMedicines(selectedIds);
+  const handleDelete = async () => {
+    if (isDeleting) return;
+
+    const isLatest = startRequest();
+    setIsDeleting(true);
+    setIsDeleteError(false);
     setModalStep(null);
-    goBack(`/medicines?seniorId=${seniorId}`);
+    try {
+      await deleteMedicines(selectedIds);
+      // 화면을 떠났으면 이동하지 않음
+      if (!isLatest()) return;
+      goBack(`/medicines?seniorId=${seniorId}`);
+    } catch {
+      if (!isLatest()) return;
+      setIsDeleteError(true);
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -83,7 +122,11 @@ const MedicineManagePage = () => {
 
       {/* 목록만 스크롤, 마지막 카드가 하단 버튼에 가리지 않도록 아래 여백 확보 */}
       <main className="min-h-0 flex-1 overflow-y-auto px-5 pt-2 pb-12">
-        {visibleMedicines.length === 0 ? (
+        {isLoadError ? (
+          <p className="pt-20 text-center text-[14px] text-[#6B7684]">
+            약 목록을 불러오지 못했어요.
+          </p>
+        ) : medicines === null ? null : visibleMedicines.length === 0 ? (
           <p className="pt-20 text-center text-[14px] text-[#6B7684]">
             검색 결과가 없어요.
           </p>
@@ -103,6 +146,14 @@ const MedicineManagePage = () => {
         )}
       </main>
 
+      {isDeleteError && (
+        <p
+          role="alert"
+          className="shrink-0 border-t border-[#E5E8EB] bg-white px-5 pt-4 text-center text-[13px] text-[#E5484D]"
+        >
+          약 삭제에 실패했어요. 다시 시도해주세요.
+        </p>
+      )}
       <div className="z-10 flex shrink-0 gap-3 border-t border-[#E5E8EB] bg-white px-5 pt-4 pb-10">
         <div className="w-29.25 shrink-0">
           <Button
@@ -115,7 +166,7 @@ const MedicineManagePage = () => {
         <div className="min-w-0 flex-1">
           <Button
             variant="danger"
-            disabled={count === 0}
+            disabled={count === 0 || isDeleting}
             onClick={() => setModalStep('doctor')}
           >
             {count > 0 ? `${count}개 삭제하기` : '삭제하기'}

@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, SquarePen } from 'lucide-react';
+import { fetchMedicines } from '@/apis/medicine';
+import { fetchSeniors } from '@/apis/senior';
 import EmptyState from '@/components/common/EmptyState';
 import SearchField from '@/components/common/SearchField';
 import SeniorChips from '@/components/common/SeniorChips';
 import MedicineCard from '@/components/medicines/MedicineCard';
 import useSelectedSeniorParam from '@/hooks/useSelectedSeniorParam';
-import { getMedicines } from '@/mocks/medicines';
-import { getSeniors } from '@/mocks/seniors';
+import type { Medicine } from '@/types/medicine';
+import type { Senior } from '@/types/senior';
 import { filterMedicines } from '@/utils/medicineSearch';
 
 const ICON_BUTTON_CLASS =
@@ -15,16 +17,58 @@ const ICON_BUTTON_CLASS =
 
 const MedicineListPage = () => {
   const navigate = useNavigate();
-  const [seniors] = useState(getSeniors);
-  const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(seniors);
+  // null이면 불러오는 중
+  const [seniors, setSeniors] = useState<Senior[] | null>(null);
+  const [isSeniorError, setIsSeniorError] = useState(false);
+  const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(
+    seniors ?? []
+  );
+  // 어느 시니어의 약 목록인지 함께 저장 (시니어를 바꾸면 이전 목록을 보이지 않음)
+  const [loaded, setLoaded] = useState<{
+    seniorId: number;
+    medicines: Medicine[];
+  } | null>(null);
+  const [errorSeniorId, setErrorSeniorId] = useState<number | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [keyword, setKeyword] = useState('');
 
+  useEffect(() => {
+    let ignore = false;
+    fetchSeniors()
+      .then((data) => {
+        if (!ignore) setSeniors(data);
+      })
+      .catch(() => {
+        if (!ignore) setIsSeniorError(true);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (selectedSeniorId === null) return;
+    let ignore = false;
+    fetchMedicines(selectedSeniorId)
+      .then((data) => {
+        if (!ignore) setLoaded({ seniorId: selectedSeniorId, medicines: data });
+      })
+      .catch(() => {
+        if (!ignore) setErrorSeniorId(selectedSeniorId);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [selectedSeniorId]);
+
+  // null이면 불러오는 중
   const medicines =
-    selectedSeniorId === null ? [] : getMedicines(selectedSeniorId);
-  const visibleMedicines = filterMedicines(medicines, keyword);
-  const hasSenior = seniors.length > 0;
-  const hasMedicine = medicines.length > 0;
+    loaded?.seniorId === selectedSeniorId ? loaded.medicines : null;
+  const isMedicineError =
+    medicines === null && errorSeniorId === selectedSeniorId;
+  const visibleMedicines = filterMedicines(medicines ?? [], keyword);
+  const hasSenior = (seniors ?? []).length > 0;
+  const hasMedicine = (medicines ?? []).length > 0;
 
   const goRegister = () =>
     navigate('/medicines/register', {
@@ -43,7 +87,7 @@ const MedicineListPage = () => {
           <h1 className="text-[22px] font-bold text-black">약 목록</h1>
           {hasSenior && (
             <span className="rounded-full border border-[#DCF2E4] bg-[#F0F9F4] px-2.25 py-0.75 text-[12px] font-semibold text-[#0E6E3B]">
-              총 {medicines.length}개
+              총 {medicines?.length ?? 0}개
             </span>
           )}
         </div>
@@ -96,14 +140,20 @@ const MedicineListPage = () => {
       {hasSenior && (
         <div className="border-b border-[#E5E8EB]">
           <SeniorChips
-            seniors={seniors}
+            seniors={seniors ?? []}
             selectedId={selectedSeniorId}
             onSelect={selectSenior}
           />
         </div>
       )}
 
-      {!hasSenior ? (
+      {isSeniorError ? (
+        <p className="flex flex-1 items-center justify-center text-[14px] text-[#6B7684]">
+          시니어 목록을 불러오지 못했어요.
+        </p>
+      ) : seniors === null ? (
+        <div className="flex-1" />
+      ) : !hasSenior ? (
         <div className="flex flex-1 items-center justify-center">
           <EmptyState
             message="등록된 시니어가 없어요!"
@@ -115,6 +165,12 @@ const MedicineListPage = () => {
             }
           />
         </div>
+      ) : isMedicineError ? (
+        <p className="flex flex-1 items-center justify-center text-[14px] text-[#6B7684]">
+          약 목록을 불러오지 못했어요.
+        </p>
+      ) : medicines === null ? (
+        <div className="flex-1" />
       ) : !hasMedicine ? (
         <div className="flex flex-1 items-center justify-center">
           <EmptyState

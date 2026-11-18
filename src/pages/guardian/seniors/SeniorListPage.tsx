@@ -6,7 +6,8 @@ import EmptyState from '@/components/common/EmptyState';
 import FilterChips from '@/components/common/FilterChips';
 import SearchField from '@/components/common/SearchField';
 import SeniorCard from '@/components/seniors/SeniorCard';
-import { getMedicines } from '@/mocks/medicines';
+import { fetchMedicineSummaries } from '@/apis/medicine';
+import type { MedicineSummary } from '@/types/medicine';
 import type { Senior } from '@/types/senior';
 import { filterByName } from '@/utils/nameSearch';
 
@@ -25,6 +26,9 @@ const SeniorListPage = () => {
   // null이면 불러오는 중
   const [seniors, setSeniors] = useState<Senior[] | null>(null);
   const [isError, setIsError] = useState(false);
+  const [summaries, setSummaries] = useState<Record<number, MedicineSummary>>(
+    {}
+  );
   const [filter, setFilter] = useState<Filter>('recent');
   const [isSearching, setIsSearching] = useState(false);
   const [keyword, setKeyword] = useState('');
@@ -33,7 +37,15 @@ const SeniorListPage = () => {
     let ignore = false;
     fetchSeniors()
       .then((data) => {
-        if (!ignore) setSeniors(data);
+        if (ignore) return;
+        setSeniors(data);
+        // 약 요약은 실패해도 목록은 표시 ('-')
+        if (data.length === 0) return;
+        fetchMedicineSummaries(data.map(({ id }) => id))
+          .then((result) => {
+            if (!ignore) setSummaries(result);
+          })
+          .catch(() => {});
       })
       .catch(() => {
         if (!ignore) setIsError(true);
@@ -151,7 +163,7 @@ const SeniorListPage = () => {
             <li key={senior.id}>
               <SeniorCard
                 senior={senior}
-                medicineCount={getMedicines(senior.id).length}
+                medicineSummary={summaries[senior.id] ?? null}
                 onToggleFavorite={() => handleToggleFavorite(senior.id)}
                 onEdit={() => navigate(`/seniors/${senior.id}/edit`)}
                 onMedicineDetail={() =>
