@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, SquarePen } from 'lucide-react';
 import { fetchGuardians, setPrimaryGuardian } from '@/apis/guardian';
+import ErrorState from '@/components/common/ErrorState';
 import FilterChips from '@/components/common/FilterChips';
+import LoadingState from '@/components/common/LoadingState';
 import SearchField from '@/components/common/SearchField';
 import GuardianCard from '@/components/guardians/GuardianCard';
 import type { Guardian, GuardianGroup } from '@/types/guardian';
@@ -41,6 +43,8 @@ const GuardianListPage = () => {
   const [sort, setSort] = useState<Sort>('representative');
   const [isSearching, setIsSearching] = useState(false);
   const [keyword, setKeyword] = useState('');
+  // 다시 시도하면 값이 바뀌어 다시 불러옴
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let ignore = false;
@@ -54,7 +58,7 @@ const GuardianListPage = () => {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [loadAttempt]);
 
   // 총 인원은 연결 수가 아닌 보호자 수
   const guardianList = groupByGuardian(guardians ?? []);
@@ -148,11 +152,15 @@ const GuardianListPage = () => {
       )}
 
       {isError ? (
-        <p className="flex flex-1 items-center justify-center text-[14px] text-[#6B7684]">
-          보호자 목록을 불러오지 못했어요.
-        </p>
+        <ErrorState
+          message="보호자 목록을 불러오지 못했어요."
+          onRetry={() => {
+            setIsError(false);
+            setLoadAttempt((prev) => prev + 1);
+          }}
+        />
       ) : guardians === null ? (
-        <div className="flex-1" />
+        <LoadingState />
       ) : !hasGuardian ? (
         <p className="flex flex-1 items-center justify-center text-[14px] text-[#6B7684]">
           등록된 보호자가 없어요.

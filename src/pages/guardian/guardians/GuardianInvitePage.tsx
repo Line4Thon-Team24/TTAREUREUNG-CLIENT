@@ -6,7 +6,9 @@ import BackHeader from '@/components/common/BackHeader';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import DropdownField from '@/components/common/DropdownField';
+import ErrorState from '@/components/common/ErrorState';
 import FormField from '@/components/common/FormField';
+import LoadingState from '@/components/common/LoadingState';
 import TextField from '@/components/common/TextField';
 import useGoBack from '@/hooks/useGoBack';
 import useLatestRequest from '@/hooks/useLatestRequest';
@@ -35,7 +37,7 @@ const GuardianInvitePage = () => {
     keyof typeof PHONE_ERRORS | null
   >(null);
   const [isDiscardOpen, setIsDiscardOpen] = useState(false);
-  const { seniors } = useSeniors();
+  const { seniors, isError: isSeniorError, retry: retrySeniors } = useSeniors();
   // 초대받은 보호자가 맡을 시니어 (고르기 전에는 첫 번째 시니어)
   const [pickedSeniorId, setPickedSeniorId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -150,12 +152,18 @@ const GuardianInvitePage = () => {
                 value={seniorId === null ? '' : String(seniorId)}
                 onChange={(next) => setPickedSeniorId(Number(next))}
               />
+            ) : isSeniorError ? (
+              <ErrorState
+                message="시니어 목록을 불러오지 못했어요."
+                onRetry={retrySeniors}
+                className="py-2"
+              />
+            ) : seniors === null ? (
+              <LoadingState className="py-2" />
             ) : (
-              seniors && (
-                <p className="text-[14px] text-[#6B7684]">
-                  먼저 시니어를 등록해주세요.
-                </p>
-              )
+              <p className="text-[14px] text-[#6B7684]">
+                먼저 시니어를 등록해주세요.
+              </p>
             )}
           </FormField>
         </div>
