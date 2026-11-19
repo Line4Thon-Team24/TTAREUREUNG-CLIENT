@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
+import ErrorState from '@/components/common/ErrorState';
+import LoadingState from '@/components/common/LoadingState';
 import SeniorDropdown from '@/components/common/SeniorDropdown';
 import MedicineDetailModal from '@/components/schedule/MedicineDetailModal';
 import ScheduleTimeline from '@/components/schedule/ScheduleTimeline';
@@ -18,7 +20,7 @@ const ScheduleWeekPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const goBackOr = useGoBack();
-  const { seniors, isError: isSeniorError } = useSeniors();
+  const { seniors, isError: isSeniorError, retry: retrySeniors } = useSeniors();
   // 월 달력과 시니어·날짜 공유 (주소에 저장)
   const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(
     seniors ?? [],
@@ -27,7 +29,7 @@ const ScheduleWeekPage = () => {
   const [date, setDate] = useDateParam();
   // 약 상세 팝업용
   const { medicines } = useSeniorMedicines(selectedSeniorId);
-  const { slots, isError } = useDailySchedule(selectedSeniorId, date);
+  const { slots, isError, retry } = useDailySchedule(selectedSeniorId, date);
   const [detailMedicine, setDetailMedicine] = useState<Medicine | null>(null);
 
   // 월 달력에서 들어왔으면 뒤로, 바로 들어왔으면 월 달력으로
@@ -68,14 +70,15 @@ const ScheduleWeekPage = () => {
 
       <WeekStrip date={date} onSelect={setDate} />
 
-      {isSeniorError || isError ? (
-        <p className="flex flex-1 items-center justify-center text-[14px] text-[#6B7684]">
-          {isSeniorError
-            ? '시니어 목록을 불러오지 못했어요.'
-            : '복용 일정을 불러오지 못했어요.'}
-        </p>
+      {isSeniorError ? (
+        <ErrorState
+          message="시니어 목록을 불러오지 못했어요."
+          onRetry={retrySeniors}
+        />
+      ) : isError ? (
+        <ErrorState message="복용 일정을 불러오지 못했어요." onRetry={retry} />
       ) : seniors === null || (selectedSeniorId !== null && slots === null) ? (
-        <div className="flex-1" />
+        <LoadingState />
       ) : slots && slots.length > 0 ? (
         <ScheduleTimeline
           slots={slots}
