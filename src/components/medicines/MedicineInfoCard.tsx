@@ -5,18 +5,16 @@ import DropdownField from '@/components/common/DropdownField';
 import TextField from '@/components/common/TextField';
 import {
   INTERVAL_OPTIONS,
-  BEDTIME_NOTIFICATION_SLOTS,
   DEFAULT_DOSE_TIMES,
   DOSE_COUNT_OPTIONS,
   DOSE_UNIT_OPTIONS,
   NOTIFICATION_SLOT_STYLES,
-  NOTIFICATION_SLOTS,
   TIMES_PER_DAY_OPTIONS,
   TIMING_OPTIONS,
 } from '@/constants/medicine';
 import type { DoseInterval, DoseTiming, MedicineForm } from '@/types/medicine';
 import type { DoseTimes } from '@/types/schedule';
-import { parseDoseAmount } from '@/utils/medicineForm';
+import { getMealTimeSlots, parseDoseAmount } from '@/utils/medicineForm';
 
 type MedicineInfoCardProps = {
   index: number;
@@ -300,10 +298,7 @@ export default function MedicineInfoCard({
           설정된 자동 알림 시간
         </h3>
         <ul className="flex flex-wrap gap-1.5">
-          {(value.timing === 'bedtime'
-            ? BEDTIME_NOTIFICATION_SLOTS
-            : NOTIFICATION_SLOTS[value.timesPerDay]
-          ).map((slot) => {
+          {getMealTimeSlots(value).map((slot) => {
             const { label, color } = NOTIFICATION_SLOT_STYLES[slot];
             const time = (doseTimes ?? DEFAULT_DOSE_TIMES)[slot];
             return (

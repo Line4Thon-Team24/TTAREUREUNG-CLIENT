@@ -1,4 +1,5 @@
 import type { Medicine, MedicineForm } from '@/types/medicine';
+import type { TimeSlot } from '@/types/schedule';
 import { DOSE_COUNT_OPTIONS, DOSE_UNITS } from '@/constants/medicine';
 import { addDaysToDateString, toDateString } from '@/utils/date';
 
@@ -70,4 +71,15 @@ export const parseDoseAmount = (value: string) => {
     DOSE_COUNT_OPTIONS.some((option) => option.value === count) &&
     DOSE_UNITS.some((option) => option === unit);
   return isOption ? { count, unit } : null;
+};
+
+// 하루 복용 횟수 → 복용 회차 (취침 전이면 자기 전 하나, 약 등록 요청·알림 시간 표시에 같이 사용)
+export const getMealTimeSlots = ({
+  timing,
+  timesPerDay,
+}: Pick<MedicineForm, 'timing' | 'timesPerDay'>): TimeSlot[] => {
+  if (timing === 'bedtime') return ['BEFORE_SLEEP'];
+  if (timesPerDay >= 3) return ['MORNING', 'LUNCH', 'DINNER'];
+  if (timesPerDay === 2) return ['MORNING', 'DINNER'];
+  return ['MORNING'];
 };
