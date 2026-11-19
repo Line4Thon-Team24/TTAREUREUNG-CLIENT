@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom';
+import PushPermissionBar from '@/components/alert/PushPermissionBar';
 import BottomNavigation, {
   BOTTOM_NAVIGATION_HEIGHT,
 } from '@/components/common/BottomNavigation';
@@ -12,6 +13,7 @@ export default function GuardianLayout() {
         className="flex min-h-dvh flex-col"
         style={{ paddingBottom: BOTTOM_NAVIGATION_HEIGHT }}
       >
+        <PushPermissionBar />
         <Outlet />
       </main>
       <BottomNavigation />
