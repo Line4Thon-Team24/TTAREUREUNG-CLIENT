@@ -97,12 +97,12 @@ const AlertCard = ({
   return (
     <div
       role="status"
-      className="fixed inset-x-0 top-3.5 z-60 mx-auto w-full max-w-100.5 px-2"
+      className="pointer-events-none fixed inset-x-0 top-3.5 z-60 mx-auto w-full max-w-100.5 px-2"
     >
       <button
         type="button"
         onClick={onClose}
-        className="flex w-full animate-slide-down flex-col gap-1 overflow-hidden rounded-[20px] bg-[#F3F3F3]/90 p-4 text-left backdrop-blur-[2px] motion-reduce:animate-none"
+        className="pointer-events-auto flex w-full animate-slide-down flex-col gap-1 overflow-hidden rounded-[20px] bg-[#F3F3F3]/90 p-4 text-left backdrop-blur-[2px] motion-reduce:animate-none"
       >
         <span className="flex w-full items-center justify-between text-[14px] text-[#333D4B]/80">
           <span className="flex items-center gap-2">

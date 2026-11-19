@@ -17,6 +17,8 @@ export default function useGuardianAlerts() {
   useEffect(() => {
     let ignore = false;
     const load = async () => {
+      // 화면이 안 보일 때 띄우면 못 본 채 읽음 처리되므로 건너뜀
+      if (document.hidden) return;
       try {
         // TODO: 프로필 선택 연동 후 선택된 보호자 프로필로 교체
         if (profileId.current === null) {
@@ -42,9 +44,12 @@ export default function useGuardianAlerts() {
     };
     load();
     const timer = window.setInterval(load, POLL_INTERVAL_MS);
+    // 앱으로 돌아오면 바로 다시 조회
+    document.addEventListener('visibilitychange', load);
     return () => {
       ignore = true;
       window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', load);
     };
   }, []);
 
