@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   MedicineOrderCard,
   StorageLocationCard,
@@ -6,7 +6,9 @@ import {
 import { useNavigate } from 'react-router-dom';
 import ErrorState from '@/components/common/ErrorState';
 import LoadingState from '@/components/common/LoadingState';
+import { answerSession, reportNoAnswer } from '@/apis/dose';
 import useCurrentSession from '@/hooks/useCurrentSession';
+import useLatestRequest from '@/hooks/useLatestRequest';
 import useSeniors from '@/hooks/useSeniors';
 import callIcon from '@/assets/icons/call.svg';
 import {
@@ -35,6 +37,12 @@ const SeniorIncomingCallPage = () => {
     retry: retrySession,
   } = useCurrentSession(seniorId);
 
+  const [isAnswering, setIsAnswering] = useState(false);
+  const [isAnswerError, setIsAnswerError] = useState(false);
+  const startRequest = useLatestRequest();
+  // 전화 응답 or 미응답 시 true
+  const isHandledRef = useRef(false);
+
   const call = session?.current ?? null;
   const medicine = call?.medications[0];
   // 울려야 할 회차(또는 찾을 약)가 없으면 일정 화면으로
@@ -45,9 +53,45 @@ const SeniorIncomingCallPage = () => {
     if (hasNoCall) navigate('/senior', { replace: true });
   }, [hasNoCall, navigate]);
 
-  const handleAccept = () => {
-    if (!medicine) return;
-    navigate(`/senior/recognition?order=${medicine.order}`);
+  const sessionId = call?.sessionId;
+
+  // 전화를 받지 않고 화면을 닫으면(탭 닫기·앱 종료) 미응답으로 알림
+  useEffect(() => {
+    if (sessionId === undefined) return;
+    const handlePageHide = () => {
+      if (isHandledRef.current) return;
+      isHandledRef.current = true;
+      reportNoAnswer(sessionId);
+    };
+    window.addEventListener('pagehide', handlePageHide);
+    return () => window.removeEventListener('pagehide', handlePageHide);
+  }, [sessionId]);
+
+  const handleAccept = async () => {
+    if (!call || isAnswering) return;
+    isHandledRef.current = true;
+    // 요청이 끝났을 때 아직 이 화면에 있는지 확인
+    const isLatest = startRequest();
+    setIsAnswering(true);
+    setIsAnswerError(false);
+    try {
+      const answered = await answerSession(call.sessionId);
+      if (!isLatest()) return;
+      // 먹을 약이 남아 있지 않으면 일정 화면으로
+      const first = answered.medications[0];
+      navigate(
+        first
+          ? `/senior/recognition?sessionId=${answered.sessionId}&order=${first.order}`
+          : '/senior',
+        { replace: true }
+      );
+    } catch {
+      if (!isLatest()) return;
+      // 미응답으로 처리
+      isHandledRef.current = false;
+      setIsAnswerError(true);
+      setIsAnswering(false);
+    }
   };
 
   if (!call || !medicine) {
@@ -99,11 +143,17 @@ const SeniorIncomingCallPage = () => {
       </div>
 
       <div className="mt-auto flex flex-col items-center gap-2.5">
+        {isAnswerError && (
+          <p role="alert" className="text-[16px] font-bold text-white">
+            전화를 받지 못했어요. 다시 눌러주세요.
+          </p>
+        )}
         <button
           type="button"
           onClick={handleAccept}
+          disabled={isAnswering}
           aria-label="전화 받기"
-          className="flex size-24 items-center justify-center rounded-full border-6 border-bg-secondary-pressed/80 bg-bg-primary active:bg-bg-primary-pressed"
+          className="flex size-24 items-center justify-center rounded-full border-6 border-bg-secondary-pressed/80 bg-bg-primary active:bg-bg-primary-pressed disabled:opacity-60"
         >
           <img src={callIcon} alt="" width={30} height={30} />
         </button>
