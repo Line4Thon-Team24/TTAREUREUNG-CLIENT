@@ -2,7 +2,7 @@
 export type CareSenior = {
   id: number;
   name: string;
-  age: number; // 만 나이
+  age: number | null; // 만 나이 (생년월일 미입력 시 null)
   relation: string; // 보호자 기준 관계 (예: '어머니')
 };
 

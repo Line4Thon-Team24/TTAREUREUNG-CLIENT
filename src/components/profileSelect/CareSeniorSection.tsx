@@ -23,7 +23,9 @@ export default function CareSeniorSection({ seniors }: CareSeniorSectionProps) {
                 {senior.name} 어르신
               </span>
               <span className="text-[11px] text-text-sub">
-                만 {senior.age}세{senior.relation && ` · ${senior.relation}`}
+                {[senior.age !== null && `만 ${senior.age}세`, senior.relation]
+                  .filter(Boolean)
+                  .join(' · ')}
               </span>
             </div>
           </li>
