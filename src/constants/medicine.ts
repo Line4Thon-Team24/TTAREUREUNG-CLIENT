@@ -1,4 +1,5 @@
 import type { DoseInterval, DoseTiming } from '@/types/medicine';
+import type { DoseTimes, TimeSlot } from '@/types/schedule';
 
 export const INTERVAL_OPTIONS: { label: string; value: DoseInterval }[] = [
   { label: '매일', value: 'daily' },
@@ -31,21 +32,34 @@ export const DOSE_UNIT_OPTIONS = DOSE_UNITS.map((unit) => ({
   value: unit,
 }));
 
-// 하루 복용 횟수별 자동 알림 시간
-const MORNING = { label: '아침', time: '09:00', color: '#FBBF24' };
-const LUNCH = { label: '점심', time: '13:00', color: '#FB923C' };
-const DINNER = { label: '저녁', time: '19:00', color: '#6366F1' };
+// 서버 기본 회차 시각 (불러오기 전·실패 시 표시)
+export const DEFAULT_DOSE_TIMES: DoseTimes = {
+  MORNING: '08:00',
+  LUNCH: '12:30',
+  DINNER: '18:30',
+  BEFORE_SLEEP: '22:00',
+};
 
-export const NOTIFICATION_TIMES: Record<number, (typeof MORNING)[]> = {
-  1: [MORNING],
-  2: [MORNING, DINNER],
-  3: [MORNING, LUNCH, DINNER],
+// 회차별 자동 알림 표시
+export const NOTIFICATION_SLOT_STYLES: Record<
+  TimeSlot,
+  { label: string; color: string }
+> = {
+  MORNING: { label: '아침', color: '#FBBF24' },
+  LUNCH: { label: '점심', color: '#FB923C' },
+  DINNER: { label: '저녁', color: '#6366F1' },
+  BEFORE_SLEEP: { label: '자기 전', color: '#8B5CF6' },
+};
+
+// 하루 복용 횟수별 알림 회차 (약 등록 시 보내는 회차와 같은 규칙)
+export const NOTIFICATION_SLOTS: Record<number, TimeSlot[]> = {
+  1: ['MORNING'],
+  2: ['MORNING', 'DINNER'],
+  3: ['MORNING', 'LUNCH', 'DINNER'],
 };
 
 // 복용 시점이 취침 전이면 자기 전 1회
-export const BEDTIME_NOTIFICATION_TIMES = [
-  { label: '자기 전', time: '22:00', color: '#8B5CF6' },
-];
+export const BEDTIME_NOTIFICATION_SLOTS: TimeSlot[] = ['BEFORE_SLEEP'];
 
 // 저장된 값 → 화면 표시 문구 (예: 'daily' → '매일')
 export const getIntervalLabel = (value: DoseInterval) =>

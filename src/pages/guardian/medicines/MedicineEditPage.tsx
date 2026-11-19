@@ -12,6 +12,7 @@ import StepHeader from '@/components/common/StepHeader';
 import MedicineInfoCard from '@/components/medicines/MedicineInfoCard';
 import PrescriptionSummary from '@/components/medicines/PrescriptionSummary';
 import useGoBack from '@/hooks/useGoBack';
+import useDoseTimes from '@/hooks/useDoseTimes';
 import useLatestRequest from '@/hooks/useLatestRequest';
 import type { ApiError } from '@/types/api';
 import type { Medicine, MedicineForm, RegisterFlow } from '@/types/medicine';
@@ -53,6 +54,7 @@ const MedicineEditContent = ({
   const navigate = useNavigate();
   const goBack = useGoBack();
   const startRequest = useLatestRequest();
+  const doseTimes = useDoseTimes(seniorId);
 
   // null이면 불러오는 중 (약 단건 조회 API가 없어 시니어의 약 목록에서 찾음)
   const [medicine, setMedicine] = useState<Medicine | null>(null);
@@ -191,6 +193,7 @@ const MedicineEditContent = ({
           onChange={setForm}
           registeredAt={formatDateTime(new Date(medicine.registeredAt))}
           isManual={isManual}
+          doseTimes={doseTimes}
         />
       </main>
 

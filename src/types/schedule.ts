@@ -32,6 +32,12 @@ export type ScheduleSlot = {
   medicines: ScheduleMedicine[];
 };
 
+// 복용 회차 (API 값)
+export type TimeSlot = 'MORNING' | 'LUNCH' | 'DINNER' | 'BEFORE_SLEEP';
+
+// 회차별 시각 (HH:mm)
+export type DoseTimes = Record<TimeSlot, string>;
+
 // 날짜별 복용 일정 API 응답
 export type ScheduleResponse = {
   date: string;

@@ -5,14 +5,17 @@ import DropdownField from '@/components/common/DropdownField';
 import TextField from '@/components/common/TextField';
 import {
   INTERVAL_OPTIONS,
-  BEDTIME_NOTIFICATION_TIMES,
+  BEDTIME_NOTIFICATION_SLOTS,
+  DEFAULT_DOSE_TIMES,
   DOSE_COUNT_OPTIONS,
   DOSE_UNIT_OPTIONS,
-  NOTIFICATION_TIMES,
+  NOTIFICATION_SLOT_STYLES,
+  NOTIFICATION_SLOTS,
   TIMES_PER_DAY_OPTIONS,
   TIMING_OPTIONS,
 } from '@/constants/medicine';
 import type { DoseInterval, DoseTiming, MedicineForm } from '@/types/medicine';
+import type { DoseTimes } from '@/types/schedule';
 import { parseDoseAmount } from '@/utils/medicineForm';
 
 type MedicineInfoCardProps = {
@@ -22,6 +25,7 @@ type MedicineInfoCardProps = {
   registeredAt: string;
   isManual: boolean; // 직접 입력이면 약 이름을 직접 작성
   numbered?: boolean; // 제목 앞 번호 표시 (여러 개 등록할 때)
+  doseTimes: DoseTimes | null; // 시니어의 회차 시각 (null이면 서버 기본값)
 };
 
 const AiVoiceTag = () => (
@@ -103,6 +107,7 @@ export default function MedicineInfoCard({
   registeredAt,
   isManual,
   numbered = true,
+  doseTimes,
 }: MedicineInfoCardProps) {
   const id = `medicine-${index}`;
   const update = (next: Partial<MedicineForm>) =>
@@ -296,21 +301,25 @@ export default function MedicineInfoCard({
         </h3>
         <ul className="flex flex-wrap gap-1.5">
           {(value.timing === 'bedtime'
-            ? BEDTIME_NOTIFICATION_TIMES
-            : NOTIFICATION_TIMES[value.timesPerDay]
-          ).map(({ label, time, color }) => (
-            <li
-              key={label}
-              className="flex items-center gap-1.5 rounded-full border border-[#E5E8EB] bg-white px-2.25 py-1.5 text-[12px] font-medium text-[#333D4B]"
-            >
-              <span
-                className="size-1.5 rounded-full"
-                style={{ backgroundColor: color }}
-                aria-hidden
-              />
-              {label} {time}
-            </li>
-          ))}
+            ? BEDTIME_NOTIFICATION_SLOTS
+            : NOTIFICATION_SLOTS[value.timesPerDay]
+          ).map((slot) => {
+            const { label, color } = NOTIFICATION_SLOT_STYLES[slot];
+            const time = (doseTimes ?? DEFAULT_DOSE_TIMES)[slot];
+            return (
+              <li
+                key={slot}
+                className="flex items-center gap-1.5 rounded-full border border-[#E5E8EB] bg-white px-2.25 py-1.5 text-[12px] font-medium text-[#333D4B]"
+              >
+                <span
+                  className="size-1.5 rounded-full"
+                  style={{ backgroundColor: color }}
+                  aria-hidden
+                />
+                {label} {time}
+              </li>
+            );
+          })}
         </ul>
       </section>
     </article>
