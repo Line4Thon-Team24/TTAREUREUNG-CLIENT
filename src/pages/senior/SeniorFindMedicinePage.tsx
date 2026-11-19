@@ -12,7 +12,7 @@ import pillIcon from '@/assets/icons/pill.svg';
 const SWITCH_SECONDS = 5;
 
 // 시니어 약 사진 안내 화면 (다음 약 찾기 / 약 다시 찾기)
-// ?order=약 순서,
+// ?sessionId=복용 회차, ?order=약 순서,
 // ?mode=voice(음성으로 찾았다고 답) | countdown(자동 카메라 전환)
 // ?retry=1(다시 찾기)
 const SeniorFindMedicinePage = () => {
@@ -23,8 +23,13 @@ const SeniorFindMedicinePage = () => {
   const isRetry = searchParams.get('retry') === '1';
   const medicine = mockMedicineByOrder(order);
 
+  // 카메라 화면에서 약 판독에 쓰는 복용 회차
+  const sessionId = searchParams.get('sessionId') ?? '';
+
   const goCamera = () =>
-    navigate(`/senior/recognition?order=${order}`, { replace: true });
+    navigate(`/senior/recognition?sessionId=${sessionId}&order=${order}`, {
+      replace: true,
+    });
 
   return (
     <div className="flex min-h-dvh flex-col gap-6 bg-white px-5 py-10">
