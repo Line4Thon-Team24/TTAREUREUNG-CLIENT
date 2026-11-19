@@ -1,9 +1,6 @@
 import arrowDownIcon from '@/assets/icons/arrow-down.svg';
 import { ALERT_LEAD_OPTIONS } from '@/constants/profile';
-import type {
-  AlertLeadMinutes,
-  AlertSettings as AlertSettingsValue,
-} from '@/types/profile';
+import type { AlertSettings as AlertSettingsValue } from '@/types/profile';
 
 type AlertSettingsProps = {
   value: AlertSettingsValue;
@@ -12,6 +9,16 @@ type AlertSettingsProps = {
 
 // 알림 설정: 복용 일정 임박 알림 시간 선택 + 복용 완료 알림 ON/OFF
 export default function AlertSettings({ value, onChange }: AlertSettingsProps) {
+  // 선택지에 없는 서버 값은 선택지에 추가해서 표시
+  const options = ALERT_LEAD_OPTIONS.some(
+    ({ value: option }) => option === value.leadMinutes
+  )
+    ? ALERT_LEAD_OPTIONS
+    : [
+        ...ALERT_LEAD_OPTIONS,
+        { label: `${value.leadMinutes}분 전`, value: value.leadMinutes },
+      ].sort((a, b) => a.value - b.value);
+
   return (
     <>
       <div className="flex min-h-8 items-center justify-between">
@@ -28,12 +35,12 @@ export default function AlertSettings({ value, onChange }: AlertSettingsProps) {
             onChange={(e) =>
               onChange({
                 ...value,
-                leadMinutes: Number(e.target.value) as AlertLeadMinutes,
+                leadMinutes: Number(e.target.value),
               })
             }
             className="appearance-none rounded-md border border-border-divider bg-bg-section py-1 pr-5 pl-2 text-[12px] font-semibold text-text-sub outline-none focus:border-border-focus"
           >
-            {ALERT_LEAD_OPTIONS.map(({ label, value: option }) => (
+            {options.map(({ label, value: option }) => (
               <option key={option} value={option}>
                 {label}
               </option>
