@@ -29,7 +29,8 @@ const STEP = { NAME: 1, BIRTH_DATE: 2, GENDER: 3, PHONE: 4 } as const;
 
 const SignupGuardianPage = () => {
   const navigate = useNavigate();
-  const { account, guardian, setGuardian } = useSignupForm();
+  const { account, guardian, setGuardian, createdAccount, setCreatedAccount } =
+    useSignupForm();
   // 저장된 입력값이 있으면 그 단계까지 입력칸을 미리 표시
   const [step, setStep] = useState<number>(() => {
     if (guardian.gender !== '') return STEP.PHONE;
@@ -43,9 +44,6 @@ const SignupGuardianPage = () => {
   const [phoneNumber, setPhoneNumber] = useState(guardian.phoneNumber);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
-
-  // 계정이 이미 생성된 경우, 재시도 시 계정 가입 과정을 건너뜀
-  const isAccountCreated = useRef(false);
 
   const nameRef = useRef<HTMLInputElement>(null);
   const birthDateRef = useRef<HTMLSelectElement>(null);
@@ -90,12 +88,34 @@ const SignupGuardianPage = () => {
     setIsSubmitting(true);
     setSubmitError('');
     try {
-      if (!isAccountCreated.current) {
-        await signup(account);
-        isAccountCreated.current = true;
-      }
       // 프로필 생성에 Access Token이 필요하므로 가입 직후 로그인
-      await login(account);
+      if (createdAccount?.email === account.email) {
+        // 이미 가입된 이메일이면 가입을 건너뛰고 로그인부터 재시도
+        await login(createdAccount);
+      } else {
+        try {
+          await signup(account);
+          setCreatedAccount(account);
+          await login(account);
+        } catch (error) {
+          if ((error as ApiError).code !== AUTH_ERROR_CODE.emailDuplicate) {
+            throw error;
+          }
+          // 응답 유실로 이미 가입됐을 수 있으므로 같은 계정으로 로그인 시도
+          // 자격 증명 불일치면 다른 사람의 이메일이므로 중복 오류로 처리
+          // 네트워크/서버 오류 발생 시 실패 메시지를 그대로 표시하고 재시도하도록 함
+          await login(account).catch((loginError) => {
+            if (
+              (loginError as ApiError).code ===
+              AUTH_ERROR_CODE.invalidCredentials
+            ) {
+              throw error;
+            }
+            throw loginError;
+          });
+          setCreatedAccount(account);
+        }
+      }
       await createGuardian(
         toSeniorForm({ name, birthDate, gender, phoneNumber })
       );

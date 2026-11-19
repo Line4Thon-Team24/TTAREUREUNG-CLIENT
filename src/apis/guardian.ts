@@ -1,9 +1,11 @@
 import { apiClient } from '@/apis/client';
+import { fetchProfiles } from '@/apis/profile';
 import { toProfileRequest } from '@/apis/senior';
 import type { BaseResponse } from '@/types/api';
 import type { SeniorForm } from '@/types/senior';
 import type { ProfileResponse } from '@/types/senior';
 import type { Guardian, GuardianSeniorResponse } from '@/types/guardian';
+import { pickSelectedGuardianId } from '@/utils/profile';
 
 // 보호자 프로필 생성
 export const createGuardian = async (form: SeniorForm) => {
@@ -43,8 +45,7 @@ export const fetchGuardians = async () => {
     apiClient.get<BaseResponse<GuardianSeniorResponse[]>>('/guardian-seniors'),
     fetchMyGuardianProfileIds(),
   ]);
-  // TODO: 프로필 선택 연동 후 선택된 보호자 프로필로 교체 (지금은 계정의 첫 번째 보호자)
-  const myProfileId = myGuardianIds[0];
+  const myProfileId = pickSelectedGuardianId(myGuardianIds);
   return {
     guardians: data.data.map((link) => toGuardian(link, myProfileId)),
     myGuardianIds,
@@ -95,9 +96,8 @@ export const inviteGuardians = async (
 
 // 내 계정의 보호자 프로필 id (다른 계정 보호자와 구분)
 export const fetchMyGuardianProfileIds = async () => {
-  const { data } =
-    await apiClient.get<BaseResponse<ProfileResponse[]>>('/profiles');
-  return data.data
+  const profiles = await fetchProfiles();
+  return profiles
     .filter((profile) => profile.role === 'GUARDIAN')
     .map((profile) => profile.profileId);
 };

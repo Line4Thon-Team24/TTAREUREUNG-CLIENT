@@ -19,6 +19,7 @@ export type ProfileResponse = {
   phoneNumber: string | null;
   relationship: string | null;
   role: 'GUARDIAN' | 'SENIOR';
+  email: string; // 로그인 이메일 (같은 계정의 프로필은 모두 같은 값)
   isFavorite: boolean;
   createdAt: string;
   linkedProfiles: {

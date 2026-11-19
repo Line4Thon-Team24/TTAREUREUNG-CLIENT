@@ -1,7 +1,6 @@
-import { GUARDIAN_RELATIONS, SENIOR_RELATIONS } from '@/mocks/profileSelect';
-import type { Guardian } from '@/types/guardian';
 import type { CareSenior, FamilyMember } from '@/types/profileSelect';
-import type { Senior } from '@/types/senior';
+import type { ProfileResponse } from '@/types/senior';
+import { getSelectedGuardian } from '@/utils/profile';
 
 // 'YYYY-MM-DD' → 만 나이
 export const getAge = (birthDate: string, today = new Date()) => {
@@ -16,18 +15,28 @@ export const getAge = (birthDate: string, today = new Date()) => {
 export const getShortName = (name: string) =>
   name.length >= 3 ? name.slice(1) : name;
 
-export const toCareSeniors = (seniors: Senior[]): CareSenior[] =>
-  seniors.map(({ id, name, birthDate }) => ({
-    id,
-    name,
-    age: getAge(birthDate),
-    relation: SENIOR_RELATIONS[id] ?? '',
-  }));
+// 시니어 프로필 → 돌봄 대상 시니어 (최근 추가순)
+export const toCareSeniors = (profiles: ProfileResponse[]): CareSenior[] =>
+  profiles
+    .filter(({ role }) => role === 'SENIOR')
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .map(({ profileId, name, birthDate, relationship }) => ({
+      id: profileId,
+      name,
+      age: birthDate ? getAge(birthDate) : null,
+      relation: relationship ?? '',
+    }));
 
-export const toFamilyMembers = (guardians: Guardian[]): FamilyMember[] =>
-  guardians.map(({ id, name, isMe }) => ({
-    id,
+// 보호자 프로필 → 가족 및 공동 보호자
+export const toFamilyMembers = (
+  profiles: ProfileResponse[]
+): FamilyMember[] => {
+  const guardians = profiles.filter(({ role }) => role === 'GUARDIAN');
+  const myId = getSelectedGuardian(profiles)?.profileId;
+  return guardians.map(({ profileId, name, relationship }) => ({
+    id: profileId,
     name,
-    relation: GUARDIAN_RELATIONS[id] ?? '',
-    isMe,
+    relation: relationship ?? '',
+    isMe: profileId === myId,
   }));
+};
