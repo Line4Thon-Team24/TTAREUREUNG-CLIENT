@@ -107,7 +107,14 @@ const ProfilePage = () => {
             onClick={() => {
               const now = new Date();
               const pad = (n: number) => String(n).padStart(2, '0');
-              const local = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:00`;
+              // Date → 'YYYY-MM-DDTHH:mm:00' (서버와 같은 한국 시간 형식)
+              const toLocal = (d: Date) =>
+                `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+              const local = toLocal(now);
+              // 복용 예정은 10분 뒤, 나머지는 오늘 오후 3시 회차
+              const inTenMinutes = toLocal(
+                new Date(now.getTime() + 10 * 60_000)
+              );
               const types = [
                 'completed',
                 'partial',
@@ -122,7 +129,10 @@ const ProfilePage = () => {
                     alertId: null,
                     type,
                     seniorName: '김순자',
-                    scheduledAt: `${local.slice(0, 10)}T15:00:00`,
+                    scheduledAt:
+                      type === 'upcoming'
+                        ? inTenMinutes
+                        : `${local.slice(0, 10)}T15:00:00`,
                     occurredAt: local,
                     minutesLeft: type === 'upcoming' ? 10 : null,
                   })),
