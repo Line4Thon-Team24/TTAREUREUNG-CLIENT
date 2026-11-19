@@ -10,6 +10,8 @@ export default function useSeniorMedicines(seniorId: number | null) {
     medicines: Medicine[];
   } | null>(null);
   const [errorSeniorId, setErrorSeniorId] = useState<number | null>(null);
+  // 다시 시도하면 값이 바뀌어 다시 불러옴
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (seniorId === null) return;
@@ -24,11 +26,15 @@ export default function useSeniorMedicines(seniorId: number | null) {
     return () => {
       ignore = true;
     };
-  }, [seniorId]);
+  }, [seniorId, attempt]);
 
   const medicines = loaded?.seniorId === seniorId ? loaded.medicines : null;
   // 시니어가 없으면 오류가 아님
   const isError =
     seniorId !== null && medicines === null && errorSeniorId === seniorId;
-  return { medicines, isError };
+  const retry = () => {
+    setErrorSeniorId(null);
+    setAttempt((prev) => prev + 1);
+  };
+  return { medicines, isError, retry };
 }

@@ -6,6 +6,8 @@ import type { Senior } from '@/types/senior';
 export default function useSeniors() {
   const [seniors, setSeniors] = useState<Senior[] | null>(null);
   const [isError, setIsError] = useState(false);
+  // 다시 시도하면 값이 바뀌어 다시 불러옴
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let ignore = false;
@@ -19,7 +21,12 @@ export default function useSeniors() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [attempt]);
 
-  return { seniors, isError };
+  const retry = () => {
+    setIsError(false);
+    setAttempt((prev) => prev + 1);
+  };
+
+  return { seniors, isError, retry };
 }
