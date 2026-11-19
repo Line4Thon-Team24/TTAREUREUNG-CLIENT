@@ -16,14 +16,19 @@ import type { AlertSettings as AlertSettingsValue } from '@/types/profile';
 import useGuardians from '@/hooks/useGuardians';
 import useNotificationSetting from '@/hooks/useNotificationSetting';
 import useProfiles from '@/hooks/useProfiles';
-import { getCareLabel, getCoGuardianSummaries } from '@/utils/profile';
+import {
+  getCareLabel,
+  getCoGuardianSummaries,
+  getSelectedGuardian,
+} from '@/utils/profile';
+import { clearSelectedProfileId } from '@/utils/selectedProfile';
 import settingIcon from '@/assets/icons/setting.svg';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { profiles, isError, retry } = useProfiles();
-  // TODO: 프로필 선택 연동 후 선택된 보호자 프로필로 교체
-  const me = profiles?.find(({ role }) => role === 'GUARDIAN');
+  // 선택한 보호자 프로필
+  const me = profiles ? getSelectedGuardian(profiles) : undefined;
   const notification = useNotificationSetting(me?.profileId);
   const [editedAlert, setEditedAlert] = useState<AlertSettingsValue | null>(
     null
@@ -39,6 +44,7 @@ const ProfilePage = () => {
   const handleLogout = async () => {
     // 서버 요청에 실패해도 로그인 화면으로 이동
     await logout().catch(() => {});
+    clearSelectedProfileId();
     navigate('/login', { replace: true });
   };
 
@@ -59,6 +65,8 @@ const ProfilePage = () => {
       );
       return;
     }
+    // 삭제한 프로필이 선택된 상태로 남지 않게 정리
+    clearSelectedProfileId();
     const hasOtherGuardian = profiles?.some(
       ({ role, profileId }) => role === 'GUARDIAN' && profileId !== me.profileId
     );
