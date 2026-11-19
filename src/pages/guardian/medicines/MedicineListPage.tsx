@@ -46,7 +46,7 @@ const MedicineListPage = () => {
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="flex items-center justify-between px-5 pt-10 pb-3">
+      <header className="flex items-center justify-between px-5 pt-4 pb-3">
         <div className="flex items-center gap-2">
           <h1 className="text-[22px] font-bold text-black">약 목록</h1>
           {hasSenior && (

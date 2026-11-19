@@ -79,7 +79,7 @@ const ScheduleMonthPage = () => {
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="grid grid-cols-[1fr_auto_1fr] items-center px-5 pt-10 pb-4">
+      <header className="grid grid-cols-[1fr_auto_1fr] items-center px-5 pt-4 pb-4">
         <button
           type="button"
           aria-label="뒤로 가기"

@@ -8,9 +8,11 @@ import PrescriptionViewer from '@/components/medicines/PrescriptionViewer';
 import RecognizedMedicineList from '@/components/medicines/RecognizedMedicineList';
 import UploadErrorMessage from '@/components/medicines/UploadErrorMessage';
 import useLatestRequest from '@/hooks/useLatestRequest';
+import type { ApiError } from '@/types/api';
 import type { MedicineFormState } from '@/types/medicine';
 import {
   releasePreviewUrls,
+  toAnalyzeErrorMessage,
   toRecognitionState,
   UPLOAD_ACCEPT,
   validatePrescriptionFile,
@@ -24,7 +26,8 @@ const MedicineRecognitionPage = () => {
 
   const reuploadRef = useRef<HTMLInputElement>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [isAnalyzeError, setIsAnalyzeError] = useState(false);
+  // 인식 실패 문구 (null이면 실패 아님)
+  const [analyzeFailure, setAnalyzeFailure] = useState<string | null>(null);
   const startRequest = useLatestRequest();
 
   // 인식 결과가 없으면 업로드·인식 요청 (결과는 화면 기록에 저장)
@@ -40,8 +43,10 @@ const MedicineRecognitionPage = () => {
           state: { ...state, analysis },
         });
       })
-      .catch(() => {
-        if (!controller.signal.aborted) setIsAnalyzeError(true);
+      .catch((error: ApiError) => {
+        if (!controller.signal.aborted) {
+          setAnalyzeFailure(toAnalyzeErrorMessage(error));
+        }
       });
     return () => controller.abort();
   }, [state, navigate, location.pathname]);
@@ -55,10 +60,11 @@ const MedicineRecognitionPage = () => {
   const { analysis } = state;
   const medicines = analysis?.medicines ?? [];
   // 새로고침 등으로 파일이 없어져 인식할 수 없는 경우도 실패로 안내
-  const isFailed = isAnalyzeError || (!analysis && !state.file);
+  const isFailed = analyzeFailure !== null || (!analysis && !state.file);
   const isAnalyzing = !analysis && !isFailed;
   const analyzeError = isFailed
-    ? '처방전을 읽지 못했어요. 다시 올리거나 직접 입력해주세요.'
+    ? (analyzeFailure ??
+      '처방전을 읽지 못했어요. 다시 올리거나 직접 입력해주세요.')
     : analysis && medicines.length === 0
       ? '처방전에서 약을 찾지 못했어요. 다시 올리거나 직접 입력해주세요.'
       : null;
@@ -97,7 +103,7 @@ const MedicineRecognitionPage = () => {
     setUploadError(errorMessage);
     if (errorMessage) return;
 
-    setIsAnalyzeError(false);
+    setAnalyzeFailure(null);
     // 이전 사진 주소는 바로 해제하지 않음 (교체 이동은 앞쪽 기록이 남아 앞으로가기로 다시 쓸 수 있음)
     navigate(location.pathname, {
       replace: true,
