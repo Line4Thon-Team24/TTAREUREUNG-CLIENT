@@ -4,7 +4,7 @@ export type Membership = 'FAMILY';
 export type AlertLeadMinutes = 5 | 10 | 30 | 60;
 
 export type AlertSettings = {
-  leadMinutes: AlertLeadMinutes; // 복용 일정 임박 시 알림
+  leadMinutes: number; // 복용 일정 임박 시 알림 (서버: 0~180분)
   notifyOnComplete: boolean; // 복용 완료 시 알림
 };
 
@@ -22,4 +22,13 @@ export type CoGuardianSummary = {
   name: string;
   seniorName: string;
   phoneNumber: string;
+};
+
+// 프로필 알림 설정 API 응답
+export type NotificationSettingResponse = {
+  profile_id: number;
+  notify_on_complete: boolean;
+  notify_on_miss: boolean;
+  notify_on_delay: boolean;
+  remind_before_minutes: number;
 };
