@@ -43,3 +43,16 @@ export type CurrentSession = {
   current: SessionCall | null; // 없으면 null
   next: NextCallInfo | null; // 없으면 null
 };
+
+// 약 판독 결과 (API 값)
+export type RecognitionResult = 'MATCH' | 'MISMATCH' | 'UNCERTAIN';
+
+// 약 판독 API 응답
+export type RecognitionResultResponse = {
+  recognitionId: number;
+  medicationId: number;
+  result: RecognitionResult; // MATCH → 복용 화면, MISMATCH → 다시 찾기, UNCERTAIN → 사진 보고 직접 선택
+  message: string; // 화면 문구
+  voiceText: string; // TTS로 읽을 문장
+  attemptsLeft: number; // 이 회차·약에 남은 판독 횟수
+};

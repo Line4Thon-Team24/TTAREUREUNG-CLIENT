@@ -1,7 +1,11 @@
 import { apiClient } from '@/apis/client';
 import type { BaseResponse } from '@/types/api';
 import { getAccessToken } from '@/utils/accessToken';
-import type { CurrentSession, SessionCall } from '@/types/dose';
+import type {
+  CurrentSession,
+  RecognitionResultResponse,
+  SessionCall,
+} from '@/types/dose';
 
 // 지금 울려야 할 회차 조회
 export const fetchCurrentSession = async (seniorId: number) => {
@@ -32,4 +36,22 @@ export const reportNoAnswer = (sessionId: number) => {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     }
   ).catch(() => {});
+};
+
+// 약 판독 (카메라로 찍은 사진이 이 약인지 확인, JPG/PNG/WEBP 5MB 이하, 회차·약당 10회)
+// MATCH여도 복용 처리는 따로 호출해야 함
+export const recognizeMedication = async (
+  sessionId: number,
+  medicationId: number,
+  image: Blob
+) => {
+  const body = new FormData();
+  body.append('file', image, 'capture.jpg');
+  const { data } = await apiClient.post<
+    BaseResponse<RecognitionResultResponse>
+  >(
+    `/dose-sessions/${sessionId}/medications/${medicationId}/recognitions`,
+    body
+  );
+  return data.data;
 };
