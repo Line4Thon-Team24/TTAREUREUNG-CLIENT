@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { fetchGuardianAlerts, markAlertRead } from '@/apis/alert';
 import { fetchMyGuardianProfileIds } from '@/apis/guardian';
+import { SW_MESSAGE } from '@/constants/serviceWorker';
 import type { GuardianAlert } from '@/types/alert';
 
 const POLL_INTERVAL_MS = 60_000;
@@ -46,10 +47,16 @@ export default function useGuardianAlerts() {
     const timer = window.setInterval(load, POLL_INTERVAL_MS);
     // 앱으로 돌아오면 바로 다시 조회
     document.addEventListener('visibilitychange', load);
+    // 앱을 보고 있을 때 푸시가 오면 1분을 기다리지 않고 바로 조회
+    const handlePush = (event: MessageEvent) => {
+      if (event.data?.type === SW_MESSAGE.pushReceived) load();
+    };
+    navigator.serviceWorker?.addEventListener('message', handlePush);
     return () => {
       ignore = true;
       window.clearInterval(timer);
       document.removeEventListener('visibilitychange', load);
+      navigator.serviceWorker?.removeEventListener('message', handlePush);
     };
   }, []);
 
