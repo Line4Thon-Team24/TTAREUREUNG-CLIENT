@@ -57,6 +57,8 @@ self.addEventListener('push', (event) => {
         body: payload.body,
         icon: '/app-icon.png',
         tag: toTag(payload),
+        // 재전화는 같은 회차라 알림이 교체되므로, 소리·진동이 다시 나도록
+        renotify: payload.type === 'DOSE_CALL',
         data: payload,
       });
     })()
