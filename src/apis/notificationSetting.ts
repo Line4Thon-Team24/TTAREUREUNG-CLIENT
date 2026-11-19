@@ -17,3 +17,15 @@ export const fetchNotificationSetting = async (
     notifyOnComplete: data.data.notify_on_complete,
   };
 };
+
+// 알림 설정 변경
+export const updateNotificationSetting = async (
+  profileId: number,
+  changes: Partial<AlertSettings>
+) => {
+  await apiClient.patch('/notification-settings', {
+    profile_id: profileId,
+    remind_before_minutes: changes.leadMinutes,
+    notify_on_complete: changes.notifyOnComplete,
+  });
+};
