@@ -8,6 +8,8 @@ import {
 import { fetchMedicines, updateMedicine } from '@/apis/medicine';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import ErrorState from '@/components/common/ErrorState';
+import LoadingState from '@/components/common/LoadingState';
 import StepHeader from '@/components/common/StepHeader';
 import MedicineInfoCard from '@/components/medicines/MedicineInfoCard';
 import PrescriptionSummary from '@/components/medicines/PrescriptionSummary';
@@ -65,6 +67,8 @@ const MedicineEditContent = ({
   const [leaveTarget, setLeaveTarget] = useState<LeaveTarget>('back');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitError, setIsSubmitError] = useState(false);
+  // 다시 시도하면 값이 바뀌어 다시 불러옴
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let ignore = false;
@@ -88,7 +92,7 @@ const MedicineEditContent = ({
     return () => {
       ignore = true;
     };
-  }, [seniorId, medicineId]);
+  }, [seniorId, medicineId, loadAttempt]);
 
   // 없는 약이면 약 목록으로 이동
   if (isNotFound) {
@@ -102,10 +106,16 @@ const MedicineEditContent = ({
           title="약 정보 수정"
           onBack={() => goBack(`/medicines?seniorId=${seniorId}`)}
         />
-        {isLoadError && (
-          <p className="pt-20 text-center text-[14px] text-[#6B7684]">
-            약 정보를 불러오지 못했어요.
-          </p>
+        {isLoadError ? (
+          <ErrorState
+            message="약 정보를 불러오지 못했어요."
+            onRetry={() => {
+              setIsLoadError(false);
+              setLoadAttempt((prev) => prev + 1);
+            }}
+          />
+        ) : (
+          <LoadingState />
         )}
       </div>
     );

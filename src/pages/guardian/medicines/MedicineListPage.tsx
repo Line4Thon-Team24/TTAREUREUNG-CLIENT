@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, SquarePen } from 'lucide-react';
-import { fetchMedicines } from '@/apis/medicine';
-import { fetchSeniors } from '@/apis/senior';
 import EmptyState from '@/components/common/EmptyState';
+import ErrorState from '@/components/common/ErrorState';
+import LoadingState from '@/components/common/LoadingState';
 import SearchField from '@/components/common/SearchField';
 import SeniorChips from '@/components/common/SeniorChips';
 import MedicineCard from '@/components/medicines/MedicineCard';
 import useSelectedSeniorParam from '@/hooks/useSelectedSeniorParam';
-import type { Medicine } from '@/types/medicine';
-import type { Senior } from '@/types/senior';
+import useSeniorMedicines from '@/hooks/useSeniorMedicines';
+import useSeniors from '@/hooks/useSeniors';
 import { filterMedicines } from '@/utils/medicineSearch';
 
 const ICON_BUTTON_CLASS =
@@ -17,55 +17,19 @@ const ICON_BUTTON_CLASS =
 
 const MedicineListPage = () => {
   const navigate = useNavigate();
-  // null이면 불러오는 중
-  const [seniors, setSeniors] = useState<Senior[] | null>(null);
-  const [isSeniorError, setIsSeniorError] = useState(false);
+  const { seniors, isError: isSeniorError, retry: retrySeniors } = useSeniors();
   const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(
     seniors ?? []
   );
-  // 어느 시니어의 약 목록인지 함께 저장 (시니어를 바꾸면 이전 목록을 보이지 않음)
-  const [loaded, setLoaded] = useState<{
-    seniorId: number;
-    medicines: Medicine[];
-  } | null>(null);
-  const [errorSeniorId, setErrorSeniorId] = useState<number | null>(null);
+  // 시니어를 바꾸면 이전 시니어의 목록은 보이지 않음
+  const {
+    medicines,
+    isError: isMedicineError,
+    retry: retryMedicines,
+  } = useSeniorMedicines(selectedSeniorId);
   const [isSearching, setIsSearching] = useState(false);
   const [keyword, setKeyword] = useState('');
 
-  useEffect(() => {
-    let ignore = false;
-    fetchSeniors()
-      .then((data) => {
-        if (!ignore) setSeniors(data);
-      })
-      .catch(() => {
-        if (!ignore) setIsSeniorError(true);
-      });
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (selectedSeniorId === null) return;
-    let ignore = false;
-    fetchMedicines(selectedSeniorId)
-      .then((data) => {
-        if (!ignore) setLoaded({ seniorId: selectedSeniorId, medicines: data });
-      })
-      .catch(() => {
-        if (!ignore) setErrorSeniorId(selectedSeniorId);
-      });
-    return () => {
-      ignore = true;
-    };
-  }, [selectedSeniorId]);
-
-  // null이면 불러오는 중
-  const medicines =
-    loaded?.seniorId === selectedSeniorId ? loaded.medicines : null;
-  const isMedicineError =
-    medicines === null && errorSeniorId === selectedSeniorId;
   const visibleMedicines = filterMedicines(medicines ?? [], keyword);
   const hasSenior = (seniors ?? []).length > 0;
   const hasMedicine = (medicines ?? []).length > 0;
@@ -148,11 +112,12 @@ const MedicineListPage = () => {
       )}
 
       {isSeniorError ? (
-        <p className="flex flex-1 items-center justify-center text-[14px] text-[#6B7684]">
-          시니어 목록을 불러오지 못했어요.
-        </p>
+        <ErrorState
+          message="시니어 목록을 불러오지 못했어요."
+          onRetry={retrySeniors}
+        />
       ) : seniors === null ? (
-        <div className="flex-1" />
+        <LoadingState />
       ) : !hasSenior ? (
         <div className="flex flex-1 items-center justify-center">
           <EmptyState
@@ -166,11 +131,12 @@ const MedicineListPage = () => {
           />
         </div>
       ) : isMedicineError ? (
-        <p className="flex flex-1 items-center justify-center text-[14px] text-[#6B7684]">
-          약 목록을 불러오지 못했어요.
-        </p>
+        <ErrorState
+          message="약 목록을 불러오지 못했어요."
+          onRetry={retryMedicines}
+        />
       ) : medicines === null ? (
-        <div className="flex-1" />
+        <LoadingState />
       ) : !hasMedicine ? (
         <div className="flex flex-1 items-center justify-center">
           <EmptyState

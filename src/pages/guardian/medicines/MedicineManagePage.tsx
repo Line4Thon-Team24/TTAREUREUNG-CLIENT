@@ -3,6 +3,8 @@ import { Navigate, useSearchParams } from 'react-router-dom';
 import { deleteMedicines, fetchMedicines } from '@/apis/medicine';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import ErrorState from '@/components/common/ErrorState';
+import LoadingState from '@/components/common/LoadingState';
 import SearchField from '@/components/common/SearchField';
 import StepHeader from '@/components/common/StepHeader';
 import MedicineCard from '@/components/medicines/MedicineCard';
@@ -30,6 +32,8 @@ const MedicineManagePage = () => {
   const [modalStep, setModalStep] = useState<ModalStep>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteError, setIsDeleteError] = useState(false);
+  // 다시 시도하면 값이 바뀌어 다시 불러옴
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let ignore = false;
@@ -46,7 +50,7 @@ const MedicineManagePage = () => {
     return () => {
       ignore = true;
     };
-  }, [seniorId]);
+  }, [seniorId, loadAttempt]);
 
   // 편집할 약이 없으면 약 목록으로 이동
   if (isNotFound || medicines?.length === 0) {
@@ -123,10 +127,17 @@ const MedicineManagePage = () => {
       {/* 목록만 스크롤, 마지막 카드가 하단 버튼에 가리지 않도록 아래 여백 확보 */}
       <main className="min-h-0 flex-1 overflow-y-auto px-5 pt-2 pb-12">
         {isLoadError ? (
-          <p className="pt-20 text-center text-[14px] text-[#6B7684]">
-            약 목록을 불러오지 못했어요.
-          </p>
-        ) : medicines === null ? null : visibleMedicines.length === 0 ? (
+          <ErrorState
+            message="약 목록을 불러오지 못했어요."
+            onRetry={() => {
+              setIsLoadError(false);
+              setLoadAttempt((prev) => prev + 1);
+            }}
+            className="pt-20"
+          />
+        ) : medicines === null ? (
+          <LoadingState className="pt-20" />
+        ) : visibleMedicines.length === 0 ? (
           <p className="pt-20 text-center text-[14px] text-[#6B7684]">
             검색 결과가 없어요.
           </p>
