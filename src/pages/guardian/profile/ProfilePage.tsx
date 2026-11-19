@@ -40,6 +40,7 @@ const ProfilePage = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isSavingAlert, setIsSavingAlert] = useState(false);
+  const [alertSaveError, setAlertSaveError] = useState<string | null>(null);
 
   const handleLogout = async () => {
     // 서버 요청에 실패해도 로그인 화면으로 이동
@@ -83,6 +84,7 @@ const ProfilePage = () => {
     if (!me || !alert || isSavingAlert) return;
     const previous = alert;
     setEditedAlert(next);
+    setAlertSaveError(null);
     setIsSavingAlert(true);
     updateNotificationSetting(me.profileId, {
       ...(next.leadMinutes !== previous.leadMinutes && {
@@ -92,7 +94,10 @@ const ProfilePage = () => {
         notifyOnComplete: next.notifyOnComplete,
       }),
     })
-      .catch(() => setEditedAlert(previous))
+      .catch(() => {
+        setEditedAlert(previous);
+        setAlertSaveError('알림 설정을 저장하지 못했어요. 다시 시도해주세요!');
+      })
       .finally(() => setIsSavingAlert(false));
   };
 
@@ -205,11 +210,18 @@ const ProfilePage = () => {
             className="py-6"
           />
         ) : alert ? (
-          <AlertSettings
-            value={alert}
-            onChange={handleAlertChange}
-            disabled={isSavingAlert}
-          />
+          <>
+            <AlertSettings
+              value={alert}
+              onChange={handleAlertChange}
+              disabled={isSavingAlert}
+            />
+            {alertSaveError && (
+              <p role="alert" className="pt-2 text-[13px] text-status-missed">
+                {alertSaveError}
+              </p>
+            )}
+          </>
         ) : (
           <LoadingState className="py-6" />
         )}
