@@ -12,7 +12,10 @@ export default function SeniorTimelineItem({ slot }: SeniorTimelineItemProps) {
   const { medicines } = slot;
   const status = getSlotStatus(medicines.map((medicine) => medicine.status));
   const style = SENIOR_SLOT_STYLES[status];
-  const { NodeIcon, PillIcon, alert } = style;
+  const { NodeIcon, PillIcon } = style;
+  // 전화를 받고 못 먹은 경우엔 '전화를 받지 않으셨습니다' 안내를 띄우지 않음
+  const alert =
+    status === 'missed' && slot.callConfirmedAt ? undefined : style.alert;
 
   const total = medicines.length;
   const takenCount = medicines.filter((m) => m.status === 'taken').length;
