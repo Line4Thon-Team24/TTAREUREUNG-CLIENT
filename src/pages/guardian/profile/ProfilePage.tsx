@@ -9,9 +9,11 @@ import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileRow from '@/components/profile/ProfileRow';
 import ProfileSection from '@/components/profile/ProfileSection';
 import { MEMBERSHIP_LABELS } from '@/constants/profile';
+import type { AlertSettings as AlertSettingsValue } from '@/types/profile';
 import { getGuardians } from '@/mocks/guardians';
 import { getProfile } from '@/mocks/profile';
 import { getSeniors } from '@/mocks/seniors';
+import useNotificationSetting from '@/hooks/useNotificationSetting';
 import useProfiles from '@/hooks/useProfiles';
 import { getCareLabel, getCoGuardianSummaries } from '@/utils/profile';
 import settingIcon from '@/assets/icons/setting.svg';
@@ -19,8 +21,14 @@ import settingIcon from '@/assets/icons/setting.svg';
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { profiles, isError, retry } = useProfiles();
+  // TODO: 프로필 선택 연동 후 선택된 보호자 프로필로 교체
+  const me = profiles?.find(({ role }) => role === 'GUARDIAN');
+  const notification = useNotificationSetting(me?.profileId);
   const [mockProfile] = useState(getProfile);
-  const [alert, setAlert] = useState(mockProfile.alert);
+  const [editedAlert, setEditedAlert] = useState<AlertSettingsValue | null>(
+    null
+  );
+  const alert = editedAlert ?? notification.setting;
   const [mockSeniors] = useState(getSeniors);
   const [guardians] = useState(getGuardians);
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
@@ -36,8 +44,6 @@ const ProfilePage = () => {
   }
   if (!profiles) return <LoadingState />;
 
-  // TODO: 프로필 선택 연동 후 선택된 보호자 프로필로 교체
-  const me = profiles.find(({ role }) => role === 'GUARDIAN');
   const profile = { ...mockProfile, name: me?.name ?? mockProfile.name };
   const careLabel = getCareLabel(me);
 
@@ -117,7 +123,17 @@ const ProfilePage = () => {
       </ProfileSection>
 
       <ProfileSection title="알림">
-        <AlertSettings value={alert} onChange={setAlert} />
+        {notification.isError ? (
+          <ErrorState
+            message="알림 설정을 불러오지 못했어요."
+            onRetry={notification.retry}
+            className="py-6"
+          />
+        ) : alert ? (
+          <AlertSettings value={alert} onChange={setEditedAlert} />
+        ) : (
+          <LoadingState className="py-6" />
+        )}
       </ProfileSection>
 
       {/* 개발용: 알림 배너 테스트 (5종을 차례로 띄움) */}
