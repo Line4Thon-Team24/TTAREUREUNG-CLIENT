@@ -36,6 +36,9 @@ export type SignupContextValue = {
   setAccount: (account: SignupAccount) => void;
   guardian: GuardianInfo;
   setGuardian: (guardian: GuardianInfo) => void;
+  // 서버에 가입이 완료된 계정
+  createdAccount: SignupAccount | null;
+  setCreatedAccount: (account: SignupAccount) => void;
 };
 
 // 회원가입 응답
