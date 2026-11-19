@@ -37,7 +37,7 @@ const ScheduleWeekPage = () => {
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="flex items-center justify-between px-5 pt-10 pb-4">
+      <header className="flex items-center justify-between px-5 pt-4 pb-4">
         <div className="flex items-center gap-2 text-[#191F28]">
           <button type="button" aria-label="뒤로 가기" onClick={goBack}>
             <ChevronLeft size={24} strokeWidth={2.5} aria-hidden />
