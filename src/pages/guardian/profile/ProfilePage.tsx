@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '@/apis/auth';
 import { updateNotificationSetting } from '@/apis/notificationSetting';
+import { deleteProfile } from '@/apis/profile';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import ErrorState from '@/components/common/ErrorState';
 import LoadingState from '@/components/common/LoadingState';
@@ -10,6 +11,7 @@ import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileRow from '@/components/profile/ProfileRow';
 import ProfileSection from '@/components/profile/ProfileSection';
 import { MEMBERSHIP_LABELS } from '@/constants/profile';
+import type { ApiError } from '@/types/api';
 import type { AlertSettings as AlertSettingsValue } from '@/types/profile';
 import { getGuardians } from '@/mocks/guardians';
 import { getProfile } from '@/mocks/profile';
@@ -33,9 +35,40 @@ const ProfilePage = () => {
   const [mockSeniors] = useState(getSeniors);
   const [guardians] = useState(getGuardians);
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleLogout = async () => {
     // 서버 요청에 실패해도 로그인 화면으로 이동
+    await logout().catch(() => {});
+    navigate('/login', { replace: true });
+  };
+
+  // 내 프로필 삭제 후 다른 보호자 프로필이 있으면 프로필 선택, 없으면 로그인 화면으로 이동
+  const handleDeleteProfile = async () => {
+    if (!me || isDeleting) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteProfile(me.profileId);
+    } catch (error) {
+      setIsDeleteOpen(false);
+      setIsDeleting(false);
+      setDeleteError(
+        (error as ApiError).code === 'PROFILE_006'
+          ? '담당 시니어가 있어 마지막 보호자 프로필은 삭제할 수 없어요.'
+          : '프로필을 삭제하지 못했어요. 잠시 후 다시 시도해주세요.'
+      );
+      return;
+    }
+    const hasOtherGuardian = profiles?.some(
+      ({ role, profileId }) => role === 'GUARDIAN' && profileId !== me.profileId
+    );
+    if (hasOtherGuardian) {
+      navigate('/profile/select', { replace: true });
+      return;
+    }
     await logout().catch(() => {});
     navigate('/login', { replace: true });
   };
@@ -199,14 +232,35 @@ const ProfilePage = () => {
         </div>
       )}
 
-      <div className="flex justify-center pb-4">
-        <button
-          type="button"
-          onClick={() => setIsLogoutOpen(true)}
-          className="p-2 text-[14px] text-text-sub underline underline-offset-2 active:opacity-60"
-        >
-          로그아웃
-        </button>
+      <div className="flex flex-col items-center pb-4">
+        {deleteError && (
+          <p
+            role="alert"
+            className="px-5 pb-2 text-center text-[13px] text-status-missed"
+          >
+            {deleteError}
+          </p>
+        )}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsLogoutOpen(true)}
+            className="cursor-pointer p-2 text-[14px] text-text-sub underline underline-offset-2 active:opacity-60"
+          >
+            로그아웃
+          </button>
+          <span aria-hidden className="h-3 w-px bg-text-placeholder" />
+          <button
+            type="button"
+            onClick={() => {
+              setDeleteError(null);
+              setIsDeleteOpen(true);
+            }}
+            className="cursor-pointer p-2 text-[14px] text-text-sub underline underline-offset-2 active:opacity-60"
+          >
+            프로필 삭제
+          </button>
+        </div>
       </div>
 
       <ConfirmModal
@@ -216,6 +270,18 @@ const ProfilePage = () => {
         confirmLabel="로그아웃"
         onCancel={() => setIsLogoutOpen(false)}
         onConfirm={handleLogout}
+      />
+
+      <ConfirmModal
+        open={isDeleteOpen}
+        message={
+          '시니어와의 연결도 함께 삭제됩니다.\n프로필을 삭제 하시겠어요?'
+        }
+        cancelLabel="취소"
+        confirmLabel="삭제"
+        confirmVariant="danger"
+        onCancel={() => setIsDeleteOpen(false)}
+        onConfirm={handleDeleteProfile}
       />
     </div>
   );
