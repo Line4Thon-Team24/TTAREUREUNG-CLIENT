@@ -45,6 +45,16 @@
   --color-status-missed-bg: #ffeeee;
   --color-status-planned: #8b95a1;
   --color-status-planned-bg: #f2f4f6;
+
+  /* 알림 배너가 위에서 내려옴 */
+  --animate-slide-down: slide-down 0.25s ease-out;
+
+  @keyframes slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-16px);
+    }
+  }
 }
 
 /* 스크롤바만 숨김 */
