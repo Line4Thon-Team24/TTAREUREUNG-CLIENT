@@ -4,6 +4,8 @@ import { Search } from 'lucide-react';
 import { deleteSeniors, fetchSeniors } from '@/apis/senior';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import ErrorState from '@/components/common/ErrorState';
+import LoadingState from '@/components/common/LoadingState';
 import SearchField from '@/components/common/SearchField';
 import StepHeader from '@/components/common/StepHeader';
 import SeniorCard from '@/components/seniors/SeniorCard';
@@ -30,6 +32,8 @@ const SeniorManagePage = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   // 삭제에 실패한 인원 (0이면 알림 숨김)
   const [failedCount, setFailedCount] = useState(0);
+  // 다시 시도하면 값이 바뀌어 다시 불러옴
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let ignore = false;
@@ -51,7 +55,7 @@ const SeniorManagePage = () => {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [loadAttempt]);
 
   // 편집할 시니어가 없으면 목록으로
   if (seniors?.length === 0) {
@@ -154,10 +158,17 @@ const SeniorManagePage = () => {
 
       <main className="min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-12">
         {isLoadError ? (
-          <p className="pt-20 text-center text-[14px] text-[#6B7684]">
-            시니어 목록을 불러오지 못했어요.
-          </p>
-        ) : seniors === null ? null : visibleSeniors.length === 0 ? (
+          <ErrorState
+            message="시니어 목록을 불러오지 못했어요."
+            onRetry={() => {
+              setIsLoadError(false);
+              setLoadAttempt((prev) => prev + 1);
+            }}
+            className="pt-20"
+          />
+        ) : seniors === null ? (
+          <LoadingState className="pt-20" />
+        ) : visibleSeniors.length === 0 ? (
           <p className="pt-20 text-center text-[14px] text-[#6B7684]">
             검색 결과가 없어요.
           </p>
