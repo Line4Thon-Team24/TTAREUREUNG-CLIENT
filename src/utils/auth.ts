@@ -34,5 +34,6 @@ export const getPasswordRules = (value: string): PasswordRules => ({
 
 export const isValidSignupPassword = (value: string) => {
   const rules = getPasswordRules(value);
-  return rules.length && rules.charset;
+  // 서버는 공백 없는 ASCII 문자만 허용
+  return rules.length && rules.charset && /^[\x21-\x7E]+$/.test(value);
 };

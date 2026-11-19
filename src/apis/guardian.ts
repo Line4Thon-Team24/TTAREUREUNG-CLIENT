@@ -1,7 +1,18 @@
 import { apiClient } from '@/apis/client';
+import { toProfileRequest } from '@/apis/senior';
 import type { BaseResponse } from '@/types/api';
-import type { Guardian, GuardianSeniorResponse } from '@/types/guardian';
+import type { SeniorForm } from '@/types/senior';
 import type { ProfileResponse } from '@/types/senior';
+import type { Guardian, GuardianSeniorResponse } from '@/types/guardian';
+
+// 보호자 프로필 생성
+export const createGuardian = async (form: SeniorForm) => {
+  const { data } = await apiClient.post<BaseResponse<ProfileResponse>>(
+    '/profiles',
+    { ...toProfileRequest(form), role: 'GUARDIAN' }
+  );
+  return data.data;
+};
 
 // 연결 응답 → 화면용 보호자 (연결 1개 = 카드 1개)
 const toGuardian = (
