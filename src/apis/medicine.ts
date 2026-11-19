@@ -57,10 +57,17 @@ const toMealTimeSlots = (
 };
 
 // 시간대 → 하루 복용 횟수 (취침 전은 1회, 못 읽었으면 1회, 선택지는 최대 3회)
+// 시간대가 비면 복용 빈도 문구(예: '하루 2회')의 숫자 사용 (AI 인식 결과)
 const toTimesPerDay = (
   slots: MedicationItemResponse['meal_time_slots'],
-  timing: MedicationItemResponse['intake_timing']
-) => (timing === 'BEFORE_BED' ? 1 : Math.min(Math.max(slots.length, 1), 3));
+  timing: MedicationItemResponse['intake_timing'],
+  frequency?: string | null
+) => {
+  if (timing === 'BEFORE_BED') return 1;
+  const count =
+    slots.length || Number(frequency?.match(/(\d+)\s*회/)?.[1] ?? 0);
+  return Math.min(Math.max(count, 1), 3);
+};
 
 // 화면 입력값 → 약 등록·수정 요청 (빈 값은 보내지 않음)
 const toMedicationRequest = (form: MedicineForm) => ({
@@ -208,7 +215,11 @@ const toAnalysis = (
           displayName: item.custom_drug_name ?? '',
           storageLocation: item.storage_location ?? '',
           interval: INTERVAL_FROM_DAYS[item.interval_days ?? 1] ?? 'daily',
-          timesPerDay: toTimesPerDay(item.meal_time_slots, item.intake_timing),
+          timesPerDay: toTimesPerDay(
+            item.meal_time_slots,
+            item.intake_timing,
+            item.frequency
+          ),
           timing: item.intake_timing
             ? TIMING_FROM_API[item.intake_timing]
             : null,
