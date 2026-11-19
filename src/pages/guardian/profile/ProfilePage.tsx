@@ -13,9 +13,8 @@ import ProfileSection from '@/components/profile/ProfileSection';
 import { MEMBERSHIP_LABELS } from '@/constants/profile';
 import type { ApiError } from '@/types/api';
 import type { AlertSettings as AlertSettingsValue } from '@/types/profile';
-import { getGuardians } from '@/mocks/guardians';
 import { getProfile } from '@/mocks/profile';
-import { getSeniors } from '@/mocks/seniors';
+import useGuardians from '@/hooks/useGuardians';
 import useNotificationSetting from '@/hooks/useNotificationSetting';
 import useProfiles from '@/hooks/useProfiles';
 import { getCareLabel, getCoGuardianSummaries } from '@/utils/profile';
@@ -32,8 +31,7 @@ const ProfilePage = () => {
     null
   );
   const alert = editedAlert ?? notification.setting;
-  const [mockSeniors] = useState(getSeniors);
-  const [guardians] = useState(getGuardians);
+  const guardianList = useGuardians();
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -106,7 +104,15 @@ const ProfilePage = () => {
       phoneNumber: phoneNumber ?? '',
     }));
 
-  const coGuardians = getCoGuardianSummaries(guardians, mockSeniors);
+  const coGuardians = guardianList.guardians
+    ? getCoGuardianSummaries(guardianList.guardians)
+    : null;
+
+  const coGuardianCount = new Set(
+    guardianList.guardians
+      ?.filter(({ isMe }) => !isMe)
+      .map(({ profileId }) => profileId)
+  ).size;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -151,24 +157,34 @@ const ProfilePage = () => {
 
       <ProfileSection
         title="공동 보호자 관리"
-        badge={`총 ${coGuardians.length}명`}
+        badge={coGuardians ? `총 ${coGuardianCount}명` : undefined}
       >
-        {coGuardians.map(({ id, name, seniorName, phoneNumber }) => (
-          <ProfileRow
-            key={id}
-            label={
-              <>
-                {name}
-                <span className="rounded-sm bg-bg-secondary p-1 text-[11px] leading-3 font-medium text-border-focus">
-                  {seniorName}
-                </span>
-              </>
-            }
-            value={phoneNumber}
-            valueClassName="text-text-body"
-            onClick={() => navigate('/guardians')}
+        {guardianList.isError ? (
+          <ErrorState
+            message="공동 보호자를 불러오지 못했어요."
+            onRetry={guardianList.retry}
+            className="py-6"
           />
-        ))}
+        ) : !coGuardians ? (
+          <LoadingState className="py-6" />
+        ) : (
+          coGuardians.map(({ id, name, seniorName, phoneNumber }) => (
+            <ProfileRow
+              key={id}
+              label={
+                <>
+                  {name}
+                  <span className="rounded-sm bg-bg-secondary p-1 text-[11px] leading-3 font-medium text-border-focus">
+                    {seniorName}
+                  </span>
+                </>
+              }
+              value={phoneNumber}
+              valueClassName="text-text-body"
+              onClick={() => navigate('/guardians')}
+            />
+          ))
+        )}
       </ProfileSection>
 
       <ProfileSection title="알림">
