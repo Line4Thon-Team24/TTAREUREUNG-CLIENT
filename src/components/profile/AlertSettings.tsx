@@ -5,10 +5,16 @@ import type { AlertSettings as AlertSettingsValue } from '@/types/profile';
 type AlertSettingsProps = {
   value: AlertSettingsValue;
   onChange: (value: AlertSettingsValue) => void;
+  // 저장 중에는 입력을 차단해 연속 변경을 막음
+  disabled?: boolean;
 };
 
 // 알림 설정: 복용 일정 임박 알림 시간 선택 + 복용 완료 알림 ON/OFF
-export default function AlertSettings({ value, onChange }: AlertSettingsProps) {
+export default function AlertSettings({
+  value,
+  onChange,
+  disabled = false,
+}: AlertSettingsProps) {
   // 선택지에 없는 서버 값은 선택지에 추가해서 표시
   const options = ALERT_LEAD_OPTIONS.some(
     ({ value: option }) => option === value.leadMinutes
@@ -32,6 +38,7 @@ export default function AlertSettings({ value, onChange }: AlertSettingsProps) {
           <select
             id="alert-lead-minutes"
             value={value.leadMinutes}
+            disabled={disabled}
             onChange={(e) =>
               onChange({
                 ...value,
@@ -74,6 +81,7 @@ export default function AlertSettings({ value, onChange }: AlertSettingsProps) {
             role="switch"
             aria-checked={value.notifyOnComplete}
             aria-labelledby="alert-complete-label"
+            disabled={disabled}
             onClick={() =>
               onChange({ ...value, notifyOnComplete: !value.notifyOnComplete })
             }

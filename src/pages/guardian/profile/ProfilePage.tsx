@@ -36,6 +36,7 @@ const ProfilePage = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isSavingAlert, setIsSavingAlert] = useState(false);
 
   const handleLogout = async () => {
     // 서버 요청에 실패해도 로그인 화면으로 이동
@@ -71,11 +72,12 @@ const ProfilePage = () => {
     navigate('/login', { replace: true });
   };
 
-  // 알림 설정 변경
+  // 알림 설정 변경 (저장 중에는 추가 변경을 막아 실패 시 롤백이 꼬이지 않게 함)
   const handleAlertChange = (next: AlertSettingsValue) => {
-    if (!me || !alert) return;
+    if (!me || !alert || isSavingAlert) return;
     const previous = alert;
     setEditedAlert(next);
+    setIsSavingAlert(true);
     updateNotificationSetting(me.profileId, {
       ...(next.leadMinutes !== previous.leadMinutes && {
         leadMinutes: next.leadMinutes,
@@ -83,7 +85,9 @@ const ProfilePage = () => {
       ...(next.notifyOnComplete !== previous.notifyOnComplete && {
         notifyOnComplete: next.notifyOnComplete,
       }),
-    }).catch(() => setEditedAlert(previous));
+    })
+      .catch(() => setEditedAlert(previous))
+      .finally(() => setIsSavingAlert(false));
   };
 
   if (isError) {
@@ -195,7 +199,11 @@ const ProfilePage = () => {
             className="py-6"
           />
         ) : alert ? (
-          <AlertSettings value={alert} onChange={handleAlertChange} />
+          <AlertSettings
+            value={alert}
+            onChange={handleAlertChange}
+            disabled={isSavingAlert}
+          />
         ) : (
           <LoadingState className="py-6" />
         )}
