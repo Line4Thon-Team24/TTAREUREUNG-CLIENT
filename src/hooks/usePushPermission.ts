@@ -24,6 +24,8 @@ export default function usePushPermission() {
         if (profileId === undefined || profileId === registeredProfileId) {
           return;
         }
+        // 등록 중 실패해도 서버는 이미 옮겼을 수 있어 이전 값은 먼저 지움
+        registeredProfileId = null;
         if (await registerPush(profileId)) registeredProfileId = profileId;
       })
       .catch(() => {
