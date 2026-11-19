@@ -1,4 +1,5 @@
 import { apiClient } from '@/apis/client';
+import { fetchProfiles } from '@/apis/profile';
 import { toProfileRequest } from '@/apis/senior';
 import type { BaseResponse } from '@/types/api';
 import type { SeniorForm } from '@/types/senior';
@@ -95,9 +96,8 @@ export const inviteGuardians = async (
 
 // 내 계정의 보호자 프로필 id (다른 계정 보호자와 구분)
 export const fetchMyGuardianProfileIds = async () => {
-  const { data } =
-    await apiClient.get<BaseResponse<ProfileResponse[]>>('/profiles');
-  return data.data
+  const profiles = await fetchProfiles();
+  return profiles
     .filter((profile) => profile.role === 'GUARDIAN')
     .map((profile) => profile.profileId);
 };

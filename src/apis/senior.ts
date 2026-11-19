@@ -1,4 +1,5 @@
 import { apiClient } from '@/apis/client';
+import { fetchProfiles } from '@/apis/profile';
 import type { BaseResponse } from '@/types/api';
 import type { ProfileResponse, Senior, SeniorForm } from '@/types/senior';
 
@@ -23,12 +24,6 @@ export const toProfileRequest = (form: SeniorForm) => ({
   gender: form.gender ? GENDER_TO_API[form.gender] : undefined,
   phoneNumber: form.phoneNumber,
 });
-
-const fetchProfiles = async () => {
-  const { data } =
-    await apiClient.get<BaseResponse<ProfileResponse[]>>('/profiles');
-  return data.data;
-};
 
 // 시니어 목록 조회 (최근 추가순)
 export const fetchSeniors = async () => {
