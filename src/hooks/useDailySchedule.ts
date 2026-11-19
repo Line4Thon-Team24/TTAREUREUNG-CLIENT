@@ -13,6 +13,8 @@ export default function useDailySchedule(seniorId: number | null, date: Date) {
     slots: ScheduleSlot[];
   } | null>(null);
   const [errorKey, setErrorKey] = useState<string | null>(null);
+  // 다시 시도하면 값이 바뀌어 다시 불러옴
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (seniorId === null) return;
@@ -28,10 +30,14 @@ export default function useDailySchedule(seniorId: number | null, date: Date) {
     return () => {
       ignore = true;
     };
-  }, [seniorId, day]);
+  }, [seniorId, day, attempt]);
 
   const slots = loaded?.key === key ? loaded.slots : null;
   // 시니어가 없으면(key가 null) 오류가 아님
   const isError = key !== null && slots === null && errorKey === key;
-  return { slots, isError };
+  const retry = () => {
+    setErrorKey(null);
+    setAttempt((prev) => prev + 1);
+  };
+  return { slots, isError, retry };
 }

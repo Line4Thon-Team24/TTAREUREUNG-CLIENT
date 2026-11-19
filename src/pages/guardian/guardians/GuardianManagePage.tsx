@@ -8,6 +8,8 @@ import {
 } from '@/apis/guardian';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import ErrorState from '@/components/common/ErrorState';
+import LoadingState from '@/components/common/LoadingState';
 import SearchField from '@/components/common/SearchField';
 import StepHeader from '@/components/common/StepHeader';
 import GuardianCard from '@/components/guardians/GuardianCard';
@@ -40,6 +42,8 @@ const GuardianManagePage = () => {
   const [keyword, setKeyword] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isSaveError, setIsSaveError] = useState(false);
+  // 다시 시도하면 값이 바뀌어 다시 불러옴
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let ignore = false;
@@ -55,7 +59,7 @@ const GuardianManagePage = () => {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [loadAttempt]);
 
   // 편집할 보호자가 없으면 목록으로
   if (links?.length === 0) {
@@ -285,10 +289,17 @@ const GuardianManagePage = () => {
 
       <main className="min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-12">
         {isLoadError ? (
-          <p className="pt-20 text-center text-[14px] text-[#6B7684]">
-            보호자 목록을 불러오지 못했어요.
-          </p>
-        ) : links === null ? null : visibleGroups.length === 0 ? (
+          <ErrorState
+            message="보호자 목록을 불러오지 못했어요."
+            onRetry={() => {
+              setIsLoadError(false);
+              setLoadAttempt((prev) => prev + 1);
+            }}
+            className="pt-20"
+          />
+        ) : links === null ? (
+          <LoadingState className="pt-20" />
+        ) : visibleGroups.length === 0 ? (
           <p className="pt-20 text-center text-[14px] text-[#6B7684]">
             검색 결과가 없어요.
           </p>

@@ -3,6 +3,8 @@ import { Navigate, useParams } from 'react-router-dom';
 import { fetchSenior, updateSenior } from '@/apis/senior';
 import Button from '@/components/common/Button';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import ErrorState from '@/components/common/ErrorState';
+import LoadingState from '@/components/common/LoadingState';
 import StepHeader from '@/components/common/StepHeader';
 import SeniorInfoForm from '@/components/seniors/SeniorInfoForm';
 import useGoBack from '@/hooks/useGoBack';
@@ -35,6 +37,8 @@ const SeniorEditContent = ({ seniorId }: { seniorId: number }) => {
   const [isDiscardOpen, setIsDiscardOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitError, setIsSubmitError] = useState(false);
+  // 다시 시도하면 값이 바뀌어 다시 불러옴
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let ignore = false;
@@ -53,7 +57,7 @@ const SeniorEditContent = ({ seniorId }: { seniorId: number }) => {
     return () => {
       ignore = true;
     };
-  }, [seniorId]);
+  }, [seniorId, loadAttempt]);
 
   if (isNotFound) {
     return <Navigate to="/seniors" replace />;
@@ -95,17 +99,22 @@ const SeniorEditContent = ({ seniorId }: { seniorId: number }) => {
 
       <main className="min-h-0 flex-1 overflow-y-auto px-5 pt-6 pb-10">
         {isLoadError ? (
-          <p className="pt-20 text-center text-[14px] text-[#6B7684]">
-            시니어 정보를 불러오지 못했어요.
-          </p>
+          <ErrorState
+            message="시니어 정보를 불러오지 못했어요."
+            onRetry={() => {
+              setIsLoadError(false);
+              setLoadAttempt((prev) => prev + 1);
+            }}
+            className="pt-20"
+          />
+        ) : !form ? (
+          <LoadingState className="pt-20" />
         ) : (
-          form && (
-            <SeniorInfoForm
-              value={form}
-              onChange={setForm}
-              onSubmit={handleSubmit}
-            />
-          )
+          <SeniorInfoForm
+            value={form}
+            onChange={setForm}
+            onSubmit={handleSubmit}
+          />
         )}
       </main>
 

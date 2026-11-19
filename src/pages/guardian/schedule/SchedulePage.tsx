@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import EmptyState from '@/components/common/EmptyState';
+import ErrorState from '@/components/common/ErrorState';
+import LoadingState from '@/components/common/LoadingState';
 import DateNavigator from '@/components/schedule/DateNavigator';
 import MedicineDetailModal from '@/components/schedule/MedicineDetailModal';
 import ScheduleTimeline from '@/components/schedule/ScheduleTimeline';
@@ -13,38 +15,42 @@ import useSelectedSeniorParam from '@/hooks/useSelectedSeniorParam';
 import { SCHEDULE_SENIOR_KEY } from '@/constants/schedule';
 import type { Medicine } from '@/types/medicine';
 
-const LOAD_ERROR_CLASS =
-  'flex flex-1 items-center justify-center text-[14px] text-[#6B7684]';
-
 const SchedulePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { seniors, isError: isSeniorError } = useSeniors();
+  const { seniors, isError: isSeniorError, retry: retrySeniors } = useSeniors();
   // 월 달력과 시니어·날짜 공유 (주소에 저장)
   const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(
     seniors ?? [],
     SCHEDULE_SENIOR_KEY
   );
   const [date, setDate] = useDateParam();
-  const { medicines, isError: isMedicineError } =
-    useSeniorMedicines(selectedSeniorId);
-  const { slots, isError: isScheduleError } = useDailySchedule(
-    selectedSeniorId,
-    date
-  );
+  const {
+    medicines,
+    isError: isMedicineError,
+    retry: retryMedicines,
+  } = useSeniorMedicines(selectedSeniorId);
+  const {
+    slots,
+    isError: isScheduleError,
+    retry: retrySchedule,
+  } = useDailySchedule(selectedSeniorId, date);
   const [detailMedicine, setDetailMedicine] = useState<Medicine | null>(null);
 
   const hasSenior = (seniors ?? []).length > 0;
   const hasMedicine = (medicines ?? []).length > 0;
 
-  // 시니어 없음 → 약 없음 → 일정 (각 단계는 불러오는 동안 빈 화면)
+  // 시니어 없음 → 약 없음 → 일정 (각 단계는 불러오는 동안 로딩 표시)
   const renderContent = () => {
     if (isSeniorError) {
       return (
-        <p className={LOAD_ERROR_CLASS}>시니어 목록을 불러오지 못했어요.</p>
+        <ErrorState
+          message="시니어 목록을 불러오지 못했어요."
+          onRetry={retrySeniors}
+        />
       );
     }
-    if (seniors === null) return <div className="flex-1" />;
+    if (seniors === null) return <LoadingState />;
 
     if (!hasSenior) {
       return (
@@ -63,9 +69,14 @@ const SchedulePage = () => {
     }
 
     if (isMedicineError) {
-      return <p className={LOAD_ERROR_CLASS}>약 목록을 불러오지 못했어요.</p>;
+      return (
+        <ErrorState
+          message="약 목록을 불러오지 못했어요."
+          onRetry={retryMedicines}
+        />
+      );
     }
-    if (medicines === null) return <div className="flex-1" />;
+    if (medicines === null) return <LoadingState />;
 
     if (!hasMedicine || selectedSeniorId === null) {
       return (
@@ -84,9 +95,14 @@ const SchedulePage = () => {
     }
 
     if (isScheduleError) {
-      return <p className={LOAD_ERROR_CLASS}>복용 일정을 불러오지 못했어요.</p>;
+      return (
+        <ErrorState
+          message="복용 일정을 불러오지 못했어요."
+          onRetry={retrySchedule}
+        />
+      );
     }
-    if (slots === null) return <div className="flex-1" />;
+    if (slots === null) return <LoadingState />;
 
     if (slots.length === 0) {
       return (

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, SquarePen } from 'lucide-react';
 import { fetchSeniors, updateSeniorFavorite } from '@/apis/senior';
 import EmptyState from '@/components/common/EmptyState';
+import ErrorState from '@/components/common/ErrorState';
+import LoadingState from '@/components/common/LoadingState';
 import FilterChips from '@/components/common/FilterChips';
 import SearchField from '@/components/common/SearchField';
 import SeniorCard from '@/components/seniors/SeniorCard';
@@ -32,6 +34,8 @@ const SeniorListPage = () => {
   const [filter, setFilter] = useState<Filter>('recent');
   const [isSearching, setIsSearching] = useState(false);
   const [keyword, setKeyword] = useState('');
+  // 다시 시도하면 값이 바뀌어 다시 불러옴
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let ignore = false;
@@ -53,7 +57,7 @@ const SeniorListPage = () => {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [loadAttempt]);
 
   const seniorList = seniors ?? [];
   const hasSenior = seniorList.length > 0;
@@ -143,11 +147,15 @@ const SeniorListPage = () => {
       )}
 
       {isError ? (
-        <p className="flex flex-1 items-center justify-center text-[14px] text-[#6B7684]">
-          시니어 목록을 불러오지 못했어요.
-        </p>
+        <ErrorState
+          message="시니어 목록을 불러오지 못했어요."
+          onRetry={() => {
+            setIsError(false);
+            setLoadAttempt((prev) => prev + 1);
+          }}
+        />
       ) : seniors === null ? (
-        <div className="flex-1" />
+        <LoadingState />
       ) : !hasSenior ? (
         <div className="flex flex-1 items-center justify-center">
           <EmptyState

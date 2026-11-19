@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { fetchMonthlyAdherence } from '@/apis/schedule';
+import ErrorState from '@/components/common/ErrorState';
 import SeniorDropdown from '@/components/common/SeniorDropdown';
 import AdherenceSummary from '@/components/schedule/AdherenceSummary';
 import MonthCalendar from '@/components/schedule/MonthCalendar';
@@ -19,13 +20,17 @@ const ScheduleMonthPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const goBackOr = useGoBack();
-  const { seniors } = useSeniors();
+  const { seniors, isError: isSeniorError, retry: retrySeniors } = useSeniors();
   const [selectedSeniorId, selectSenior] = useSelectedSeniorParam(
     seniors ?? [],
     SCHEDULE_SENIOR_KEY
   );
   const [date, setDate] = useDateParam();
-  const { medicines } = useSeniorMedicines(selectedSeniorId);
+  const {
+    medicines,
+    isError: isMedicineError,
+    retry: retryMedicines,
+  } = useSeniorMedicines(selectedSeniorId);
 
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -133,21 +138,34 @@ const ScheduleMonthPage = () => {
         <AdherenceSummary {...monthlyAdherence} />
       )}
 
-      <MonthCalendar
-        year={year}
-        month={month}
-        medicines={medicines ?? []}
-        onDateClick={goToDate}
-        // 시니어는 있는데 약이 없을 때만 (약 목록을 불러온 뒤)
-        onRegisterMedicine={
-          hasSenior && medicines !== null && !hasMedicine
-            ? () =>
-                navigate('/medicines/register', {
-                  state: { seniorId: selectedSeniorId },
-                })
-            : undefined
-        }
-      />
+      {/* 달력은 바로 보여주고, 시니어·약을 못 불러오면 달력 대신 안내 */}
+      {isSeniorError ? (
+        <ErrorState
+          message="시니어 목록을 불러오지 못했어요."
+          onRetry={retrySeniors}
+        />
+      ) : isMedicineError ? (
+        <ErrorState
+          message="약 목록을 불러오지 못했어요."
+          onRetry={retryMedicines}
+        />
+      ) : (
+        <MonthCalendar
+          year={year}
+          month={month}
+          medicines={medicines ?? []}
+          onDateClick={goToDate}
+          // 시니어는 있는데 약이 없을 때만 (약 목록을 불러온 뒤)
+          onRegisterMedicine={
+            hasSenior && medicines !== null && !hasMedicine
+              ? () =>
+                  navigate('/medicines/register', {
+                    state: { seniorId: selectedSeniorId },
+                  })
+              : undefined
+          }
+        />
+      )}
     </div>
   );
 };
