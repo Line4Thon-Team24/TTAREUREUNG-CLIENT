@@ -1,27 +1,41 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ZoomIn } from 'lucide-react';
+import { takeMedication } from '@/apis/dose';
+import ErrorState from '@/components/common/ErrorState';
+import LoadingState from '@/components/common/LoadingState';
 import MicPrompt from '@/components/recognition/MicPrompt';
 import MaskIcon from '@/components/common/MaskIcon';
-import { mockTargetMedicines } from '@/mocks/recognition';
+import useLatestRequest from '@/hooks/useLatestRequest';
+import useSessionCall from '@/hooks/useSessionCall';
+import type { MedicationGuide } from '@/types/dose';
 import { parsePositiveInt } from '@/utils/recognition';
 import pillIcon from '@/assets/icons/pill.svg';
 
+type DoseScreenProps = {
+  sessionId: number;
+  medicines: MedicationGuide[];
+  initialOrder: number;
+};
+
 // 시니어 약 복용 안내 화면 (복용 수량 + 약 사진 슬라이드)
-// ?order=약 순서
-const SeniorDosePage = () => {
+const DoseScreen = ({
+  sessionId,
+  medicines,
+  initialOrder,
+}: DoseScreenProps) => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const medicines = mockTargetMedicines;
-  const order = parsePositiveInt(searchParams.get('order'));
   const trackRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(() =>
     Math.max(
       0,
-      medicines.findIndex((medicine) => medicine.order === order)
+      medicines.findIndex((medicine) => medicine.order === initialOrder)
     )
   );
   const [zoomed, setZoomed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitError, setIsSubmitError] = useState(false);
+  const startRequest = useLatestRequest();
   const current = medicines[index];
 
   // 초기 선택된 약의 슬라이드 위치로 이동
@@ -38,9 +52,31 @@ const SeniorDosePage = () => {
     setIndex(Math.min(Math.max(next, 0), medicines.length - 1));
   };
 
-  const handleDone = () => {
-    // TODO: 음성 인식("다 먹었어") 연동 시 호출. 지금은 클릭 시 복용 결과 화면으로 이동
-    navigate('/senior/result?status=complete');
+  // "다 먹었어" → 복용 처리 후 다음 약 찾기 (다 먹었으면 복용 결과)
+  const handleDone = async () => {
+    if (isSubmitting) return;
+    // 요청이 끝났을 때 아직 이 화면에 있는지 확인
+    const isLatest = startRequest();
+    setIsSubmitting(true);
+    setIsSubmitError(false);
+    try {
+      const { nextMedication } = await takeMedication(
+        sessionId,
+        current.medicationId
+      );
+      if (!isLatest()) return;
+      // TODO: 회차 종료(finish) API 연동 후 결과를 복용 결과 화면에 반영
+      navigate(
+        nextMedication
+          ? `/senior/find?sessionId=${sessionId}&order=${nextMedication.order}&mode=voice`
+          : `/senior/result?sessionId=${sessionId}&status=complete`,
+        { replace: true }
+      );
+    } catch {
+      if (!isLatest()) return;
+      setIsSubmitError(true);
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -67,17 +103,19 @@ const SeniorDosePage = () => {
         >
           {medicines.map((medicine) => (
             <button
-              key={medicine.id}
+              key={medicine.medicationId}
               type="button"
               onClick={() => setZoomed(true)}
-              aria-label={`${medicine.displayName} 사진 크게 보기`}
-              className="h-62 w-full shrink-0 snap-center"
+              aria-label={`${medicine.name} 사진 크게 보기`}
+              className="h-62 w-full shrink-0 snap-center bg-bg-section"
             >
-              <img
-                src={medicine.imageUrl}
-                alt={medicine.displayName}
-                className="size-full object-cover"
-              />
+              {medicine.imageUrl && (
+                <img
+                  src={medicine.imageUrl}
+                  alt={medicine.name}
+                  className="size-full object-cover"
+                />
+              )}
             </button>
           ))}
         </div>
@@ -90,19 +128,29 @@ const SeniorDosePage = () => {
       <div className="flex justify-center gap-1.5" aria-hidden="true">
         {medicines.map((medicine, i) => (
           <span
-            key={medicine.id}
+            key={medicine.medicationId}
             className={`size-2 rounded-full ${i === index ? 'bg-bg-primary-pressed' : 'bg-text-on-dark-green'}`}
           />
         ))}
       </div>
 
-      <div className="mt-auto flex justify-center">
-        <button type="button" onClick={handleDone} className="text-center">
+      <div className="mt-auto flex flex-col items-center gap-3">
+        {isSubmitError && (
+          <p role="alert" className="text-[16px] font-bold text-text-title">
+            복용 처리를 하지 못했어요. 다시 눌러주세요.
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={handleDone}
+          disabled={isSubmitting}
+          className="text-center disabled:opacity-60"
+        >
           <MicPrompt lead="약을 모두 복용하셨다면" keyword="다 먹었어" />
         </button>
       </div>
 
-      {zoomed && (
+      {zoomed && current.imageUrl && (
         <button
           type="button"
           onClick={() => setZoomed(false)}
@@ -111,12 +159,50 @@ const SeniorDosePage = () => {
         >
           <img
             src={current.imageUrl}
-            alt={current.displayName}
+            alt={current.name}
             className="max-h-full max-w-full object-contain"
           />
         </button>
       )}
     </div>
+  );
+};
+
+// 시니어 약 복용 안내 화면 (회차의 약 목록을 불러온 뒤 복용 안내 표시)
+// ?sessionId=복용 회차, ?order=약 순서
+const SeniorDosePage = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const sessionId = parsePositiveInt(searchParams.get('sessionId'), 0);
+  const order = parsePositiveInt(searchParams.get('order'));
+  const { call, isError, retry } = useSessionCall(sessionId || null);
+
+  // 회차 정보가 없거나 먹을 약이 남아 있지 않으면 일정 화면으로
+  const hasNothingToTake =
+    sessionId === 0 || (call !== null && call.medications.length === 0);
+
+  useEffect(() => {
+    if (hasNothingToTake) navigate('/senior', { replace: true });
+  }, [hasNothingToTake, navigate]);
+
+  if (!call || call.medications.length === 0) {
+    return (
+      <div className="flex min-h-dvh flex-col bg-white">
+        {isError ? (
+          <ErrorState message="약 정보를 불러오지 못했어요." onRetry={retry} />
+        ) : (
+          <LoadingState />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <DoseScreen
+      sessionId={sessionId}
+      medicines={call.medications}
+      initialOrder={order}
+    />
   );
 };
 
