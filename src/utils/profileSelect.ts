@@ -1,5 +1,6 @@
 import type { CareSenior, FamilyMember } from '@/types/profileSelect';
 import type { ProfileResponse } from '@/types/senior';
+import { getSelectedGuardian } from '@/utils/profile';
 
 // 'YYYY-MM-DD' → 만 나이
 export const getAge = (birthDate: string, today = new Date()) => {
@@ -27,15 +28,15 @@ export const toCareSeniors = (profiles: ProfileResponse[]): CareSenior[] =>
     }));
 
 // 보호자 프로필 → 가족 및 공동 보호자
-// TODO: 프로필 선택 연동 후 선택된 보호자 프로필로 교체
 export const toFamilyMembers = (
   profiles: ProfileResponse[]
 ): FamilyMember[] => {
   const guardians = profiles.filter(({ role }) => role === 'GUARDIAN');
-  return guardians.map(({ profileId, name, relationship }, index) => ({
+  const myId = getSelectedGuardian(profiles)?.profileId;
+  return guardians.map(({ profileId, name, relationship }) => ({
     id: profileId,
     name,
     relation: relationship ?? '',
-    isMe: index === 0,
+    isMe: profileId === myId,
   }));
 };

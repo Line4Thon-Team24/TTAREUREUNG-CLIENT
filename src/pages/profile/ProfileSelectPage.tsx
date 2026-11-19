@@ -8,6 +8,7 @@ import ErrorState from '@/components/common/ErrorState';
 import LoadingState from '@/components/common/LoadingState';
 import useProfiles from '@/hooks/useProfiles';
 import { getCareLabel } from '@/utils/profile';
+import { setSelectedProfileId } from '@/utils/selectedProfile';
 import { toCareSeniors, toFamilyMembers } from '@/utils/profileSelect';
 import arrowDownIcon from '@/assets/icons/arrow-down-black.svg';
 import arrowUpIcon from '@/assets/icons/arrow-up-black.svg';
@@ -18,7 +19,13 @@ const ProfileSelectPage = () => {
   const [showAll, setShowAll] = useState(false);
 
   const { profiles, isError, retry } = useProfiles();
-  const me = profiles?.find(({ role }) => role === 'GUARDIAN');
+  const guardians = profiles?.filter(({ role }) => role === 'GUARDIAN') ?? [];
+
+  // 선택한 보호자 프로필을 저장해 다른 화면에서도 같은 프로필을 쓰게 함
+  const handleSelect = (profileId: number) => {
+    setSelectedProfileId(profileId);
+    navigate('/schedule', { replace: true });
+  };
 
   return (
     <div className="flex min-h-dvh flex-col px-5 pt-14 pb-8">
@@ -47,14 +54,15 @@ const ProfileSelectPage = () => {
             showAll ? 'pt-13' : 'pt-0'
           }`}
         >
-          {me && (
+          {guardians.map((guardian) => (
             <MyProfileCard
-              name={me.name}
-              careLabel={getCareLabel(me)}
+              key={guardian.profileId}
+              name={guardian.name}
+              careLabel={getCareLabel(guardian)}
               profileImageUrl={null}
-              onSelect={() => navigate('/schedule', { replace: true })}
+              onSelect={() => handleSelect(guardian.profileId)}
             />
-          )}
+          ))}
           {showAll && (
             <>
               <CareSeniorSection seniors={toCareSeniors(profiles)} />
