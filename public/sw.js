@@ -38,6 +38,18 @@ const toUrl = (payload) => {
   return '/schedule';
 };
 
+// 알림 배너가 있는 보호자 화면인지 (src/routes의 GuardianAlertLayout 아래 주소)
+const GUARDIAN_PATHS = ['/schedule', '/medicines', '/seniors', '/guardians'];
+const isGuardianPage = (url) => {
+  const { pathname } = new URL(url);
+  return (
+    pathname === '/profile' ||
+    GUARDIAN_PATHS.some(
+      (path) => pathname === path || pathname.startsWith(`${path}/`)
+    )
+  );
+};
+
 self.addEventListener('push', (event) => {
   const payload = readPayload(event.data);
   event.waitUntil(
@@ -46,8 +58,11 @@ self.addEventListener('push', (event) => {
         type: 'window',
         includeUncontrolled: true,
       });
-      const visible = windows.filter((w) => w.visibilityState === 'visible');
-      // 보호자 알림은 앱을 보고 있으면 휴대폰 알림 대신 앱 안 배너로
+      // 배너를 띄울 수 있는 화면만 (로그인·시니어 화면은 휴대폰 알림으로)
+      const visible = windows.filter(
+        (w) => w.visibilityState === 'visible' && isGuardianPage(w.url)
+      );
+      // 보호자 알림은 보호자 화면을 보고 있으면 휴대폰 알림 대신 앱 안 배너로
       // (시니어 전화는 놓치면 안 되므로 항상 알림)
       if (visible.length > 0 && payload.type !== 'DOSE_CALL') {
         visible.forEach((w) => w.postMessage({ type: PUSH_RECEIVED, payload }));
