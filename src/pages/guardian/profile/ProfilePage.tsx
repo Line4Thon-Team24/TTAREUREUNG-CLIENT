@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '@/apis/auth';
+import { updateNotificationSetting } from '@/apis/notificationSetting';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import ErrorState from '@/components/common/ErrorState';
 import LoadingState from '@/components/common/LoadingState';
@@ -37,6 +38,21 @@ const ProfilePage = () => {
     // 서버 요청에 실패해도 로그인 화면으로 이동
     await logout().catch(() => {});
     navigate('/login', { replace: true });
+  };
+
+  // 알림 설정 변경
+  const handleAlertChange = (next: AlertSettingsValue) => {
+    if (!me || !alert) return;
+    const previous = alert;
+    setEditedAlert(next);
+    updateNotificationSetting(me.profileId, {
+      ...(next.leadMinutes !== previous.leadMinutes && {
+        leadMinutes: next.leadMinutes,
+      }),
+      ...(next.notifyOnComplete !== previous.notifyOnComplete && {
+        notifyOnComplete: next.notifyOnComplete,
+      }),
+    }).catch(() => setEditedAlert(previous));
   };
 
   if (isError) {
@@ -130,7 +146,7 @@ const ProfilePage = () => {
             className="py-6"
           />
         ) : alert ? (
-          <AlertSettings value={alert} onChange={setEditedAlert} />
+          <AlertSettings value={alert} onChange={handleAlertChange} />
         ) : (
           <LoadingState className="py-6" />
         )}
