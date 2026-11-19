@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '@/apis/auth';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import ErrorState from '@/components/common/ErrorState';
+import LoadingState from '@/components/common/LoadingState';
 import AlertSettings from '@/components/profile/AlertSettings';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileRow from '@/components/profile/ProfileRow';
@@ -10,14 +12,16 @@ import { MEMBERSHIP_LABELS } from '@/constants/profile';
 import { getGuardians } from '@/mocks/guardians';
 import { getProfile } from '@/mocks/profile';
 import { getSeniors } from '@/mocks/seniors';
-import { getCoGuardianSummaries, getMyCareLabel } from '@/utils/profile';
+import useProfiles from '@/hooks/useProfiles';
+import { getCareLabel, getCoGuardianSummaries } from '@/utils/profile';
 import settingIcon from '@/assets/icons/setting.svg';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
-  const [profile] = useState(getProfile);
-  const [alert, setAlert] = useState(profile.alert);
-  const [seniors] = useState(getSeniors);
+  const { profiles, isError, retry } = useProfiles();
+  const [mockProfile] = useState(getProfile);
+  const [alert, setAlert] = useState(mockProfile.alert);
+  const [mockSeniors] = useState(getSeniors);
   const [guardians] = useState(getGuardians);
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 
@@ -27,7 +31,27 @@ const ProfilePage = () => {
     navigate('/login', { replace: true });
   };
 
-  const coGuardians = getCoGuardianSummaries(guardians, seniors);
+  if (isError) {
+    return <ErrorState message="프로필을 불러오지 못했어요." onRetry={retry} />;
+  }
+  if (!profiles) return <LoadingState />;
+
+  // TODO: 프로필 선택 연동 후 선택된 보호자 프로필로 교체
+  const me = profiles.find(({ role }) => role === 'GUARDIAN');
+  const profile = { ...mockProfile, name: me?.name ?? mockProfile.name };
+  const careLabel = getCareLabel(me);
+
+  // 시니어 프로필 (최근 추가순)
+  const seniors = profiles
+    .filter(({ role }) => role === 'SENIOR')
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .map(({ profileId, name, phoneNumber }) => ({
+      id: profileId,
+      name,
+      phoneNumber: phoneNumber ?? '',
+    }));
+
+  const coGuardians = getCoGuardianSummaries(guardians, mockSeniors);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -42,10 +66,7 @@ const ProfilePage = () => {
         </button>
       </header>
 
-      <ProfileHeader
-        profile={profile}
-        careLabel={getMyCareLabel(guardians, seniors)}
-      />
+      <ProfileHeader profile={profile} careLabel={careLabel} />
 
       <ProfileSection title="계정 정보">
         <ProfileRow
