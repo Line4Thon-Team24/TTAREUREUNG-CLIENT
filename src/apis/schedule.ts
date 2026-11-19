@@ -41,8 +41,8 @@ const toSlot = (session: Session): ScheduleSlot => ({
   id: session.timeSlot,
   mealTime: MEAL_TIME_FROM_API[session.timeSlot],
   time: session.doseTime,
-  // TODO: 약별 복용 시점이 응답에 추가되면 표시
-  timingLabel: '',
+  // 회차 이름 (예: 아침, 점심 식후)
+  timingLabel: session.slotName,
   // '2026-11-08T11:08:00' → '11:08'
   callConfirmedAt: session.answeredAt?.slice(11, 16),
   medicines: session.medications.map((medication) => ({
