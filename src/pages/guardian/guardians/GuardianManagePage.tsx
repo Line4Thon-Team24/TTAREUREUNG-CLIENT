@@ -292,6 +292,8 @@ const GuardianManagePage = () => {
           <ErrorState
             message="보호자 목록을 불러오지 못했어요."
             onRetry={() => {
+              // 저장 실패 뒤 남은 예전 목록으로 편집하지 않도록 비우고 다시 불러옴
+              setLinks(null);
               setIsLoadError(false);
               setLoadAttempt((prev) => prev + 1);
             }}
