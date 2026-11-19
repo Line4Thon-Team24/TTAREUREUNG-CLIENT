@@ -99,6 +99,53 @@ const ProfilePage = () => {
         <AlertSettings value={alert} onChange={setAlert} />
       </ProfileSection>
 
+      {/* 개발용: 알림 배너 테스트 (5종을 차례로 띄움) */}
+      {import.meta.env.DEV && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              const now = new Date();
+              const pad = (n: number) => String(n).padStart(2, '0');
+              // Date → 'YYYY-MM-DDTHH:mm:00' (서버와 같은 한국 시간 형식)
+              const toLocal = (d: Date) =>
+                `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+              const local = toLocal(now);
+              // 복용 예정은 10분 뒤, 나머지는 오늘 오후 3시 회차
+              const inTenMinutes = toLocal(
+                new Date(now.getTime() + 10 * 60_000)
+              );
+              const types = [
+                'completed',
+                'partial',
+                'missed',
+                'helpRequest',
+                'upcoming',
+              ] as const;
+              window.dispatchEvent(
+                new CustomEvent('guardian-alert-test', {
+                  detail: types.map((type) => ({
+                    key: `test-${type}-${now.getTime()}`,
+                    alertId: null,
+                    type,
+                    seniorName: '김순자',
+                    scheduledAt:
+                      type === 'upcoming'
+                        ? inTenMinutes
+                        : `${local.slice(0, 10)}T15:00:00`,
+                    occurredAt: local,
+                    minutesLeft: type === 'upcoming' ? 10 : null,
+                  })),
+                })
+              );
+            }}
+            className="rounded-full border border-[#E5E8EB] px-4 py-2 text-[14px] text-text-sub"
+          >
+            알림 테스트
+          </button>
+        </div>
+      )}
+
       <div className="flex justify-center pb-4">
         <button
           type="button"
