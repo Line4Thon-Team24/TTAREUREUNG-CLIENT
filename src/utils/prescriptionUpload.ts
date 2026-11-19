@@ -1,3 +1,4 @@
+import type { ApiError } from '@/types/api';
 import type { PrescriptionAnalysis, RegisterFlow } from '@/types/medicine';
 
 export type UploadSource = 'gallery' | 'file' | 'camera';
@@ -17,6 +18,20 @@ export const UPLOAD_ACCEPT: Record<UploadSource, string> = {
   gallery: 'image/*',
   file: 'image/*,application/pdf',
   camera: 'image/*',
+};
+
+// 서버 응답별 인식 실패 문구 (어두운 사진 등으로 약을 못 찾으면 422)
+export const toAnalyzeErrorMessage = (error: ApiError) => {
+  switch (error.status) {
+    case 422:
+      return '처방전에서 약을 찾지 못했어요. 밝은 곳에서 다시 찍거나 직접 입력해주세요.';
+    case 415:
+      return 'JPG, PNG, WEBP, PDF 파일만 올릴 수 있어요.';
+    case 413:
+      return '10MB 이하 파일만 올릴 수 있어요.';
+    default:
+      return '처방전을 읽지 못했어요. 다시 올리거나 직접 입력해주세요.';
+  }
 };
 
 // 글씨 인식이 가능한 최소 사진 크기 (짧은 쪽 기준, px)
