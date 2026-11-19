@@ -10,10 +10,9 @@ import AlertSettings from '@/components/profile/AlertSettings';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileRow from '@/components/profile/ProfileRow';
 import ProfileSection from '@/components/profile/ProfileSection';
-import { MEMBERSHIP_LABELS } from '@/constants/profile';
+import { MEMBERSHIP_LABEL } from '@/constants/profile';
 import type { ApiError } from '@/types/api';
 import type { AlertSettings as AlertSettingsValue } from '@/types/profile';
-import { getProfile } from '@/mocks/profile';
 import useGuardians from '@/hooks/useGuardians';
 import useNotificationSetting from '@/hooks/useNotificationSetting';
 import useProfiles from '@/hooks/useProfiles';
@@ -26,7 +25,6 @@ const ProfilePage = () => {
   // TODO: 프로필 선택 연동 후 선택된 보호자 프로필로 교체
   const me = profiles?.find(({ role }) => role === 'GUARDIAN');
   const notification = useNotificationSetting(me?.profileId);
-  const [mockProfile] = useState(getProfile);
   const [editedAlert, setEditedAlert] = useState<AlertSettingsValue | null>(
     null
   );
@@ -95,7 +93,7 @@ const ProfilePage = () => {
   }
   if (!profiles) return <LoadingState />;
 
-  const profile = { ...mockProfile, name: me?.name ?? mockProfile.name };
+  const profile = { name: me?.name ?? '', profileImageUrl: null };
   const careLabel = getCareLabel(me);
 
   // 시니어 프로필 (최근 추가순)
@@ -136,12 +134,12 @@ const ProfilePage = () => {
       <ProfileSection title="계정 정보">
         <ProfileRow
           label="이메일"
-          value={profile.email}
+          value={me?.email ?? ''}
           valueClassName="text-text-title"
         />
         <ProfileRow
           label="멤버십"
-          value={MEMBERSHIP_LABELS[profile.membership]}
+          value={MEMBERSHIP_LABEL}
           valueClassName="font-bold text-border-focus"
           onClick={() => {}}
         />
