@@ -102,9 +102,16 @@ const SignupGuardianPage = () => {
             throw error;
           }
           // 응답 유실로 이미 가입됐을 수 있으므로 같은 계정으로 로그인 시도
-          // 실패하면 다른 사람의 이메일이므로 중복 오류로 처리
-          await login(account).catch(() => {
-            throw error;
+          // 자격 증명 불일치면 다른 사람의 이메일이므로 중복 오류로 처리
+          // 네트워크/서버 오류 발생 시 실패 메시지를 그대로 표시하고 재시도하도록 함
+          await login(account).catch((loginError) => {
+            if (
+              (loginError as ApiError).code ===
+              AUTH_ERROR_CODE.invalidCredentials
+            ) {
+              throw error;
+            }
+            throw loginError;
           });
           setCreatedAccount(account);
         }
