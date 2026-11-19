@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent } from 'react';
+import { useRef, type ChangeEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import {
   Camera,
@@ -10,14 +10,11 @@ import {
 import BackHeader from '@/components/common/BackHeader';
 import BrandBadge from '@/components/common/BrandBadge';
 import MethodOptionCard from '@/components/medicines/MethodOptionCard';
-import UploadErrorMessage from '@/components/medicines/UploadErrorMessage';
-import useLatestRequest from '@/hooks/useLatestRequest';
 import type { MedicineFormState, RegisterFlow } from '@/types/medicine';
 import {
   releasePreviewUrls,
   toRecognitionState,
   UPLOAD_ACCEPT,
-  validatePrescriptionFile,
   type UploadSource,
 } from '@/utils/prescriptionUpload';
 
@@ -30,28 +27,17 @@ const MedicineRegisterMethodPage = () => {
   const galleryRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const startRequest = useLatestRequest();
-
   // 어떤 시니어의 약인지 모르면 등록할 수 없으므로 복용 일정으로 이동
   if (seniorId === undefined) {
     return <Navigate to="/schedule" replace />;
   }
 
+  // 사진 검사 없이 인식 화면으로 이동 (인식이 어려우면 인식 화면에서 안내)
   const handleFile =
-    (source: UploadSource) => async (e: ChangeEvent<HTMLInputElement>) => {
+    (source: UploadSource) => (e: ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       e.target.value = ''; // 같은 파일을 다시 골라도 동작하도록 초기화
       if (!file) return;
-
-      // 인식이 어려운 사진이면 이동하지 않고 다시 선택하도록 안내
-      const isLatest = startRequest();
-      const errorMessage = await validatePrescriptionFile(file);
-      // 검사 중 화면을 떠났거나 다른 파일을 다시 골랐으면 이전 결과는 무시
-      if (!isLatest()) return;
-
-      setUploadError(errorMessage);
-      if (errorMessage) return;
 
       const next = toRecognitionState({ ...flow, seniorId }, source, file);
       // 앞쪽 기록이 지워지므로 새 사진 외 미리보기 주소 해제
@@ -61,7 +47,7 @@ const MedicineRegisterMethodPage = () => {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <BackHeader />
+      <BackHeader compact />
 
       <div className="flex flex-1 flex-col justify-between gap-8 px-5 pt-8 pb-10">
         <section className="flex flex-col items-start gap-4">
@@ -101,8 +87,6 @@ const MedicineRegisterMethodPage = () => {
               onClick={() => cameraRef.current?.click()}
             />
           </div>
-
-          {uploadError && <UploadErrorMessage message={uploadError} />}
 
           <div className="flex items-start gap-2.5 rounded-xl border border-[#E5E8EB] bg-[#FAFAFA] p-3.75 text-[13px] leading-4.5 text-[#6B7684]">
             <Lightbulb

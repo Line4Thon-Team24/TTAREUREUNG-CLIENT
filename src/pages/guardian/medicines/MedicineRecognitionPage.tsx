@@ -7,7 +7,6 @@ import StepHeader from '@/components/common/StepHeader';
 import PrescriptionViewer from '@/components/medicines/PrescriptionViewer';
 import RecognizedMedicineList from '@/components/medicines/RecognizedMedicineList';
 import UploadErrorMessage from '@/components/medicines/UploadErrorMessage';
-import useLatestRequest from '@/hooks/useLatestRequest';
 import type { ApiError } from '@/types/api';
 import type { MedicineFormState } from '@/types/medicine';
 import {
@@ -15,7 +14,6 @@ import {
   toAnalyzeErrorMessage,
   toRecognitionState,
   UPLOAD_ACCEPT,
-  validatePrescriptionFile,
   type RecognitionState,
 } from '@/utils/prescriptionUpload';
 
@@ -25,10 +23,8 @@ const MedicineRecognitionPage = () => {
   const state = location.state as RecognitionState | null;
 
   const reuploadRef = useRef<HTMLInputElement>(null);
-  const [uploadError, setUploadError] = useState<string | null>(null);
   // 인식 실패 문구 (null이면 실패 아님)
   const [analyzeFailure, setAnalyzeFailure] = useState<string | null>(null);
-  const startRequest = useLatestRequest();
 
   // 인식 결과가 없으면 업로드·인식 요청 (결과는 화면 기록에 저장)
   // 화면을 떠나거나 다른 파일로 바꾸면 이전 요청은 취소
@@ -87,21 +83,11 @@ const MedicineRecognitionPage = () => {
     });
   };
 
-  // 같은 방식으로 다시 올리면 현재 화면의 사진만 교체
-  const handleReupload = async (e: ChangeEvent<HTMLInputElement>) => {
+  // 같은 방식으로 다시 올리면 현재 화면의 사진만 교체 (이전 사진의 경고는 지움)
+  const handleReupload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-
-    // 인식이 어려운 사진이면 기존 사진을 유지하고 다시 선택하도록 안내
-    const isLatest = startRequest();
-    const errorMessage = await validatePrescriptionFile(file);
-    // 검사 중 화면을 떠났거나 다른 파일을 다시 골랐으면 이전 결과는 무시
-    // (주소 해제·화면 교체도 하지 않음)
-    if (!isLatest()) return;
-
-    setUploadError(errorMessage);
-    if (errorMessage) return;
 
     setAnalyzeFailure(null);
     // 이전 사진 주소는 바로 해제하지 않음 (교체 이동은 앞쪽 기록이 남아 앞으로가기로 다시 쓸 수 있음)
@@ -114,6 +100,7 @@ const MedicineRecognitionPage = () => {
   return (
     <div className="flex h-dvh flex-col">
       <StepHeader
+        compact
         title="따르릉 AI 자동 인식"
         subtitle="AI 처방전 자동 분석 단계"
         status={analysis ? '인식 완료' : isAnalyzing ? '인식 중' : undefined}
@@ -141,10 +128,7 @@ const MedicineRecognitionPage = () => {
           </div>
         )}
 
-        {uploadError && <UploadErrorMessage message={uploadError} />}
-        {!uploadError && analyzeError && (
-          <UploadErrorMessage message={analyzeError} />
-        )}
+        {analyzeError && <UploadErrorMessage message={analyzeError} />}
 
         <PrescriptionViewer
           fileName={state.fileName}

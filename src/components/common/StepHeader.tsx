@@ -6,6 +6,7 @@ type StepHeaderProps = {
   subtitle?: string; // 없으면 제목만 크게 표시 (예: '약 목록 편집')
   status?: string; // 오른쪽 상태 배지 (예: '인식 완료')
   onBack?: () => void;
+  compact?: boolean; // 위 여백을 줄임 (상태 표시줄 공간 없이)
 };
 
 // 뒤로가기 + 제목(+설명) + 상태 배지가 있는 상단 헤더
@@ -14,11 +15,14 @@ export default function StepHeader({
   subtitle,
   status,
   onBack,
+  compact,
 }: StepHeaderProps) {
   const navigate = useNavigate();
 
   return (
-    <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-[#E5E8EB] bg-white px-3 pt-10 pb-4">
+    <header
+      className={`sticky top-0 z-10 flex items-center gap-3 border-b border-[#E5E8EB] bg-white px-3 pb-4 ${compact ? 'pt-4' : 'pt-10'}`}
+    >
       <button
         type="button"
         aria-label="뒤로가기"
