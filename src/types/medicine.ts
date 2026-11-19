@@ -120,6 +120,7 @@ export type RecognitionResponse = {
     interval_days: number | null;
     intake_timing: MedicationItemResponse['intake_timing'];
     meal_time_slots: MedicationItemResponse['meal_time_slots'];
+    frequency: string | null; // 예: 하루 2회
     confidence: number | null;
     regions: RecognitionRegion[];
   }[];

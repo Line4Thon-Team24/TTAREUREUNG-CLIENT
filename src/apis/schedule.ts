@@ -1,10 +1,13 @@
 import { apiClient } from '@/apis/client';
+import { DEFAULT_DOSE_TIMES } from '@/constants/medicine';
 import type { BaseResponse } from '@/types/api';
 import type {
   DoseStatus,
+  DoseTimes,
   MealTime,
   ScheduleResponse,
   ScheduleSlot,
+  TimeSlot,
 } from '@/types/schedule';
 
 type Session = ScheduleResponse['sessions'][number];
@@ -73,6 +76,20 @@ export const fetchMonthlyAdherence = async (
     partial: data.data.partial_rate,
     missed: data.data.missed_rate,
   };
+};
+
+// 시니어별 회차 시각 (설정한 적이 없으면 서버 기본값)
+export const fetchDoseTimes = async (seniorId: number) => {
+  const { data } = await apiClient.get<
+    BaseResponse<{
+      seniorId: number;
+      doseTimes: { timeSlot: TimeSlot; slotName: string; doseTime: string }[];
+    }>
+  >(`/seniors/${seniorId}/dose-times`);
+  return data.data.doseTimes.reduce<DoseTimes>(
+    (times, { timeSlot, doseTime }) => ({ ...times, [timeSlot]: doseTime }),
+    { ...DEFAULT_DOSE_TIMES }
+  );
 };
 
 // 날짜별 복용 일정 (date: YYYY-MM-DD, 약이 없는 회차는 제외)

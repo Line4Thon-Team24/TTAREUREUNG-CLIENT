@@ -18,13 +18,12 @@ type DoseCardProps = {
 
 // 복약 카드
 export default function DoseCard({ medicine, onClick }: DoseCardProps) {
-  const { displayName, dosage, amount, shape, imageUrl, status } = medicine;
+  const { displayName, dosage, amount, shape, status } = medicine;
   const { label, Icon, textColor, amountClassName } =
     DOSE_STATUS_STYLES[status];
   const isMissed = status === 'missed';
-  // 약 사진이 없으면 피그마의 기본 사진 (미복용은 다른 사진)
-  const backgroundUrl =
-    imageUrl || (isMissed ? pillAssortedImage : pillBlisterImage);
+  // 배경은 약 사진과 상관없이 피그마 기본 사진 (미복용은 다른 사진)
+  const backgroundUrl = isMissed ? pillAssortedImage : pillBlisterImage;
   const ShapeIcon = shape === 'tablet' ? null : SHAPE_ICONS[shape];
 
   return (

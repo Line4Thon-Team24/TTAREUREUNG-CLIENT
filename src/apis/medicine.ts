@@ -11,7 +11,10 @@ import type {
   RecognitionResponse,
   RecognizedArea,
 } from '@/types/medicine';
-import { createEmptyMedicineForm } from '@/utils/medicineForm';
+import {
+  createEmptyMedicineForm,
+  getMealTimeSlots,
+} from '@/utils/medicineForm';
 
 // 복용 간격 일수 → 화면 값 (없으면 매일)
 const INTERVAL_FROM_DAYS: Record<number, DoseInterval> = {
@@ -46,21 +49,18 @@ const TIMING_TO_API: Record<
   bedtime: 'BEFORE_BED',
 };
 
-// 하루 복용 횟수 → 시간대 (취침 전이면 자기 전 하나)
-const toMealTimeSlots = (
-  form: MedicineForm
-): MedicationItemResponse['meal_time_slots'] => {
-  if (form.timing === 'bedtime') return ['BEFORE_SLEEP'];
-  if (form.timesPerDay >= 3) return ['MORNING', 'LUNCH', 'DINNER'];
-  if (form.timesPerDay === 2) return ['MORNING', 'DINNER'];
-  return ['MORNING'];
-};
-
 // 시간대 → 하루 복용 횟수 (취침 전은 1회, 못 읽었으면 1회, 선택지는 최대 3회)
+// 시간대가 비면 복용 빈도 문구(예: '하루 2회')의 숫자 사용 (AI 인식 결과)
 const toTimesPerDay = (
   slots: MedicationItemResponse['meal_time_slots'],
-  timing: MedicationItemResponse['intake_timing']
-) => (timing === 'BEFORE_BED' ? 1 : Math.min(Math.max(slots.length, 1), 3));
+  timing: MedicationItemResponse['intake_timing'],
+  frequency?: string | null
+) => {
+  if (timing === 'BEFORE_BED') return 1;
+  const count =
+    slots.length || Number(frequency?.match(/(\d+)\s*회/)?.[1] ?? 0);
+  return Math.min(Math.max(count, 1), 3);
+};
 
 // 화면 입력값 → 약 등록·수정 요청 (빈 값은 보내지 않음)
 const toMedicationRequest = (form: MedicineForm) => ({
@@ -75,7 +75,7 @@ const toMedicationRequest = (form: MedicineForm) => ({
   cycle_type: 'DAILY',
   interval_days: INTERVAL_TO_DAYS[form.interval],
   intake_timing: form.timing ? TIMING_TO_API[form.timing] : undefined,
-  meal_time_slots: toMealTimeSlots(form),
+  meal_time_slots: getMealTimeSlots(form),
   dose_amount: form.doseAmount || undefined,
 });
 
@@ -208,7 +208,11 @@ const toAnalysis = (
           displayName: item.custom_drug_name ?? '',
           storageLocation: item.storage_location ?? '',
           interval: INTERVAL_FROM_DAYS[item.interval_days ?? 1] ?? 'daily',
-          timesPerDay: toTimesPerDay(item.meal_time_slots, item.intake_timing),
+          timesPerDay: toTimesPerDay(
+            item.meal_time_slots,
+            item.intake_timing,
+            item.frequency
+          ),
           timing: item.intake_timing
             ? TIMING_FROM_API[item.intake_timing]
             : null,
@@ -297,7 +301,7 @@ export const updateMedicine = async (
     category: form.category,
     effect: form.effect,
     intake_reason: form.reason,
-    meal_time_slots: isSlotChanged ? toMealTimeSlots(form) : undefined,
+    meal_time_slots: isSlotChanged ? getMealTimeSlots(form) : undefined,
     interval_days: isIntervalChanged
       ? INTERVAL_TO_DAYS[form.interval]
       : undefined,

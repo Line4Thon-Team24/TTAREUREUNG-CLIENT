@@ -9,6 +9,7 @@ import {
 import Button from '@/components/common/Button';
 import StepHeader from '@/components/common/StepHeader';
 import MedicineInfoCard from '@/components/medicines/MedicineInfoCard';
+import useDoseTimes from '@/hooks/useDoseTimes';
 import useLatestRequest from '@/hooks/useLatestRequest';
 import type { MedicineForm, MedicineFormState } from '@/types/medicine';
 import { formatDateTime } from '@/utils/date';
@@ -44,6 +45,7 @@ const MedicineInfoFormPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitError, setIsSubmitError] = useState(false);
   const startRequest = useLatestRequest();
+  const doseTimes = useDoseTimes(state?.seniorId ?? null);
 
   // 이전 단계를 거치지 않았거나, 선택한 약이 없거나, 이미 등록을 마친 화면이면 복용 일정으로 이동
   if (!state || drafts.length === 0 || completedKeys.has(location.key)) {
@@ -156,6 +158,7 @@ const MedicineInfoFormPage = () => {
                 onChange={(next) => updateForm(id, next)}
                 registeredAt={registeredAt}
                 isManual={isManual}
+                doseTimes={doseTimes}
               />
             </Fragment>
           ))}
