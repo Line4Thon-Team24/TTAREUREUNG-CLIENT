@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import RootLayout from '@/layouts/RootLayout';
 import GuardianLayout from '@/layouts/GuardianLayout';
+import GuardianAlertLayout from '@/layouts/GuardianAlertLayout';
 import LoginPage from '@/pages/auth/LoginPage';
 import SignupLayout from '@/layouts/SignupLayout';
 import SignupEmailPage from '@/pages/auth/SignupEmailPage';
@@ -61,35 +62,61 @@ export const router = createBrowserRouter([
         ],
       },
       {
-        // 보호자 탭 화면 (하단 네비게이션 노출)
-        element: <GuardianLayout />,
+        // 보호자 화면 (상단 복용 알림 배너 표시)
+        element: <GuardianAlertLayout />,
         children: [
-          { path: '/schedule', element: <SchedulePage /> },
-          { path: '/schedule/month', element: <ScheduleMonthPage /> },
-          { path: '/schedule/week', element: <ScheduleWeekPage /> },
-          { path: '/medicines', element: <MedicineListPage /> },
-          { path: '/seniors', element: <SeniorListPage /> },
-          { path: '/guardians', element: <GuardianListPage /> },
-          { path: '/profile', element: <ProfilePage /> },
+          {
+            // 보호자 탭 화면 (하단 네비게이션 노출)
+            element: <GuardianLayout />,
+            children: [
+              { path: '/schedule', element: <SchedulePage /> },
+              { path: '/schedule/month', element: <ScheduleMonthPage /> },
+              { path: '/schedule/week', element: <ScheduleWeekPage /> },
+              { path: '/medicines', element: <MedicineListPage /> },
+              { path: '/seniors', element: <SeniorListPage /> },
+              { path: '/guardians', element: <GuardianListPage /> },
+              { path: '/profile', element: <ProfilePage /> },
+            ],
+          },
+          // 시니어 등록 흐름 (하단 네비게이션 미노출)
+          { path: '/seniors/register', element: <SeniorRegisterPage /> },
+          {
+            path: '/seniors/register/complete',
+            element: <SeniorRegisterCompletePage />,
+          },
+          // 시니어 추가 / 정보 수정 (시니어 목록)
+          { path: '/seniors/add', element: <SeniorAddPage /> },
+          { path: '/seniors/:seniorId/edit', element: <SeniorEditPage /> },
+          // 시니어 목록 편집 (선택 삭제)
+          { path: '/seniors/manage', element: <SeniorManagePage /> },
+          // 보호자 목록 편집 / 보호자 초대 (보호자 목록)
+          { path: '/guardians/manage', element: <GuardianManagePage /> },
+          { path: '/guardians/invite', element: <GuardianInvitePage /> },
+          {
+            path: '/guardians/invite/complete',
+            element: <GuardianInviteCompletePage />,
+          },
+          // 약 등록 흐름 (하단 네비게이션 미노출)
+          {
+            path: '/medicines/register',
+            element: <MedicineRegisterMethodPage />,
+          },
+          {
+            path: '/medicines/register/recognition',
+            element: <MedicineRecognitionPage />,
+          },
+          {
+            path: '/medicines/register/form',
+            element: <MedicineInfoFormPage />,
+          },
+          // 약 목록 편집 (선택 삭제)
+          { path: '/medicines/manage', element: <MedicineManagePage /> },
+          // 약 세부 정보 수정
+          {
+            path: '/medicines/:medicineId/edit',
+            element: <MedicineEditPage />,
+          },
         ],
-      },
-      // 시니어 등록 흐름 (하단 네비게이션 미노출)
-      { path: '/seniors/register', element: <SeniorRegisterPage /> },
-      {
-        path: '/seniors/register/complete',
-        element: <SeniorRegisterCompletePage />,
-      },
-      // 시니어 추가 / 정보 수정 (시니어 목록)
-      { path: '/seniors/add', element: <SeniorAddPage /> },
-      { path: '/seniors/:seniorId/edit', element: <SeniorEditPage /> },
-      // 시니어 목록 편집 (선택 삭제)
-      { path: '/seniors/manage', element: <SeniorManagePage /> },
-      // 보호자 목록 편집 / 보호자 초대 (보호자 목록)
-      { path: '/guardians/manage', element: <GuardianManagePage /> },
-      { path: '/guardians/invite', element: <GuardianInvitePage /> },
-      {
-        path: '/guardians/invite/complete',
-        element: <GuardianInviteCompletePage />,
       },
       // 시니어 약 섭취 일정 (오늘 / 내일)
       { path: '/senior', element: <SeniorSchedulePage day="today" /> },
@@ -104,17 +131,6 @@ export const router = createBrowserRouter([
       { path: '/senior/find', element: <SeniorFindMedicinePage /> },
       { path: '/senior/dose', element: <SeniorDosePage /> },
       { path: '/senior/result', element: <SeniorDoseResultPage /> },
-      // 약 등록 흐름 (하단 네비게이션 미노출)
-      { path: '/medicines/register', element: <MedicineRegisterMethodPage /> },
-      {
-        path: '/medicines/register/recognition',
-        element: <MedicineRecognitionPage />,
-      },
-      { path: '/medicines/register/form', element: <MedicineInfoFormPage /> },
-      // 약 목록 편집 (선택 삭제)
-      { path: '/medicines/manage', element: <MedicineManagePage /> },
-      // 약 세부 정보 수정
-      { path: '/medicines/:medicineId/edit', element: <MedicineEditPage /> },
     ],
   },
 ]);
