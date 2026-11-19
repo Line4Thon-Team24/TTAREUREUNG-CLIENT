@@ -26,7 +26,7 @@ const Red = ({ children }: { children: ReactNode }) => (
 );
 
 // 알림 종류별 문구 (일부 복용·도움 요청은 Figma에 없어 같은 형식으로 작성)
-const renderMessage = (alert: GuardianAlert) => {
+const renderMessage = (alert: GuardianAlert, minutesLeft: number) => {
   const name = `${alert.seniorName}님께서`;
   // 'YYYY-MM-DDTHH:mm:ss' → '오후 3시'
   const time = formatKoreanTime(alert.scheduledAt.slice(11, 16));
@@ -59,7 +59,7 @@ const renderMessage = (alert: GuardianAlert) => {
     case 'upcoming':
       return (
         <>
-          {name} {alert.minutesLeft}분 후 {time} 약 복용 예정입니다.
+          {name} {minutesLeft}분 후 {time} 약 복용 예정입니다.
         </>
       );
   }
@@ -87,12 +87,21 @@ const AlertCard = ({
   alert: GuardianAlert;
   onClose: () => void;
 }) => {
-  const [elapsed] = useState(() => formatElapsed(alert.occurredAt, Date.now()));
+  // 배너를 띄운 시각 기준으로 계산 (대기하는 동안 지난 시간 반영)
+  const [now] = useState(Date.now);
+  const elapsed = formatElapsed(alert.occurredAt, now);
+  const minutesLeft = Math.ceil(
+    (new Date(alert.scheduledAt).getTime() - now) / 60_000
+  );
+  // 복용 시각이 이미 지난 예정 알림은 띄우지 않고 넘김
+  const isExpired = alert.type === 'upcoming' && minutesLeft <= 0;
 
   useEffect(() => {
-    const timer = window.setTimeout(onClose, AUTO_DISMISS_MS);
+    const timer = window.setTimeout(onClose, isExpired ? 0 : AUTO_DISMISS_MS);
     return () => window.clearTimeout(timer);
-  }, [onClose]);
+  }, [onClose, isExpired]);
+
+  if (isExpired) return null;
 
   return (
     <div
@@ -116,7 +125,7 @@ const AlertCard = ({
             {TITLES[alert.type]}
           </span>
           <span className="font-medium text-[#333D4B]">
-            {renderMessage(alert)}
+            {renderMessage(alert, minutesLeft)}
           </span>
         </span>
       </button>

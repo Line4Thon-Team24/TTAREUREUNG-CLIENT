@@ -64,7 +64,16 @@ export default function useGuardianAlerts() {
     return () => window.removeEventListener('guardian-alert-test', handleTest);
   }, []);
 
-  const current = queue[0] ?? null;
+  // 화면이 보일 때만 배너를 띄움 (숨은 동안 닫히거나 읽음 처리되지 않도록)
+  const [isVisible, setIsVisible] = useState(() => !document.hidden);
+  useEffect(() => {
+    const handleVisibility = () => setIsVisible(!document.hidden);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () =>
+      document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
+
+  const current = isVisible ? (queue[0] ?? null) : null;
 
   // 화면에 띄운 알림은 읽음 처리 (실패해도 다시 띄우지 않음)
   useEffect(() => {
