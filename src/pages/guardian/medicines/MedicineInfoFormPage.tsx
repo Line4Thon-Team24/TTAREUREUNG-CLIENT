@@ -122,6 +122,7 @@ const MedicineInfoFormPage = () => {
   return (
     <div className="flex h-dvh flex-col">
       <StepHeader
+        compact
         title="새로운 약 정보"
         subtitle={
           isManual
