@@ -1,8 +1,7 @@
-import type { AlertLeadMinutes, Membership } from '@/types/profile';
+import type { AlertLeadMinutes } from '@/types/profile';
 
-export const MEMBERSHIP_LABELS: Record<Membership, string> = {
-  FAMILY: 'FAMILY',
-};
+// 멤버십 표시 (현재는 FAMILY 단일값)
+export const MEMBERSHIP_LABEL = 'FAMILY';
 
 export const ALERT_LEAD_OPTIONS: { label: string; value: AlertLeadMinutes }[] =
   [

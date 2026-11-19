@@ -1,7 +1,7 @@
 import { UserRound } from 'lucide-react';
 import arrowRightIcon from '@/assets/icons/arrow-right.svg';
 import pencilIcon from '@/assets/icons/pencil.svg';
-import { MEMBERSHIP_LABELS } from '@/constants/profile';
+import { MEMBERSHIP_LABEL } from '@/constants/profile';
 import type { Profile } from '@/types/profile';
 
 type ProfileHeaderProps = {
@@ -54,7 +54,7 @@ export default function ProfileHeader({
               {profile.name}
             </span>
             <span className="rounded-full bg-bg-secondary px-2 py-0.5 text-[12px] font-semibold text-border-focus">
-              {MEMBERSHIP_LABELS[profile.membership]}
+              {MEMBERSHIP_LABEL}
             </span>
           </span>
           <span className="text-[16px] text-text-body">{careLabel}</span>

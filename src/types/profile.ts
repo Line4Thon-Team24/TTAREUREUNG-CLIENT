@@ -1,5 +1,3 @@
-export type Membership = 'FAMILY';
-
 // 복용 일정 임박 시 알림(N분 전)
 export type AlertLeadMinutes = 5 | 10 | 30 | 60;
 
@@ -8,12 +6,10 @@ export type AlertSettings = {
   notifyOnComplete: boolean; // 복용 완료 시 알림
 };
 
+// 프로필 상단 표시 정보
 export type Profile = {
   name: string;
-  email: string;
-  membership: Membership;
   profileImageUrl: string | null;
-  alert: AlertSettings;
 };
 
 // 공동 보호자 관리 목록
