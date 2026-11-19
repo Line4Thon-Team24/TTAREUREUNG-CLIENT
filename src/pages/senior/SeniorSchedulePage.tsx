@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { CalendarDays } from 'lucide-react';
+import ErrorState from '@/components/common/ErrorState';
+import LoadingState from '@/components/common/LoadingState';
 import DailySummaryCard from '@/components/senior/DailySummaryCard';
 import SeniorTimelineItem from '@/components/senior/SeniorTimelineItem';
 import useDailySchedule from '@/hooks/useDailySchedule';
@@ -27,28 +29,49 @@ const SeniorSchedulePage = ({ day }: SeniorSchedulePageProps) => {
   const otherDate = isToday ? addDays(today, 1) : today;
 
   // TODO: 시니어 로그인·프로필 선택 연동 후 선택한 시니어로 교체 (지금은 첫 번째 시니어)
-  const { seniors, isError: isSeniorsError } = useSeniors();
+  const {
+    seniors,
+    isError: isSeniorsError,
+    retry: retrySeniors,
+  } = useSeniors();
   const seniorId = seniors?.[0]?.id ?? null;
-  const { slots, isError: isScheduleError } = useDailySchedule(seniorId, date);
-  const summary = getScheduleSummary(slots ?? []);
-  const isError = isSeniorsError || isScheduleError;
+  const {
+    slots,
+    isError: isScheduleError,
+    retry: retrySchedule,
+  } = useDailySchedule(seniorId, date);
 
   return (
     <div className="flex min-h-dvh flex-col gap-8 bg-[#FAFAFA] px-5 pt-10 pb-10">
       <h1 className="text-[24px] font-bold text-black">약 복용 일정</h1>
 
-      <DailySummaryCard date={date} isToday={isToday} {...summary} />
+      {/* 일정을 불러온 뒤에만 요약 표시 (불러오는 중·실패 시 0회로 보이지 않도록) */}
+      {slots && (
+        <DailySummaryCard
+          date={date}
+          isToday={isToday}
+          {...getScheduleSummary(slots)}
+        />
+      )}
 
-      {isError ? (
-        <p className="py-10 text-center text-[16px] text-[#6B7684]">
-          일정을 불러오지 못했어요.
-        </p>
+      {isSeniorsError ? (
+        <ErrorState
+          message="시니어 정보를 불러오지 못했어요."
+          onRetry={retrySeniors}
+          className="py-10"
+        />
+      ) : isScheduleError ? (
+        <ErrorState
+          message="일정을 불러오지 못했어요."
+          onRetry={retrySchedule}
+          className="py-10"
+        />
       ) : seniors?.length === 0 ? (
         <p className="py-10 text-center text-[16px] text-[#6B7684]">
           등록된 시니어가 없어요.
         </p>
       ) : slots === null ? (
-        <div className="py-10" />
+        <LoadingState className="py-10" />
       ) : slots.length === 0 ? (
         <p className="py-10 text-center text-[16px] text-[#6B7684]">
           {isToday ? '오늘' : '내일'}은 복용할 약이 없어요.
