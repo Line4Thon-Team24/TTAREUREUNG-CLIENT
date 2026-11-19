@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { fetchMyGuardianProfileIds } from '@/apis/guardian';
 import { isPushSupported, registerPush } from '@/utils/push';
 
-// 앱을 열 때 한 번만 등록 (탭 화면을 오갈 때마다 요청하지 않도록)
-let hasRegistered = false;
+// 이 기기를 등록한 보호자 프로필 (같은 프로필이면 다시 등록하지 않음)
+let registeredProfileId: number | null = null;
 // 안내 띠를 닫았는지 (앱을 다시 열 때까지 유지)
 let hasDismissed = false;
 
@@ -16,16 +16,18 @@ export default function usePushPermission() {
 
   // 권한이 있으면 기기 등록을 맞춰 둠 (구독 만료·서버 키 설정 대비, 같은 기기는 갱신)
   useEffect(() => {
-    if (permission !== 'granted' || hasRegistered) return;
-    hasRegistered = true;
+    if (permission !== 'granted') return;
+    // 다른 계정으로 다시 로그인하면 프로필이 달라 새로 등록 (기기가 그 계정으로 옮겨짐)
     // TODO: 프로필 선택 연동 후 선택된 보호자 프로필로 교체
     fetchMyGuardianProfileIds()
-      .then(([profileId]) => {
-        if (profileId !== undefined) return registerPush(profileId);
+      .then(async ([profileId]) => {
+        if (profileId === undefined || profileId === registeredProfileId) {
+          return;
+        }
+        if (await registerPush(profileId)) registeredProfileId = profileId;
       })
       .catch(() => {
         // 실패하면 다음에 화면을 열 때 다시 등록
-        hasRegistered = false;
       });
   }, [permission]);
 

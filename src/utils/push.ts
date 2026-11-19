@@ -18,11 +18,11 @@ const toKeyBytes = (base64Url: string) => {
   return Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
 };
 
-// 알림 권한이 있으면 이 기기를 푸시 수신 기기로 등록 (서버에 키가 없으면 건너뜀)
+// 알림 권한이 있으면 이 기기를 푸시 수신 기기로 등록 (등록했으면 true, 서버에 키가 없으면 false)
 export const registerPush = async (profileId: number) => {
-  if (!isPushSupported() || Notification.permission !== 'granted') return;
+  if (!isPushSupported() || Notification.permission !== 'granted') return false;
   const { enabled, publicKey } = await fetchVapidKey();
-  if (!enabled || !publicKey) return;
+  if (!enabled || !publicKey) return false;
 
   const registration = await navigator.serviceWorker.ready;
   const subscription =
@@ -32,6 +32,7 @@ export const registerPush = async (profileId: number) => {
       applicationServerKey: toKeyBytes(publicKey),
     }));
   await registerPushDevice(profileId, subscription.toJSON());
+  return true;
 };
 
 // 이 기기의 푸시 수신 해제 (로그아웃·알림 끄기 화면에서 호출)
