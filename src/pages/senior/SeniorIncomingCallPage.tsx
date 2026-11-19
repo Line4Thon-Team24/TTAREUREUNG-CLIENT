@@ -1,23 +1,79 @@
+import { useEffect } from 'react';
 import {
   MedicineOrderCard,
   StorageLocationCard,
 } from '@/components/senior/IncomingCallInfo';
 import { useNavigate } from 'react-router-dom';
+import ErrorState from '@/components/common/ErrorState';
+import LoadingState from '@/components/common/LoadingState';
+import useCurrentSession from '@/hooks/useCurrentSession';
+import useSeniors from '@/hooks/useSeniors';
 import callIcon from '@/assets/icons/call.svg';
-import { mockIncomingCall } from '@/mocks/incomingCall';
-import { formatCallTime, formatMedicineOrder } from '@/utils/call';
+import {
+  formatCallTime,
+  formatMedicineOrder,
+  toStorageGuide,
+} from '@/utils/call';
+
+const PAGE_BACKGROUND =
+  'bg-linear-to-b from-[#0F2419] from-0% to-[#2A563F] to-100%';
 
 // 시니어 복약 알림 수신 화면
 const SeniorIncomingCallPage = () => {
   const navigate = useNavigate();
-  const call = mockIncomingCall;
+
+  // TODO: 시니어 로그인·프로필 선택 연동 후 선택한 시니어로 교체
+  const {
+    seniors,
+    isError: isSeniorsError,
+    retry: retrySeniors,
+  } = useSeniors();
+  const seniorId = seniors?.[0]?.id ?? null;
+  const {
+    session,
+    isError: isSessionError,
+    retry: retrySession,
+  } = useCurrentSession(seniorId);
+
+  const call = session?.current ?? null;
+  const medicine = call?.medications[0];
+  // 울려야 할 회차(또는 찾을 약)가 없으면 일정 화면으로
+  const hasNoCall =
+    (seniors !== null && seniorId === null) || (session !== null && !medicine);
+
+  useEffect(() => {
+    if (hasNoCall) navigate('/senior', { replace: true });
+  }, [hasNoCall, navigate]);
 
   const handleAccept = () => {
-    navigate(`/senior/recognition?order=${call.medicineOrder}`);
+    if (!medicine) return;
+    navigate(`/senior/recognition?order=${medicine.order}`);
   };
 
+  if (!call || !medicine) {
+    return (
+      <div className={`flex min-h-dvh flex-col ${PAGE_BACKGROUND}`}>
+        {isSeniorsError ? (
+          <ErrorState
+            message="시니어 정보를 불러오지 못했어요."
+            onRetry={retrySeniors}
+          />
+        ) : isSessionError ? (
+          <ErrorState
+            message="복약 알림을 불러오지 못했어요."
+            onRetry={retrySession}
+          />
+        ) : (
+          <LoadingState />
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-dvh flex-col bg-linear-to-b from-[#0F2419] from-0% to-[#2A563F] to-100% px-5 pt-10 pb-10">
+    <div
+      className={`flex min-h-dvh flex-col ${PAGE_BACKGROUND} px-5 pt-10 pb-10`}
+    >
       <header className="flex flex-col items-center gap-2 text-center leading-none">
         <h1 className="text-[28px] font-bold text-white">
           {formatCallTime(new Date(call.scheduledAt))}
@@ -29,15 +85,17 @@ const SeniorIncomingCallPage = () => {
 
       <div className="flex flex-1 flex-col justify-center gap-6 py-8">
         <MedicineOrderCard
-          title={formatMedicineOrder(call.medicineOrder)}
-          remainingCount={call.remainingCount}
+          title={formatMedicineOrder(medicine.order)}
+          remainingCount={call.medications.length}
         />
-        <img
-          src={call.prescriptionImageUrl}
-          alt="처방전"
-          className="h-68 w-full rounded-2xl object-cover"
-        />
-        <StorageLocationCard guide={call.storageGuide} />
+        {medicine.imageUrl && (
+          <img
+            src={medicine.imageUrl}
+            alt={medicine.name}
+            className="h-68 w-full rounded-2xl object-cover"
+          />
+        )}
+        <StorageLocationCard guide={toStorageGuide(medicine.storageLocation)} />
       </div>
 
       <div className="mt-auto flex flex-col items-center gap-2.5">
