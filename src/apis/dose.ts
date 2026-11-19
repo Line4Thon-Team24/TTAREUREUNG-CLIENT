@@ -3,6 +3,7 @@ import type { BaseResponse } from '@/types/api';
 import { getAccessToken } from '@/utils/accessToken';
 import type {
   CurrentSession,
+  IntakeResponse,
   RecognitionResultResponse,
   SessionCall,
 } from '@/types/dose';
@@ -52,6 +53,18 @@ export const recognizeMedication = async (
   >(
     `/dose-sessions/${sessionId}/medications/${medicationId}/recognitions`,
     body
+  );
+  return data.data;
+};
+
+// 복용 처리 ("다 먹었어" 시 호출, 직전 판독이 MATCH면 VISION·아니면 MANUAL로 기록)
+// 같은 약을 다시 호출해도 처음 기록 유지, nextMedication이 null이면 해당 회차에 복용 완료
+export const takeMedication = async (
+  sessionId: number,
+  medicationId: number
+) => {
+  const { data } = await apiClient.post<BaseResponse<IntakeResponse>>(
+    `/dose-sessions/${sessionId}/medications/${medicationId}/intake`
   );
   return data.data;
 };

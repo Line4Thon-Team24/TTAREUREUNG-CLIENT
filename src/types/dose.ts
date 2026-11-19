@@ -56,3 +56,16 @@ export type RecognitionResultResponse = {
   voiceText: string; // TTS로 읽을 문장
   attemptsLeft: number; // 이 회차·약에 남은 판독 횟수
 };
+
+// 복용 처리 API 응답
+export type IntakeResponse = {
+  sessionId: number;
+  medicationId: number;
+  status: 'PENDING' | 'TAKEN' | 'MISSED';
+  takenAt: string;
+  verification: 'VISION' | 'MANUAL'; // VISION: 판독 MATCH 후 복용, MANUAL: 직접 선택
+  remainingCount: number; // 아직 안 먹은 약 수
+  totalCount: number;
+  nextMedication: MedicationGuide | null; // 다음에 찾을 약 (없으면 null)
+  voiceText: string; // TTS로 읽을 문장
+};
