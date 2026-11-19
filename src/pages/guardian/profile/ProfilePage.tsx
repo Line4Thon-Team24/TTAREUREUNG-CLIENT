@@ -99,6 +99,43 @@ const ProfilePage = () => {
         <AlertSettings value={alert} onChange={setAlert} />
       </ProfileSection>
 
+      {/* 개발용: 알림 배너 테스트 (5종을 차례로 띄움) */}
+      {import.meta.env.DEV && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              const now = new Date();
+              const pad = (n: number) => String(n).padStart(2, '0');
+              const local = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:00`;
+              const types = [
+                'completed',
+                'partial',
+                'missed',
+                'helpRequest',
+                'upcoming',
+              ] as const;
+              window.dispatchEvent(
+                new CustomEvent('guardian-alert-test', {
+                  detail: types.map((type) => ({
+                    key: `test-${type}-${now.getTime()}`,
+                    alertId: null,
+                    type,
+                    seniorName: '김순자',
+                    scheduledAt: `${local.slice(0, 10)}T15:00:00`,
+                    occurredAt: local,
+                    minutesLeft: type === 'upcoming' ? 10 : null,
+                  })),
+                })
+              );
+            }}
+            className="rounded-full border border-[#E5E8EB] px-4 py-2 text-[14px] text-text-sub"
+          >
+            알림 테스트
+          </button>
+        </div>
+      )}
+
       <div className="flex justify-center pb-4">
         <button
           type="button"

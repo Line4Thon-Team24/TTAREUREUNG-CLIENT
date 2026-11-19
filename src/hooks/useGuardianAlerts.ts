@@ -53,6 +53,17 @@ export default function useGuardianAlerts() {
     };
   }, []);
 
+  // 개발용: 테스트 버튼에서 보낸 가짜 알림 받기
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const handleTest = (event: Event) => {
+      const { detail } = event as CustomEvent<GuardianAlert[]>;
+      setQueue((prev) => [...prev, ...detail]);
+    };
+    window.addEventListener('guardian-alert-test', handleTest);
+    return () => window.removeEventListener('guardian-alert-test', handleTest);
+  }, []);
+
   const current = queue[0] ?? null;
 
   // 화면에 띄운 알림은 읽음 처리 (실패해도 다시 띄우지 않음)
