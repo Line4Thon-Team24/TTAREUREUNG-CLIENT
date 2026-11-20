@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchMyGuardianProfileIds } from '@/apis/guardian';
+import { fetchSelectedGuardianProfileId } from '@/apis/guardian';
 import { isPushSupported, registerPush } from '@/utils/push';
 
 // 이 기기를 등록한 보호자 프로필 (같은 프로필이면 다시 등록하지 않음)
@@ -17,10 +17,9 @@ export default function usePushPermission() {
   // 권한이 있으면 기기 등록을 맞춰 둠 (구독 만료·서버 키 설정 대비, 같은 기기는 갱신)
   useEffect(() => {
     if (permission !== 'granted') return;
-    // 다른 계정으로 다시 로그인하면 프로필이 달라 새로 등록 (기기가 그 계정으로 옮겨짐)
-    // TODO: 프로필 선택 연동 후 선택된 보호자 프로필로 교체
-    fetchMyGuardianProfileIds()
-      .then(async ([profileId]) => {
+    // 고른 보호자로 등록 (다른 계정·프로필로 바꾸면 기기가 그 프로필로 옮겨짐)
+    fetchSelectedGuardianProfileId()
+      .then(async (profileId) => {
         if (profileId === undefined || profileId === registeredProfileId) {
           return;
         }
