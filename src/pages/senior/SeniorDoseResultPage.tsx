@@ -1,11 +1,8 @@
-import { useSearchParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import MaskIcon from '@/components/common/MaskIcon';
-import { mockDoseResults } from '@/mocks/recognition';
-import {
-  DOSE_RESULT_VIEW,
-  formatMonthDayTime,
-  parseDoseResultStatus,
-} from '@/utils/recognition';
+import type { DoseResult } from '@/types/recognition';
+import { DOSE_RESULT_VIEW, formatMonthDayTime } from '@/utils/recognition';
 import phoneIcon from '@/assets/icons/phone.svg';
 import infoIcon from '@/assets/icons/info.svg';
 import successIcon from '@/assets/icons/recognition-success.svg';
@@ -67,11 +64,19 @@ const ProgressRing = ({
 };
 
 // 시니어 복약 결과 화면 (복용 완료 / 일부 복용 / 미복용)
-// ?status=complete|partial|missed
+// 회차 종료 후 넘어온 복용 결과(location state)를 보여줌
 const SeniorDoseResultPage = () => {
-  const [searchParams] = useSearchParams();
-  const status = parseDoseResultStatus(searchParams.get('status'));
-  const result = mockDoseResults[status];
+  const navigate = useNavigate();
+  const result = useLocation().state as DoseResult | null;
+
+  // 복용 결과 없이 들어오면 일정 화면으로
+  useEffect(() => {
+    if (!result) navigate('/senior', { replace: true });
+  }, [result, navigate]);
+
+  if (!result) return null;
+
+  const { status } = result;
   const view = DOSE_RESULT_VIEW[status];
 
   return (
@@ -101,20 +106,24 @@ const SeniorDoseResultPage = () => {
         className="flex w-full flex-col items-center gap-2.5 rounded-3xl border-2 p-5.5 shadow-[0_4px_20px_-2px_rgba(19,138,75,0.08),0_2px_6px_-1px_rgba(0,0,0,0.04)]"
         style={{ backgroundColor: view.background, borderColor: view.border }}
       >
-        <p
-          className="flex items-center gap-2.5 text-[18px] font-bold"
-          style={{ color: view.color }}
-        >
-          <MaskIcon src={phoneIcon} color={view.color} width={15} />
-          다음 알림 전화
-        </p>
-        <p className="text-[44px] leading-none font-black text-text-title">
-          {view.nextCallTime(result)}
-        </p>
-        <p className="text-[16px] font-bold text-text-body">
-          {result.nextCallLabel}
-        </p>
-        <hr className="w-full border-black/10" />
+        {result.nextCallAt && (
+          <>
+            <p
+              className="flex items-center gap-2.5 text-[18px] font-bold"
+              style={{ color: view.color }}
+            >
+              <MaskIcon src={phoneIcon} color={view.color} width={15} />
+              다음 알림 전화
+            </p>
+            <p className="text-[44px] leading-none font-black text-text-title">
+              {view.nextCallTime(result)}
+            </p>
+            <p className="text-[16px] font-bold text-text-body">
+              {result.nextCallLabel}
+            </p>
+            <hr className="w-full border-black/10" />
+          </>
+        )}
         <p className="flex items-center gap-1.5 text-[14px] font-medium text-text-sub">
           <MaskIcon src={infoIcon} color={view.color} width={16} />
           {view.message(result)}

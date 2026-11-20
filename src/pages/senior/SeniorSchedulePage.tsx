@@ -5,6 +5,7 @@ import LoadingState from '@/components/common/LoadingState';
 import DailySummaryCard from '@/components/senior/DailySummaryCard';
 import SeniorTimelineItem from '@/components/senior/SeniorTimelineItem';
 import useDailySchedule from '@/hooks/useDailySchedule';
+import useIncomingCallWatcher from '@/hooks/useIncomingCallWatcher';
 import useSeniors from '@/hooks/useSeniors';
 import useToday from '@/hooks/useToday';
 import { getScheduleSummary } from '@/utils/schedule';
@@ -35,6 +36,8 @@ const SeniorSchedulePage = ({ day }: SeniorSchedulePageProps) => {
     retry: retrySeniors,
   } = useSeniors();
   const seniorId = seniors?.[0]?.id ?? null;
+  // 복약 전화가 올 시간이면 수신 화면으로 이동
+  useIncomingCallWatcher(seniorId);
   const {
     slots,
     isError: isScheduleError,
