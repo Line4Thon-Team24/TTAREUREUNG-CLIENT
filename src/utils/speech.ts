@@ -100,7 +100,10 @@ export const requestMicPermission = async (): Promise<boolean> => {
 };
 
 // lib.dom에 없는 최소 타입
-type RecognitionResultList = ArrayLike<ArrayLike<{ transcript: string }>>;
+type RecognitionResult = ArrayLike<{ transcript: string }> & {
+  isFinal: boolean;
+};
+type RecognitionResultList = ArrayLike<RecognitionResult>;
 type SpeechRecognitionLike = {
   lang: string;
   continuous: boolean;
@@ -137,7 +140,8 @@ export const startListening = (
   const rec = new Ctor();
   rec.lang = 'ko-KR';
   rec.continuous = true; // 한 마디 듣고 끝나지 않게
-  rec.interimResults = true; // 말하는 중간에도 반응
+  // 말하는 중간 결과는 바뀔 수 있어 명령으로 쓰지 않음 (최종 결과만 사용)
+  rec.interimResults = false;
 
   let active = true;
   const stop = () => {
@@ -154,9 +158,12 @@ export const startListening = (
 
   rec.onresult = (e) => {
     if (!active) return;
+    // 최종 확정된 결과만 명령으로 판단
     const text = Array.from(e.results)
+      .filter((result) => result.isFinal)
       .map((result) => result[0].transcript)
       .join(' ');
+    if (!text) return;
     const action = matchCommand(text, allowed);
     if (action) {
       stop();
