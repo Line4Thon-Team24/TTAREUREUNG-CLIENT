@@ -1,0 +1,196 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Search, SquarePen } from 'lucide-react';
+import { fetchGuardians, setPrimaryGuardian } from '@/apis/guardian';
+import ErrorState from '@/components/common/ErrorState';
+import FilterChips from '@/components/common/FilterChips';
+import LoadingState from '@/components/common/LoadingState';
+import SearchField from '@/components/common/SearchField';
+import GuardianCard from '@/components/guardians/GuardianCard';
+import type { Guardian, GuardianGroup } from '@/types/guardian';
+import { groupByGuardian } from '@/utils/guardian';
+import { filterByName } from '@/utils/nameSearch';
+
+const ICON_BUTTON_CLASS =
+  'flex size-9 items-center justify-center rounded-full text-[#4B5563] transition-colors active:bg-[#F2F4F6] disabled:text-[#D1D6DB]';
+
+type Sort = 'representative' | 'age';
+
+const SORTS: { label: string; value: Sort }[] = [
+  { label: '대표 등록순', value: 'representative' },
+  { label: '나이순', value: 'age' },
+];
+
+const isAnyRepresentative = ({ assignments }: GuardianGroup) =>
+  assignments.some((item) => item.isRepresentative);
+
+// 대표 등록순: 대표 먼저, 나머지는 등록순 / 나이순: 나이 많은 순 (생년월일 없으면 뒤로)
+// 본인('나')은 정렬과 상관없이 맨 위
+const sortGuardians = (guardians: GuardianGroup[], sort: Sort) =>
+  [...guardians].sort((a, b) =>
+    a.isMe !== b.isMe
+      ? Number(b.isMe) - Number(a.isMe)
+      : sort === 'representative'
+        ? Number(isAnyRepresentative(b)) - Number(isAnyRepresentative(a))
+        : (a.birthDate || '9999').localeCompare(b.birthDate || '9999')
+  );
+
+const GuardianListPage = () => {
+  const navigate = useNavigate();
+  // null이면 불러오는 중
+  const [guardians, setGuardians] = useState<Guardian[] | null>(null);
+  const [isError, setIsError] = useState(false);
+  const [sort, setSort] = useState<Sort>('representative');
+  const [isSearching, setIsSearching] = useState(false);
+  const [keyword, setKeyword] = useState('');
+  // 다시 시도하면 값이 바뀌어 다시 불러옴
+  const [loadAttempt, setLoadAttempt] = useState(0);
+
+  useEffect(() => {
+    let ignore = false;
+    fetchGuardians()
+      .then(({ guardians: data }) => {
+        if (!ignore) setGuardians(data);
+      })
+      .catch(() => {
+        if (!ignore) setIsError(true);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [loadAttempt]);
+
+  // 총 인원은 연결 수가 아닌 보호자 수
+  const guardianList = groupByGuardian(guardians ?? []);
+  const hasGuardian = guardianList.length > 0;
+  const visibleGuardians = sortGuardians(
+    filterByName(guardianList, keyword),
+    sort
+  );
+
+  const toggleSearch = () => {
+    setIsSearching((prev) => !prev);
+    setKeyword('');
+  };
+
+  // 그 시니어의 보호자 중 이 보호자만 대표로 (화면에 먼저 반영, 저장 실패 시 원래대로)
+  const handleSetRepresentative = (profileId: number, seniorId: number) => {
+    const before = new Map(
+      (guardians ?? [])
+        .filter((link) => link.seniorId === seniorId)
+        .map((link) => [link.id, link.isRepresentative])
+    );
+    const restore = () =>
+      setGuardians((prev) =>
+        (prev ?? []).map((link) =>
+          before.has(link.id)
+            ? { ...link, isRepresentative: before.get(link.id) ?? false }
+            : link
+        )
+      );
+
+    setGuardians((prev) =>
+      (prev ?? []).map((link) =>
+        link.seniorId === seniorId
+          ? { ...link, isRepresentative: link.profileId === profileId }
+          : link
+      )
+    );
+    setPrimaryGuardian(seniorId, profileId).catch(restore);
+  };
+
+  return (
+    <div className="flex flex-1 flex-col">
+      <header className="flex items-center justify-between px-5 pt-4 pb-3">
+        <div className="flex items-center gap-2">
+          <h1 className="text-[22px] font-bold text-black">보호자 목록</h1>
+          <span className="rounded-full border border-[#DCF2E4] bg-[#F0F9F4] px-2.25 py-0.75 text-[12px] font-semibold text-[#0E6E3B]">
+            총 {guardianList.length}명
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            aria-label="보호자 검색"
+            aria-pressed={isSearching}
+            disabled={!hasGuardian}
+            onClick={toggleSearch}
+            className={ICON_BUTTON_CLASS}
+          >
+            <Search size={20} strokeWidth={1.83} aria-hidden />
+          </button>
+          <button
+            type="button"
+            aria-label="목록 편집"
+            disabled={!hasGuardian}
+            onClick={() => navigate('/guardians/manage')}
+            className={ICON_BUTTON_CLASS}
+          >
+            <SquarePen size={20} strokeWidth={1.83} aria-hidden />
+          </button>
+          <button
+            type="button"
+            aria-label="보호자 추가"
+            onClick={() => navigate('/guardians/invite')}
+            className={ICON_BUTTON_CLASS}
+          >
+            <Plus size={20} strokeWidth={1.83} aria-hidden />
+          </button>
+        </div>
+      </header>
+
+      {isSearching && hasGuardian && (
+        <div className="px-5 pb-3">
+          <SearchField
+            value={keyword}
+            onChange={setKeyword}
+            placeholder="보호자 이름으로 검색해주세요."
+            aria-label="보호자 검색"
+            autoFocus
+          />
+        </div>
+      )}
+
+      {isError ? (
+        <ErrorState
+          message="보호자 목록을 불러오지 못했어요."
+          onRetry={() => {
+            setIsError(false);
+            setLoadAttempt((prev) => prev + 1);
+          }}
+        />
+      ) : guardians === null ? (
+        <LoadingState />
+      ) : !hasGuardian ? (
+        <p className="flex flex-1 items-center justify-center text-[14px] text-[#6B7684]">
+          등록된 보호자가 없어요.
+        </p>
+      ) : (
+        <>
+          <FilterChips options={SORTS} value={sort} onChange={setSort} />
+          {visibleGuardians.length === 0 ? (
+            <p className="flex flex-1 items-center justify-center text-[14px] text-[#6B7684]">
+              검색 결과가 없어요.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-6 px-5 pt-3 pb-6">
+              {visibleGuardians.map((guardian) => (
+                <li key={guardian.profileId}>
+                  <GuardianCard
+                    guardian={guardian}
+                    assignments={guardian.assignments}
+                    onSetRepresentative={(seniorId) =>
+                      handleSetRepresentative(guardian.profileId, seniorId)
+                    }
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
+export default GuardianListPage;

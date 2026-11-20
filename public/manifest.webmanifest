@@ -1,0 +1,16 @@
+{
+  "name": "따르릉",
+  "short_name": "따르릉",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/app-icon.png",
+      "sizes": "404x404",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

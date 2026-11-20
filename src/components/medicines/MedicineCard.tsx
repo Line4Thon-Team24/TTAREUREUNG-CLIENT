@@ -1,0 +1,143 @@
+import { useState } from 'react';
+import { ChevronDown, X } from 'lucide-react';
+import InfoRow, { InfoValue as Value } from '@/components/common/InfoRow';
+import { getIntervalLabel, getTimingLabel } from '@/constants/medicine';
+import type { Medicine } from '@/types/medicine';
+import { formatDate, formatDotDate } from '@/utils/date';
+
+type MedicineCardProps = {
+  medicine: Medicine;
+  // 편집 화면: 체크박스로 선택, 복용 이유 항상 표시
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
+  // 목록 화면: '세부 편집' 버튼
+  onEdit?: () => void;
+  // 팝업: 닫기 버튼, 복용 이유 항상 표시
+  onClose?: () => void;
+};
+
+// 약 카드 (약 목록 / 약 목록 편집)
+export default function MedicineCard({
+  medicine,
+  selectable = false,
+  selected = false,
+  onToggleSelect,
+  onEdit,
+  onClose,
+}: MedicineCardProps) {
+  const [expanded, setExpanded] = useState(false);
+  const showReason = selectable || !!onClose || expanded;
+  const checkboxId = `medicine-select-${medicine.id}`;
+
+  return (
+    <article
+      // 선택해도 테두리는 그대로 (체크박스로만 표시)
+      className="flex w-full flex-col gap-3 rounded-2xl border border-[#CDEBD8] bg-white p-4.25 drop-shadow-[0_2px_5px_rgba(0,0,0,0.04)]"
+    >
+      <header className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-2">
+          {selectable && (
+            <input
+              id={checkboxId}
+              type="checkbox"
+              checked={selected}
+              onChange={onToggleSelect}
+              className="mt-0.75 size-4 shrink-0 accent-[#01A16A]"
+            />
+          )}
+          <div className="flex min-w-0 flex-col gap-1">
+            <label
+              htmlFor={selectable ? checkboxId : undefined}
+              className="text-[16px] font-bold break-keep text-[#111827]"
+            >
+              {medicine.name}
+            </label>
+            <p className="text-[11px] text-[#9CA3AF]">
+              등록 날짜: {formatDate(new Date(medicine.registeredAt))}
+            </p>
+          </div>
+        </div>
+        {onEdit && (
+          <button
+            type="button"
+            onClick={onEdit}
+            className="shrink-0 rounded-md border border-[#E5E8EB] bg-[#FAFAFA] px-2.25 py-1.25 text-[12px] font-semibold text-[#6B7684] active:bg-[#F2F4F6]"
+          >
+            세부 편집
+          </button>
+        )}
+        {onClose && (
+          <button
+            type="button"
+            aria-label="닫기"
+            onClick={onClose}
+            className="flex size-6 shrink-0 items-center justify-center text-[#191F28]"
+          >
+            <X size={20} strokeWidth={2.5} aria-hidden />
+          </button>
+        )}
+      </header>
+
+      <div className="flex justify-between gap-4">
+        <div className="flex min-w-0 flex-col gap-3">
+          <InfoRow label="종류">
+            <Value>{medicine.category || '-'}</Value>
+          </InfoRow>
+          <InfoRow label="효과">
+            <Value>{medicine.effect || '-'}</Value>
+          </InfoRow>
+          <InfoRow label="복용 주기" tone="green">
+            {/* 예: 매일 하루 3회 / 식후 30분 */}
+            <Value>
+              {`${getIntervalLabel(medicine.interval)} 하루 ${medicine.timesPerDay}회 / ${medicine.timing ? getTimingLabel(medicine.timing) : '-'}`}
+            </Value>
+          </InfoRow>
+        </div>
+        {medicine.prescription?.imageUrl && (
+          <img
+            src={medicine.prescription.imageUrl}
+            alt={`${medicine.name} 처방전 사진`}
+            className="h-19.5 w-26.5 shrink-0 rounded-xl object-cover"
+          />
+        )}
+      </div>
+
+      <div className="flex gap-3">
+        <InfoRow label="시작">
+          <Value>{formatDotDate(medicine.startDate)}</Value>
+        </InfoRow>
+        <InfoRow label="종료">
+          <Value>{formatDotDate(medicine.endDate)}</Value>
+        </InfoRow>
+      </div>
+
+      {showReason && (
+        <div className="border-t border-[#E5E8EB] pt-3">
+          <InfoRow label="복용 이유" tone="orange">
+            <p className="flex-1 rounded-lg border border-[#E5E8EB] bg-[#FAFAFA] p-2.75 text-[12px] leading-3.75 text-[#333D4B]">
+              {medicine.reason || '등록된 복용 이유가 없어요.'}
+            </p>
+          </InfoRow>
+        </div>
+      )}
+
+      {!selectable && !onClose && (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-label={expanded ? '복용 이유 접기' : '복용 이유 펼치기'}
+          onClick={() => setExpanded((prev) => !prev)}
+          className={`flex justify-center pt-1.75 text-[#8B95A1] ${expanded ? '' : 'border-t border-[#E5E8EB]'}`}
+        >
+          <ChevronDown
+            size={16}
+            strokeWidth={1.75}
+            aria-hidden
+            className={`transition-transform duration-200 motion-reduce:transition-none ${expanded ? 'rotate-180' : ''}`}
+          />
+        </button>
+      )}
+    </article>
+  );
+}

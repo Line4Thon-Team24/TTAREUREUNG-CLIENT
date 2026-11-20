@@ -1,0 +1,149 @@
+import { createBrowserRouter, Navigate } from 'react-router-dom';
+import RootLayout from '@/layouts/RootLayout';
+import RequireAuth from '@/layouts/RequireAuth';
+import GuardianLayout from '@/layouts/GuardianLayout';
+import GuardianAlertLayout from '@/layouts/GuardianAlertLayout';
+import LoginPage from '@/pages/auth/LoginPage';
+import SignupLayout from '@/layouts/SignupLayout';
+import SignupEmailPage from '@/pages/auth/SignupEmailPage';
+import SignupPasswordPage from '@/pages/auth/SignupPasswordPage';
+import SignupGuardianPage from '@/pages/auth/SignupGuardianPage';
+import SignupCompletePage from '@/pages/auth/SignupCompletePage';
+import ProfileSelectPage from '@/pages/profile/ProfileSelectPage';
+import SchedulePage from '@/pages/guardian/schedule/SchedulePage';
+import ScheduleMonthPage from '@/pages/guardian/schedule/ScheduleMonthPage';
+import ScheduleWeekPage from '@/pages/guardian/schedule/ScheduleWeekPage';
+import MedicineListPage from '@/pages/guardian/medicines/MedicineListPage';
+import SeniorListPage from '@/pages/guardian/seniors/SeniorListPage';
+import GuardianListPage from '@/pages/guardian/guardians/GuardianListPage';
+import ProfilePage from '@/pages/guardian/profile/ProfilePage';
+import SeniorRegisterPage from '@/pages/guardian/seniors/SeniorRegisterPage';
+import SeniorRegisterCompletePage from '@/pages/guardian/seniors/SeniorRegisterCompletePage';
+import SeniorAddPage from '@/pages/guardian/seniors/SeniorAddPage';
+import SeniorEditPage from '@/pages/guardian/seniors/SeniorEditPage';
+import SeniorManagePage from '@/pages/guardian/seniors/SeniorManagePage';
+import GuardianManagePage from '@/pages/guardian/guardians/GuardianManagePage';
+import GuardianInvitePage from '@/pages/guardian/guardians/GuardianInvitePage';
+import GuardianInviteCompletePage from '@/pages/guardian/guardians/GuardianInviteCompletePage';
+import SeniorSchedulePage from '@/pages/senior/SeniorSchedulePage';
+import MedicineRegisterMethodPage from '@/pages/guardian/medicines/MedicineRegisterMethodPage';
+import MedicineRecognitionPage from '@/pages/guardian/medicines/MedicineRecognitionPage';
+import MedicineInfoFormPage from '@/pages/guardian/medicines/MedicineInfoFormPage';
+import MedicineManagePage from '@/pages/guardian/medicines/MedicineManagePage';
+import MedicineEditPage from '@/pages/guardian/medicines/MedicineEditPage';
+import SeniorIncomingCallPage from '@/pages/senior/SeniorIncomingCallPage';
+import SeniorRecognitionPage from '@/pages/senior/SeniorRecognitionPage';
+import SeniorFindMedicinePage from '@/pages/senior/SeniorFindMedicinePage';
+import SeniorDosePage from '@/pages/senior/SeniorDosePage';
+import SeniorDoseResultPage from '@/pages/senior/SeniorDoseResultPage';
+import { markNavigated } from '@/utils/history';
+
+export const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <RootLayout />,
+    children: [
+      // 로그인 (하단 네비게이션 미노출)
+      { path: '/login', element: <LoginPage /> },
+      // 회원가입 흐름 (하단 네비게이션 미노출)
+      {
+        element: <SignupLayout />,
+        children: [
+          { path: '/signup', element: <SignupEmailPage /> },
+          { path: '/signup/password', element: <SignupPasswordPage /> },
+          { path: '/signup/guardian', element: <SignupGuardianPage /> },
+          { path: '/signup/complete', element: <SignupCompletePage /> },
+        ],
+      },
+      {
+        // 인증된 사용자만 접근(비인증: 로그인 페이지로 리다이렉트)
+        element: <RequireAuth />,
+        children: [
+          {
+            index: true,
+            // 기본 경로는 복용 일정 화면으로 이동
+            element: <Navigate to="/schedule" replace />,
+          },
+          // 로그인/회원가입 후 프로필 선택 (하단 네비게이션 미노출)
+          { path: '/profile/select', element: <ProfileSelectPage /> },
+          {
+            // 보호자 화면 (상단 복용 알림 배너 표시)
+            element: <GuardianAlertLayout />,
+            children: [
+              {
+                // 보호자 탭 화면 (하단 네비게이션 노출)
+                element: <GuardianLayout />,
+                children: [
+                  { path: '/schedule', element: <SchedulePage /> },
+                  { path: '/schedule/month', element: <ScheduleMonthPage /> },
+                  { path: '/schedule/week', element: <ScheduleWeekPage /> },
+                  { path: '/medicines', element: <MedicineListPage /> },
+                  { path: '/seniors', element: <SeniorListPage /> },
+                  { path: '/guardians', element: <GuardianListPage /> },
+                  { path: '/profile', element: <ProfilePage /> },
+                ],
+              },
+              // 시니어 등록 흐름 (하단 네비게이션 미노출)
+              { path: '/seniors/register', element: <SeniorRegisterPage /> },
+              {
+                path: '/seniors/register/complete',
+                element: <SeniorRegisterCompletePage />,
+              },
+              // 시니어 추가 / 정보 수정 (시니어 목록)
+              { path: '/seniors/add', element: <SeniorAddPage /> },
+              { path: '/seniors/:seniorId/edit', element: <SeniorEditPage /> },
+              // 시니어 목록 편집 (선택 삭제)
+              { path: '/seniors/manage', element: <SeniorManagePage /> },
+              // 보호자 목록 편집 / 보호자 초대 (보호자 목록)
+              { path: '/guardians/manage', element: <GuardianManagePage /> },
+              { path: '/guardians/invite', element: <GuardianInvitePage /> },
+              {
+                path: '/guardians/invite/complete',
+                element: <GuardianInviteCompletePage />,
+              },
+              // 약 등록 흐름 (하단 네비게이션 미노출)
+              {
+                path: '/medicines/register',
+                element: <MedicineRegisterMethodPage />,
+              },
+              {
+                path: '/medicines/register/recognition',
+                element: <MedicineRecognitionPage />,
+              },
+              {
+                path: '/medicines/register/form',
+                element: <MedicineInfoFormPage />,
+              },
+              // 약 목록 편집 (선택 삭제)
+              { path: '/medicines/manage', element: <MedicineManagePage /> },
+              // 약 세부 정보 수정
+              {
+                path: '/medicines/:medicineId/edit',
+                element: <MedicineEditPage />,
+              },
+            ],
+          },
+          // 시니어 약 섭취 일정 (오늘 / 내일)
+          { path: '/senior', element: <SeniorSchedulePage day="today" /> },
+          {
+            path: '/senior/tomorrow',
+            element: <SeniorSchedulePage day="tomorrow" />,
+          },
+          // 시니어 복약 알림 수신
+          { path: '/senior/call', element: <SeniorIncomingCallPage /> },
+          // 시니어 약 인식 흐름: 카메라 인식 → 약 사진 안내 → 복용 안내 → 복용 결과
+          { path: '/senior/recognition', element: <SeniorRecognitionPage /> },
+          { path: '/senior/find', element: <SeniorFindMedicinePage /> },
+          { path: '/senior/dose', element: <SeniorDosePage /> },
+          { path: '/senior/result', element: <SeniorDoseResultPage /> },
+        ],
+      },
+    ],
+  },
+]);
+
+// 처음 연 기록과 다른 곳으로 이동하면 기록 (첫 진입과 뒤로 가기 구분용)
+const initialKey = router.state.location.key;
+router.subscribe(({ location }) => {
+  if (location.key !== initialKey) markNavigated();
+});
