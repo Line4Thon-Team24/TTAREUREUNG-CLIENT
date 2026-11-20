@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { isAxiosError } from 'axios';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { recognizeMedication, requestHelp } from '@/apis/dose';
 import ErrorState from '@/components/common/ErrorState';
@@ -12,6 +11,7 @@ import useCameraStream from '@/hooks/useCameraStream';
 import useLatestRequest from '@/hooks/useLatestRequest';
 import useSessionCall from '@/hooks/useSessionCall';
 import useVoice from '@/hooks/useVoice';
+import type { ApiError } from '@/types/api';
 import type { MedicationGuide } from '@/types/dose';
 import type { RecognitionStatus } from '@/types/recognition';
 import { speak } from '@/utils/speech';
@@ -128,7 +128,7 @@ const RecognitionScreen = ({ sessionId, medicine }: RecognitionScreenProps) => {
       } catch (error) {
         if (!cancelled) {
           // 판독 횟수 제한(429)이면 더 찍어도 같은 결과이므로 직접 확인으로 넘김
-          if (isAxiosError(error) && error.response?.status === 429) {
+          if ((error as ApiError).status === 429) {
             setIsExhausted(true);
           }
           setStatus('error');
