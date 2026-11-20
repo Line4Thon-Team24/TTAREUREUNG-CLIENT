@@ -11,6 +11,7 @@ import useCurrentSession from '@/hooks/useCurrentSession';
 import useLatestRequest from '@/hooks/useLatestRequest';
 import useSeniors from '@/hooks/useSeniors';
 import { pickSelectedSeniorId } from '@/utils/profile';
+import { startRingtone } from '@/utils/ringtone';
 import { speak } from '@/utils/speech';
 import callIcon from '@/assets/icons/call.svg';
 import {
@@ -81,6 +82,13 @@ const SeniorIncomingCallPage = () => {
       window.removeEventListener('pageshow', handlePageShow);
     };
   }, [sessionId]);
+
+  // 수신화면 벨소리(전화 받기 클릭시 중지)
+  const isRinging = call !== null && !isAnswering;
+  useEffect(() => {
+    if (!isRinging) return;
+    return startRingtone();
+  }, [isRinging]);
 
   const handleAccept = async () => {
     if (!call || isAnswering) return;
