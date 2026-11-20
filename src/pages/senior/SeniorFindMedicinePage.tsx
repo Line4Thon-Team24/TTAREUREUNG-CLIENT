@@ -52,16 +52,25 @@ const FindScreen = ({
   };
 
   // 안내를 읽어 준 뒤 "찾았어"를 들음 (자동 전환 중에는 듣지 않음)
+  // 도움 요청 팝업이 열려 있는 동안에는 팝업을 읽어 주고 "도와줘"/"더 찾아볼게"를 들음
+  const handleKeepSearching = () => {
+    setIsHelpAsking(false);
+    setRestartKey((prev) => prev + 1);
+  };
   useVoice({
-    text: medicine.voiceText,
+    text: isHelpAsking
+      ? '약을 못 찾으셨나요? 보호자에게 도움을 요청할까요? 도와줘, 또는 더 찾아볼게, 라고 말씀해주세요.'
+      : medicine.voiceText,
     restartKey,
-    commands: isCountdown
-      ? undefined
-      : {
-          FOUND: onFound,
-          NOT_FOUND: () => setIsHelpAsking(true),
-          HELP: () => void sendHelp(),
-        },
+    commands: isHelpAsking
+      ? { HELP: () => void sendHelp(), MORE: handleKeepSearching }
+      : isCountdown
+        ? undefined
+        : {
+            FOUND: onFound,
+            NOT_FOUND: () => setIsHelpAsking(true),
+            HELP: () => void sendHelp(),
+          },
   });
 
   return (
@@ -110,10 +119,7 @@ const FindScreen = ({
         message={'약을 못 찾으셨나요?\n보호자에게 도움을 요청할게요.'}
         cancelLabel="더 찾아볼게요"
         confirmLabel="도움 요청"
-        onCancel={() => {
-          setIsHelpAsking(false);
-          setRestartKey((prev) => prev + 1);
-        }}
+        onCancel={handleKeepSearching}
         onConfirm={() => void sendHelp()}
       />
     </div>
