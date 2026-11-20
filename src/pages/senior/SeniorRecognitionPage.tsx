@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { recognizeMedication } from '@/apis/dose';
+import { recognizeMedication, requestHelp } from '@/apis/dose';
 import ErrorState from '@/components/common/ErrorState';
 import LoadingState from '@/components/common/LoadingState';
 import GuideFrame from '@/components/recognition/GuideFrame';
@@ -8,6 +8,7 @@ import RecognitionResultCard from '@/components/recognition/RecognitionResultCar
 import TargetMedicineCard from '@/components/recognition/TargetMedicineCard';
 import MaskIcon from '@/components/common/MaskIcon';
 import useCameraStream from '@/hooks/useCameraStream';
+import useLatestRequest from '@/hooks/useLatestRequest';
 import useSessionCall from '@/hooks/useSessionCall';
 import type { MedicationGuide } from '@/types/dose';
 import type { RecognitionStatus } from '@/types/recognition';
@@ -53,6 +54,9 @@ type RecognitionScreenProps = {
 const RecognitionScreen = ({ sessionId, medicine }: RecognitionScreenProps) => {
   const navigate = useNavigate();
   const [status, setStatus] = useState<RecognitionStatus>('scanning');
+  const [isHelping, setIsHelping] = useState(false);
+  const [isHelpError, setIsHelpError] = useState(false);
+  const startRequest = useLatestRequest();
   const videoRef = useCameraStream();
   const dimmed = status !== 'scanning' && status !== 'success';
   const { medicationId, order } = medicine;
@@ -146,8 +150,24 @@ const RecognitionScreen = ({ sessionId, medicine }: RecognitionScreenProps) => {
     }
   }, [status, sessionId, order, navigate]);
 
-  const handleHelp = () => {
-    // TODO: 보호자 도움 요청하기 연동
+  // 보호자에게 도움 요청 후 사진을 보고 직접 찾는 화면으로
+  const handleHelp = async () => {
+    if (isHelping) return;
+    const isLatest = startRequest();
+    setIsHelping(true);
+    setIsHelpError(false);
+    try {
+      await requestHelp(sessionId);
+      if (!isLatest()) return;
+      navigate(
+        `/senior/find?sessionId=${sessionId}&order=${order}&mode=voice`,
+        { replace: true }
+      );
+    } catch {
+      if (!isLatest()) return;
+      setIsHelpError(true);
+      setIsHelping(false);
+    }
   };
 
   const handleSearchMore = () => {
@@ -248,10 +268,19 @@ const RecognitionScreen = ({ sessionId, medicine }: RecognitionScreenProps) => {
 
       {status === 'delayed' && (
         <div className="relative z-10 mt-auto flex flex-col gap-3">
+          {isHelpError && (
+            <p
+              role="alert"
+              className="text-center text-[16px] font-bold text-white"
+            >
+              도움 요청을 보내지 못했어요. 다시 눌러주세요.
+            </p>
+          )}
           <button
             type="button"
             onClick={handleHelp}
-            className="flex h-14 items-center justify-center gap-2.5 rounded-2xl bg-bg-primary text-[18px] font-bold text-white active:bg-bg-primary-pressed"
+            disabled={isHelping}
+            className="flex h-14 items-center justify-center gap-2.5 rounded-2xl bg-bg-primary text-[18px] font-bold text-white active:bg-bg-primary-pressed disabled:opacity-60"
           >
             <img src={callStrokeIcon} alt="" width={24} height={24} />
             도움 요청하기 (누르기)
