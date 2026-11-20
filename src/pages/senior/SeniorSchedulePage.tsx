@@ -8,6 +8,7 @@ import useDailySchedule from '@/hooks/useDailySchedule';
 import useIncomingCallWatcher from '@/hooks/useIncomingCallWatcher';
 import useSeniors from '@/hooks/useSeniors';
 import useToday from '@/hooks/useToday';
+import { pickSelectedSeniorId } from '@/utils/profile';
 import { getScheduleSummary } from '@/utils/schedule';
 
 type SeniorSchedulePageProps = {
@@ -29,13 +30,15 @@ const SeniorSchedulePage = ({ day }: SeniorSchedulePageProps) => {
   const date = isToday ? today : addDays(today, 1);
   const otherDate = isToday ? addDays(today, 1) : today;
 
-  // TODO: 시니어 로그인·프로필 선택 연동 후 선택한 시니어로 교체 (지금은 첫 번째 시니어)
+  // 프로필 선택에서 고른 시니어 (선택이 없으면 첫 번째 시니어)
   const {
     seniors,
     isError: isSeniorsError,
     retry: retrySeniors,
   } = useSeniors();
-  const seniorId = seniors?.[0]?.id ?? null;
+  const seniorId = seniors
+    ? (pickSelectedSeniorId(seniors.map(({ id }) => id)) ?? null)
+    : null;
   // 복약 전화가 올 시간이면 수신 화면으로 이동
   useIncomingCallWatcher(seniorId);
   const {

@@ -8,7 +8,10 @@ import ErrorState from '@/components/common/ErrorState';
 import LoadingState from '@/components/common/LoadingState';
 import useProfiles from '@/hooks/useProfiles';
 import { getCareLabel } from '@/utils/profile';
-import { setSelectedProfileId } from '@/utils/selectedProfile';
+import {
+  setSelectedProfileId,
+  setSelectedSeniorId,
+} from '@/utils/selectedProfile';
 import { toCareSeniors, toFamilyMembers } from '@/utils/profileSelect';
 import arrowDownIcon from '@/assets/icons/arrow-down-black.svg';
 import arrowUpIcon from '@/assets/icons/arrow-up-black.svg';
@@ -25,6 +28,12 @@ const ProfileSelectPage = () => {
   const handleSelect = (profileId: number) => {
     setSelectedProfileId(profileId);
     navigate('/schedule', { replace: true });
+  };
+
+  // 선택한 시니어 프로필을 저장하고 시니어 약 복용 일정으로 이동
+  const handleSelectSenior = (profileId: number) => {
+    setSelectedSeniorId(profileId);
+    navigate('/senior', { replace: true });
   };
 
   return (
@@ -65,7 +74,10 @@ const ProfileSelectPage = () => {
           ))}
           {showAll && (
             <>
-              <CareSeniorSection seniors={toCareSeniors(profiles)} />
+              <CareSeniorSection
+                seniors={toCareSeniors(profiles)}
+                onSelect={handleSelectSenior}
+              />
               <FamilyMemberSection
                 members={toFamilyMembers(profiles)}
                 onInvite={() => navigate('/guardians/invite')}
