@@ -15,15 +15,20 @@ const COMMANDS: { words: string[]; action: VoiceAction }[] = [
 
 const stripSpaces = (text: string) => text.replace(/\s/g, '');
 
+// "아직 안 먹었어" 같은 부정 표현은 "먹었어"가 들어 있어도 복용 완료로 보지 않음
+const NEGATIVE_TAKEN = ['안먹', '못먹', '아직', '않았', '안했', '먹지'];
+
 // 화면이 허용한 명령(allowed) 중에서만 찾음
 export const matchCommand = (
   text: string,
   allowed: readonly VoiceAction[]
 ): VoiceAction | null => {
   const target = stripSpaces(text);
+  const isNegative = NEGATIVE_TAKEN.some((word) => target.includes(word));
   const found = COMMANDS.find(
     (command) =>
       allowed.includes(command.action) &&
+      !(command.action === 'TAKEN' && isNegative) &&
       command.words.some((word) => target.includes(stripSpaces(word)))
   );
   return found?.action ?? null;
@@ -34,10 +39,10 @@ export const matchCommand = (
 export const isSpeechSynthesisSupported = () =>
   typeof window !== 'undefined' && 'speechSynthesis' in window;
 
-// 읽기가 끝나지 않는 경우를 대비한 최대 대기 시간
 // 이 시간 안에 읽기가 시작되지 않으면 엔진이 멈춘 것으로 보고 포기(ms)
 const START_TIMEOUT = 1500;
 
+// 읽기가 끝나지 않는 경우를 대비한 최대 대기 시간
 const speakTimeout = (text: string) => 2000 + text.length * 300;
 
 // 글자를 소리로 읽고, 읽기가 끝나면(실패·중단 포함) resolve
