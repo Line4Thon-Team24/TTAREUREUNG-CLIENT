@@ -69,3 +69,23 @@ export type IntakeResponse = {
   nextMedication: MedicationGuide | null; // 다음에 찾을 약 (없으면 null)
   voiceText: string; // TTS로 읽을 문장
 };
+
+// 회차 종료 API 응답
+export type FinishResponse = {
+  sessionId: number;
+  status: DoseSessionStatus; // COMPLETED / PARTIAL / MISSED, 또는 재전화 대기 SCHEDULED
+  takenCount: number;
+  totalCount: number;
+  extendedMedicationCount: number; // 일정이 하루 늘어난 약 수
+  guardianNotified: boolean; // 보호자 알림 생성 여부
+  nextCall: NextCallInfo | null; // 재전화 대기면 같은 회차, 아니면 다음 회차
+  voiceText: string; // TTS로 읽을 문장
+};
+
+// 도움 요청 API 응답
+export type HelpResponse = {
+  alertId: number;
+  sessionId: number;
+  createdAt: string;
+  voiceText: string; // TTS로 읽을 문장
+};

@@ -3,6 +3,8 @@ import type { BaseResponse } from '@/types/api';
 import { getAccessToken } from '@/utils/accessToken';
 import type {
   CurrentSession,
+  FinishResponse,
+  HelpResponse,
   IntakeResponse,
   RecognitionResultResponse,
   SessionCall,
@@ -65,6 +67,24 @@ export const takeMedication = async (
 ) => {
   const { data } = await apiClient.post<BaseResponse<IntakeResponse>>(
     `/dose-sessions/${sessionId}/medications/${medicationId}/intake`
+  );
+  return data.data;
+};
+
+// 회차 종료
+// 전부 복용 → COMPLETED, 일부 → PARTIAL(못 먹은 약은 일정 하루 연장),
+// 하나도 안 먹음 → 10분 뒤 재전화 대기(SCHEDULED), 3회째면 MISSED
+export const finishSession = async (sessionId: number) => {
+  const { data } = await apiClient.post<BaseResponse<FinishResponse>>(
+    `/dose-sessions/${sessionId}/finish`
+  );
+  return data.data;
+};
+
+// 도움 요청 (약을 못 찾거나 인식이 안 될 때 보호자에게 알림)
+export const requestHelp = async (sessionId: number) => {
+  const { data } = await apiClient.post<BaseResponse<HelpResponse>>(
+    `/dose-sessions/${sessionId}/help`
   );
   return data.data;
 };
