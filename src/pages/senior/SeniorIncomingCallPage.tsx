@@ -42,6 +42,8 @@ const SeniorIncomingCallPage = () => {
   const startRequest = useLatestRequest();
   // 전화 응답 or 미응답 시 true
   const isHandledRef = useRef(false);
+  // 화면이 닫힌 뒤(pagehide) true, 복원(pageshow) 시 false
+  const isClosedRef = useRef(false);
 
   const call = session?.current ?? null;
   const medicine = call?.medications[0];
@@ -59,12 +61,21 @@ const SeniorIncomingCallPage = () => {
   useEffect(() => {
     if (sessionId === undefined) return;
     const handlePageHide = () => {
+      // 전화 받기 요청이 진행 중이어도 닫힘은 기록 (요청이 실패하면 미응답 처리)
+      isClosedRef.current = true;
       if (isHandledRef.current) return;
       isHandledRef.current = true;
       reportNoAnswer(sessionId);
     };
+    const handlePageShow = () => {
+      isClosedRef.current = false;
+    };
     window.addEventListener('pagehide', handlePageHide);
-    return () => window.removeEventListener('pagehide', handlePageHide);
+    window.addEventListener('pageshow', handlePageShow);
+    return () => {
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('pageshow', handlePageShow);
+    };
   }, [sessionId]);
 
   const handleAccept = async () => {
@@ -86,6 +97,11 @@ const SeniorIncomingCallPage = () => {
         { replace: true }
       );
     } catch {
+      // 화면이 닫히는 중에 전화 받기가 실패하면 미응답으로 알림
+      if (isClosedRef.current) {
+        reportNoAnswer(call.sessionId);
+        return;
+      }
       if (!isLatest()) return;
       // 미응답으로 처리
       isHandledRef.current = false;
