@@ -10,6 +10,7 @@ import { answerSession, reportNoAnswer } from '@/apis/dose';
 import useCurrentSession from '@/hooks/useCurrentSession';
 import useLatestRequest from '@/hooks/useLatestRequest';
 import useSeniors from '@/hooks/useSeniors';
+import { pickSelectedSeniorId } from '@/utils/profile';
 import { speak } from '@/utils/speech';
 import callIcon from '@/assets/icons/call.svg';
 import {
@@ -25,13 +26,15 @@ const PAGE_BACKGROUND =
 const SeniorIncomingCallPage = () => {
   const navigate = useNavigate();
 
-  // TODO: 시니어 로그인·프로필 선택 연동 후 선택한 시니어로 교체
+  // 프로필 선택에서 고른 시니어 (선택이 없으면 첫 번째 시니어)
   const {
     seniors,
     isError: isSeniorsError,
     retry: retrySeniors,
   } = useSeniors();
-  const seniorId = seniors?.[0]?.id ?? null;
+  const seniorId = seniors
+    ? (pickSelectedSeniorId(seniors.map(({ id }) => id)) ?? null)
+    : null;
   const {
     session,
     isError: isSessionError,
