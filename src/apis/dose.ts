@@ -1,4 +1,4 @@
-import { apiClient } from '@/apis/client';
+import { apiClient, refreshSession } from '@/apis/client';
 import type { BaseResponse } from '@/types/api';
 import { getAccessToken } from '@/utils/accessToken';
 import type {
@@ -28,9 +28,10 @@ export const answerSession = async (sessionId: number) => {
 
 // 전화 미응답 알림 (받지 않고 화면을 닫을 때 호출, 10분 뒤 재전화 예약·3회째면 미복용 상태로 확정)
 // 화면이 닫히는 중에도 요청이 끝까지 가도록 keepalive fetch 사용
-export const reportNoAnswer = (sessionId: number) => {
-  const token = getAccessToken();
-  void fetch(
+// apiClient 인터셉터를 거치지 않으므로 401이면 직접 토큰을 재발급해 한 번 재시도
+// (화면이 닫히는 중이면 재발급이 끝나기 전에 중단될 수 있어 최선 노력으로 처리)
+const postNoAnswer = (sessionId: number, token: string | null) =>
+  fetch(
     `${import.meta.env.VITE_API_BASE_URL}/api/v1/dose-sessions/${sessionId}/no-answer`,
     {
       method: 'POST',
@@ -38,7 +39,21 @@ export const reportNoAnswer = (sessionId: number) => {
       credentials: 'include',
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     }
-  ).catch(() => {});
+  );
+
+export const reportNoAnswer = async (sessionId: number) => {
+  try {
+    let res = await postNoAnswer(sessionId, getAccessToken());
+    if (res.status === 401) {
+      const token = await refreshSession();
+      res = await postNoAnswer(sessionId, token);
+    }
+    if (!res.ok) {
+      console.error(`미응답 알림 실패 (status ${res.status})`);
+    }
+  } catch (error) {
+    console.error('미응답 알림 실패', error);
+  }
 };
 
 // 약 판독 (카메라로 찍은 사진이 이 약인지 확인, JPG/PNG/WEBP 5MB 이하, 회차·약당 10회)
