@@ -10,8 +10,11 @@ import MaskIcon from '@/components/common/MaskIcon';
 import useCameraStream from '@/hooks/useCameraStream';
 import useLatestRequest from '@/hooks/useLatestRequest';
 import useSessionCall from '@/hooks/useSessionCall';
+import useVoice from '@/hooks/useVoice';
+import type { ApiError } from '@/types/api';
 import type { MedicationGuide } from '@/types/dose';
 import type { RecognitionStatus } from '@/types/recognition';
+import { speak } from '@/utils/speech';
 import { captureVideoFrame } from '@/utils/camera';
 import { parsePositiveInt } from '@/utils/recognition';
 import microphoneIcon from '@/assets/icons/microphone.svg';
@@ -60,6 +63,11 @@ const RecognitionScreen = ({ sessionId, medicine }: RecognitionScreenProps) => {
     isDelayDue && rawStatus === 'scanning' ? 'delayed' : rawStatus;
   const [isHelping, setIsHelping] = useState(false);
   const [isHelpError, setIsHelpError] = useState(false);
+  // 판독 횟수를 다 써서(429 또는 남은 횟수 0) 더 찍을 수 없으면 true
+  const [isExhausted, setIsExhausted] = useState(false);
+  // 판독 결과와 함께 온 TTS 문장
+  const [resultVoiceText, setResultVoiceText] = useState('');
+  const [voiceRestartKey, setVoiceRestartKey] = useState(0);
   const startRequest = useLatestRequest();
   const videoRef = useCameraStream();
   const dimmed = status !== 'scanning' && status !== 'success';
@@ -94,28 +102,37 @@ const RecognitionScreen = ({ sessionId, medicine }: RecognitionScreenProps) => {
           : null;
         if (cancelled) return;
         if (frame) {
-          const { result, attemptsLeft } = await recognizeMedication(
+          const { result, attemptsLeft, voiceText } = await recognizeMedication(
             sessionId,
             medicationId,
             frame
           );
           if (cancelled) return;
           if (result === 'MATCH') {
+            setResultVoiceText(voiceText);
             setStatus('success');
             return;
           }
           if (result === 'MISMATCH') {
+            setResultVoiceText(voiceText);
             setStatus('wrong');
             return;
           }
           // 확실하지 않으면(UNCERTAIN) 계속 찍되 횟수를 다 쓰면 사진 보고 직접 찾기
           if (attemptsLeft <= 0) {
+            setIsExhausted(true);
             setStatus('error');
             return;
           }
         }
-      } catch {
-        if (!cancelled) setStatus('error');
+      } catch (error) {
+        if (!cancelled) {
+          // 판독 횟수 제한(429)이면 더 찍어도 같은 결과이므로 직접 확인으로 넘김
+          if ((error as ApiError).status === 429) {
+            setIsExhausted(true);
+          }
+          setStatus('error');
+        }
         return;
       }
       timer = window.setTimeout(scan, SCAN_INTERVAL);
@@ -128,37 +145,22 @@ const RecognitionScreen = ({ sessionId, medicine }: RecognitionScreenProps) => {
     };
   }, [status, sessionId, medicationId, videoRef]);
 
+  // 성공·오류·다른 약 안내는 최소 AUTO_NEXT_DELAY 동안 보여주고,
+  // 안내 음성이 끝난 뒤에 다음으로 넘어감 (음성이 잘리지 않도록)
+  const [isDelayPassed, setIsDelayPassed] = useState(false);
+  const isAutoNext =
+    status === 'success' || status === 'error' || status === 'wrong';
   useEffect(() => {
-    if (status === 'success') {
-      const timer = window.setTimeout(
-        () =>
-          navigate(`/senior/dose?sessionId=${sessionId}&order=${order}`, {
-            replace: true,
-          }),
-        AUTO_NEXT_DELAY
-      );
-      return () => window.clearTimeout(timer);
-    }
-    if (status === 'error') {
-      const timer = window.setTimeout(
-        () =>
-          navigate(
-            `/senior/find?sessionId=${sessionId}&order=${order}&mode=voice`,
-            { replace: true }
-          ),
-        AUTO_NEXT_DELAY
-      );
-      return () => window.clearTimeout(timer);
-    }
-    if (status === 'wrong') {
-      // 다른 약이면 잠시 안내한 뒤 다시 인식
-      const timer = window.setTimeout(
-        () => setStatus('scanning'),
-        AUTO_NEXT_DELAY
-      );
-      return () => window.clearTimeout(timer);
-    }
-  }, [status, sessionId, order, navigate]);
+    if (!isAutoNext) return;
+    const timer = window.setTimeout(
+      () => setIsDelayPassed(true),
+      AUTO_NEXT_DELAY
+    );
+    return () => {
+      window.clearTimeout(timer);
+      setIsDelayPassed(false);
+    };
+  }, [isAutoNext, status]);
 
   // 보호자에게 도움 요청 후 사진을 보고 직접 찾는 화면으로
   const handleHelp = async () => {
@@ -167,7 +169,9 @@ const RecognitionScreen = ({ sessionId, medicine }: RecognitionScreenProps) => {
     setIsHelping(true);
     setIsHelpError(false);
     try {
-      await requestHelp(sessionId);
+      const { voiceText } = await requestHelp(sessionId);
+      if (!isLatest()) return;
+      await speak(voiceText);
       if (!isLatest()) return;
       navigate(
         `/senior/find?sessionId=${sessionId}&order=${order}&mode=voice`,
@@ -177,6 +181,7 @@ const RecognitionScreen = ({ sessionId, medicine }: RecognitionScreenProps) => {
       if (!isLatest()) return;
       setIsHelpError(true);
       setIsHelping(false);
+      setVoiceRestartKey((prev) => prev + 1);
     }
   };
 
@@ -185,6 +190,62 @@ const RecognitionScreen = ({ sessionId, medicine }: RecognitionScreenProps) => {
       `/senior/find?sessionId=${sessionId}&order=${order}&mode=countdown&retry=1`
     );
   };
+
+  // 상태별로 읽어 줄 문장 (인식 중에는 조용히)
+  const voiceText =
+    status === 'success'
+      ? resultVoiceText || '맞는 약이에요!'
+      : status === 'wrong'
+        ? resultVoiceText || '다른 약이에요. 안내 사진과 같은 약을 찾아주세요.'
+        : status === 'error'
+          ? '오류가 발생했어요. 사진을 보고 적절한 약을 골라주세요.'
+          : status === 'delayed'
+            ? '약 찾기 어려우신가요? 못 찾겠어, 또는 더 찾아볼게, 라고 말씀해주세요.'
+            : null;
+
+  // 지연 안내 때만 "못 찾겠어" / "더 찾아볼게"를 들음
+  const { isSpoken } = useVoice({
+    text: voiceText,
+    restartKey: voiceRestartKey,
+    commands:
+      status === 'delayed'
+        ? {
+            NOT_FOUND: () => void handleHelp(),
+            HELP: () => void handleHelp(),
+            MORE: handleSearchMore,
+          }
+        : undefined,
+  });
+
+  // 안내 시간이 지나고 음성도 끝나면 다음 화면으로
+  useEffect(() => {
+    if (!isDelayPassed || !isSpoken) return;
+    if (status === 'success') {
+      navigate(`/senior/dose?sessionId=${sessionId}&order=${order}`, {
+        replace: true,
+      });
+    } else if (status === 'error') {
+      // 횟수를 다 썼으면 복용 화면에서 직접 확인(복용 처리는 MANUAL로 기록), 아니면 사진을 보고 다시 찾기
+      navigate(
+        isExhausted
+          ? `/senior/dose?sessionId=${sessionId}&order=${order}`
+          : `/senior/find?sessionId=${sessionId}&order=${order}&mode=voice`,
+        { replace: true }
+      );
+    } else if (status === 'wrong') {
+      // 다른 약이면 잠시 안내한 뒤 다시 인식
+      const timer = window.setTimeout(() => setStatus('scanning'), 0);
+      return () => window.clearTimeout(timer);
+    }
+  }, [
+    isDelayPassed,
+    isSpoken,
+    status,
+    sessionId,
+    order,
+    isExhausted,
+    navigate,
+  ]);
 
   return (
     <div className="relative flex min-h-dvh flex-col overflow-hidden bg-bg-call px-5 pt-10 pb-5">

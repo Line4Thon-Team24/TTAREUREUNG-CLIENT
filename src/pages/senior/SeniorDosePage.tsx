@@ -1,14 +1,16 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ZoomIn } from 'lucide-react';
-import { finishSession, takeMedication } from '@/apis/dose';
+import { finishSession, requestHelp, takeMedication } from '@/apis/dose';
 import ErrorState from '@/components/common/ErrorState';
 import LoadingState from '@/components/common/LoadingState';
 import MicPrompt from '@/components/recognition/MicPrompt';
 import MaskIcon from '@/components/common/MaskIcon';
 import useLatestRequest from '@/hooks/useLatestRequest';
 import useSessionCall from '@/hooks/useSessionCall';
+import useVoice from '@/hooks/useVoice';
 import type { MedicationGuide } from '@/types/dose';
+import { speak } from '@/utils/speech';
 import { parsePositiveInt, toDoseResult } from '@/utils/recognition';
 import pillIcon from '@/assets/icons/pill.svg';
 
@@ -37,6 +39,7 @@ const DoseScreen = ({
   const [zoomed, setZoomed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitError, setIsSubmitError] = useState(false);
+  const [voiceRestartKey, setVoiceRestartKey] = useState(0);
   const startRequest = useLatestRequest();
   const current = medicines[index];
 
@@ -84,8 +87,30 @@ const DoseScreen = ({
       if (!isLatest()) return;
       setIsSubmitError(true);
       setIsSubmitting(false);
+      setVoiceRestartKey((prev) => prev + 1);
     }
   };
+
+  // "도와줘" → 보호자에게 도움 요청
+  const handleHelp = async () => {
+    try {
+      const { voiceText } = await requestHelp(sessionId);
+      await speak(voiceText);
+    } catch {
+      // 조용히 넘어감
+    }
+    setVoiceRestartKey((prev) => prev + 1);
+  };
+
+  // 복용 수량을 읽어 준 뒤 "다 먹었어"를 들음 (약을 넘기면 그 약의 수량을 다시 읽음)
+  useVoice({
+    text: `${current.name}, ${current.doseAmount} 드세요.`,
+    restartKey: voiceRestartKey,
+    commands: {
+      TAKEN: () => void handleDone(),
+      HELP: () => void handleHelp(),
+    },
+  });
 
   return (
     <div className="flex min-h-dvh flex-col gap-6 bg-white px-5 pt-14 pb-12">
