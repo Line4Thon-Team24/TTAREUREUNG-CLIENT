@@ -53,7 +53,11 @@ type RecognitionScreenProps = {
 // 시니어 약 인식 화면 (카메라로 찍은 사진을 서버에 판독 요청)
 const RecognitionScreen = ({ sessionId, medicine }: RecognitionScreenProps) => {
   const navigate = useNavigate();
-  const [status, setStatus] = useState<RecognitionStatus>('scanning');
+  const [rawStatus, setStatus] = useState<RecognitionStatus>('scanning');
+  const [isDelayDue, setIsDelayDue] = useState(false);
+  // 인식 중에 지연 시간이 지났으면 지연 안내로 표시
+  const status: RecognitionStatus =
+    isDelayDue && rawStatus === 'scanning' ? 'delayed' : rawStatus;
   const [isHelping, setIsHelping] = useState(false);
   const [isHelpError, setIsHelpError] = useState(false);
   const startRequest = useLatestRequest();
@@ -66,18 +70,24 @@ const RecognitionScreen = ({ sessionId, medicine }: RecognitionScreenProps) => {
       ? { title: '맞는 약이에요!', sub: doseLabel }
       : HEADINGS[status];
 
-  // 인식 중에는 일정 간격으로 한 장씩 찍어 판독 (오래 못 찾으면 지연 안내)
+  // 화면 진입 후 DELAYED_AFTER가 지나면 판독 요청과 별개로 지연 안내 대상이 됨
+  // (다른 약 안내 후 다시 인식해도 시간은 이어서 흐름)
+  const isFinished =
+    status === 'success' || status === 'error' || status === 'delayed';
+  useEffect(() => {
+    if (isDelayDue || isFinished) return;
+    const timer = window.setTimeout(() => setIsDelayDue(true), DELAYED_AFTER);
+    return () => window.clearTimeout(timer);
+  }, [isDelayDue, isFinished]);
+
+  // 인식 중에는 일정 간격으로 한 장씩 찍어 판독
+  // (지연 시간이 지나 status가 delayed로 바뀌면 effect가 정리되어 진행 중인 판독 결과는 무시됨)
   useEffect(() => {
     if (status !== 'scanning') return;
     let cancelled = false;
     let timer = 0;
-    const startedAt = Date.now();
 
     const scan = async () => {
-      if (Date.now() - startedAt >= DELAYED_AFTER) {
-        setStatus('delayed');
-        return;
-      }
       try {
         const frame = videoRef.current
           ? await captureVideoFrame(videoRef.current)
