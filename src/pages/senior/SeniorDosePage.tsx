@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ZoomIn } from 'lucide-react';
-import { takeMedication } from '@/apis/dose';
+import { finishSession, takeMedication } from '@/apis/dose';
 import ErrorState from '@/components/common/ErrorState';
 import LoadingState from '@/components/common/LoadingState';
 import MicPrompt from '@/components/recognition/MicPrompt';
@@ -9,11 +9,12 @@ import MaskIcon from '@/components/common/MaskIcon';
 import useLatestRequest from '@/hooks/useLatestRequest';
 import useSessionCall from '@/hooks/useSessionCall';
 import type { MedicationGuide } from '@/types/dose';
-import { parsePositiveInt } from '@/utils/recognition';
+import { parsePositiveInt, toDoseResult } from '@/utils/recognition';
 import pillIcon from '@/assets/icons/pill.svg';
 
 type DoseScreenProps = {
   sessionId: number;
+  scheduledAt: string; // 복용 시각
   medicines: MedicationGuide[];
   initialOrder: number;
 };
@@ -21,6 +22,7 @@ type DoseScreenProps = {
 // 시니어 약 복용 안내 화면 (복용 수량 + 약 사진 슬라이드)
 const DoseScreen = ({
   sessionId,
+  scheduledAt,
   medicines,
   initialOrder,
 }: DoseScreenProps) => {
@@ -52,7 +54,7 @@ const DoseScreen = ({
     setIndex(Math.min(Math.max(next, 0), medicines.length - 1));
   };
 
-  // "다 먹었어" → 복용 처리 후 다음 약 찾기 (다 먹었으면 복용 결과)
+  // "다 먹었어" → 복용 처리 후 다음 약 찾기 (다 먹었으면 회차 종료 후 복용 결과)
   const handleDone = async () => {
     if (isSubmitting) return;
     // 요청이 끝났을 때 아직 이 화면에 있는지 확인
@@ -65,13 +67,19 @@ const DoseScreen = ({
         current.medicationId
       );
       if (!isLatest()) return;
-      // TODO: 회차 종료(finish) API 연동 후 결과를 복용 결과 화면에 반영
-      navigate(
-        nextMedication
-          ? `/senior/find?sessionId=${sessionId}&order=${nextMedication.order}&mode=voice`
-          : `/senior/result?sessionId=${sessionId}&status=complete`,
-        { replace: true }
-      );
+      if (nextMedication) {
+        navigate(
+          `/senior/find?sessionId=${sessionId}&order=${nextMedication.order}&mode=voice`,
+          { replace: true }
+        );
+        return;
+      }
+      const finish = await finishSession(sessionId);
+      if (!isLatest()) return;
+      navigate('/senior/result', {
+        replace: true,
+        state: toDoseResult(finish, scheduledAt),
+      });
     } catch {
       if (!isLatest()) return;
       setIsSubmitError(true);
@@ -200,6 +208,7 @@ const SeniorDosePage = () => {
   return (
     <DoseScreen
       sessionId={sessionId}
+      scheduledAt={call.scheduledAt}
       medicines={call.medications}
       initialOrder={order}
     />
