@@ -31,6 +31,14 @@ const refreshAccessToken = async () => {
   return data.data.accessToken;
 };
 
+// Access Token 재발급
+export const refreshSession = () => {
+  refreshPromise ??= refreshAccessToken().finally(() => {
+    refreshPromise = null;
+  });
+  return refreshPromise;
+};
+
 const toApiError = (error: unknown): ApiError => {
   if (error instanceof AxiosError) {
     const body = error.response?.data as Partial<BaseResponse<unknown>>;
@@ -65,10 +73,7 @@ apiClient.interceptors.response.use(
     ) {
       config._retry = true;
       try {
-        refreshPromise ??= refreshAccessToken().finally(() => {
-          refreshPromise = null;
-        });
-        const token = await refreshPromise;
+        const token = await refreshSession();
         config.headers.Authorization = `Bearer ${token}`;
         return apiClient(config);
       } catch (refreshError) {
