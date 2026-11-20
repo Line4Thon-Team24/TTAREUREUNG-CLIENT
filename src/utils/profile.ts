@@ -1,7 +1,10 @@
 import type { Guardian } from '@/types/guardian';
 import type { ProfileResponse } from '@/types/senior';
 import type { CoGuardianSummary } from '@/types/profile';
-import { getSelectedProfileId } from '@/utils/selectedProfile';
+import {
+  getSelectedProfileId,
+  getSelectedSeniorId,
+} from '@/utils/selectedProfile';
 
 // 선택된 보호자 프로필 id (저장된 선택이 없거나 목록에 없으면 첫 번째 보호자)
 export const pickSelectedGuardianId = (guardianIds: number[]) => {
@@ -9,6 +12,14 @@ export const pickSelectedGuardianId = (guardianIds: number[]) => {
   return selectedId !== null && guardianIds.includes(selectedId)
     ? selectedId
     : guardianIds[0];
+};
+
+// 선택된 시니어 프로필 id (저장된 선택이 없거나 목록에 없으면 첫 번째 시니어)
+export const pickSelectedSeniorId = (seniorIds: number[]) => {
+  const selectedId = getSelectedSeniorId();
+  return selectedId !== null && seniorIds.includes(selectedId)
+    ? selectedId
+    : seniorIds[0];
 };
 
 // 선택된 보호자 프로필
