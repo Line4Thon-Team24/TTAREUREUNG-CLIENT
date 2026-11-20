@@ -102,6 +102,10 @@ export const fetchMyGuardianProfileIds = async () => {
     .map((profile) => profile.profileId);
 };
 
+// 프로필 선택에서 고른 보호자 프로필 id (보호자가 없으면 undefined)
+export const fetchSelectedGuardianProfileId = async () =>
+  pickSelectedGuardianId(await fetchMyGuardianProfileIds());
+
 // 같은 계정의 보호자를 시니어에 연결 (시니어의 첫 연결이면 서버가 대표로 지정)
 export const linkGuardianSenior = async (
   guardianProfileId: number,

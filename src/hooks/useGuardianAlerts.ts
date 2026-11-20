@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { fetchGuardianAlerts, markAlertRead } from '@/apis/alert';
-import { fetchMyGuardianProfileIds } from '@/apis/guardian';
+import { fetchSelectedGuardianProfileId } from '@/apis/guardian';
 import { SW_MESSAGE } from '@/constants/serviceWorker';
 import type { GuardianAlert } from '@/types/alert';
 
@@ -21,11 +21,11 @@ export default function useGuardianAlerts() {
       // 화면이 안 보일 때 띄우면 못 본 채 읽음 처리되므로 건너뜀
       if (document.hidden) return;
       try {
-        // TODO: 프로필 선택 연동 후 선택된 보호자 프로필로 교체
+        // 프로필 선택에서 고른 보호자의 알림만 조회
         if (profileId.current === null) {
-          const [firstId] = await fetchMyGuardianProfileIds();
-          if (firstId === undefined) return;
-          profileId.current = firstId;
+          const selectedId = await fetchSelectedGuardianProfileId();
+          if (selectedId === undefined) return;
+          profileId.current = selectedId;
         }
         const alerts = await fetchGuardianAlerts(profileId.current);
         if (ignore) return;

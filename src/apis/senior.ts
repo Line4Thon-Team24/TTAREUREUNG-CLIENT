@@ -2,6 +2,7 @@ import { apiClient } from '@/apis/client';
 import { fetchProfiles } from '@/apis/profile';
 import type { BaseResponse } from '@/types/api';
 import type { ProfileResponse, Senior, SeniorForm } from '@/types/senior';
+import { getSelectedGuardian } from '@/utils/profile';
 
 const GENDER_FROM_API = { MALE: 'male', FEMALE: 'female' } as const;
 const GENDER_TO_API = { male: 'MALE', female: 'FEMALE' } as const;
@@ -64,10 +65,9 @@ export const deleteSeniors = async (seniorIds: number[]) => {
   return seniorIds.filter((_, index) => results[index].status === 'rejected');
 };
 
-// TODO: 프로필 선택 연동 후 선택된 보호자 프로필로 교체
+// 프로필 선택에서 고른 보호자 (선택이 없으면 첫 번째 보호자)
 const fetchGuardianProfileId = async () => {
-  const profiles = await fetchProfiles();
-  const guardian = profiles.find((profile) => profile.role === 'GUARDIAN');
+  const guardian = getSelectedGuardian(await fetchProfiles());
   if (!guardian) throw new Error('보호자 프로필이 없습니다.');
   return guardian.profileId;
 };
