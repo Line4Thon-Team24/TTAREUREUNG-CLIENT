@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { requestHelp } from '@/apis/dose';
 import ConfirmModal from '@/components/common/ConfirmModal';
@@ -38,16 +38,26 @@ const FindScreen = ({
 }: FindScreenProps) => {
   const [isHelpAsking, setIsHelpAsking] = useState(false);
   const [restartKey, setRestartKey] = useState(0);
+  // 도움 요청을 보내고 응답을 읽는 중 (이 동안은 듣지 않음)
+  const [isHelpSending, setIsHelpSending] = useState(false);
+  const isHelpSendingRef = useRef(false);
 
   // 도움 요청 후 보호자에게 알렸다고 읽어 줌 (실패해도 화면은 그대로)
+  // 응답을 읽는 동안 마이크가 켜져 있으면 응답 속 "도움"이 다시 명령으로 인식될 수 있으므로
+  // 요청 전에 음성을 끄고(읽기가 끊기지 않도록), 읽기가 끝난 뒤에 다시 켬
   const sendHelp = async () => {
-    setIsHelpAsking(false);
+    if (isHelpSendingRef.current) return;
+    isHelpSendingRef.current = true;
+    setIsHelpSending(true);
     try {
       const { voiceText } = await requestHelp(sessionId);
       await speak(voiceText);
     } catch {
       // 직접 찾기 버튼이 그대로 있으므로 조용히 넘어감
     }
+    isHelpSendingRef.current = false;
+    setIsHelpSending(false);
+    setIsHelpAsking(false);
     setRestartKey((prev) => prev + 1);
   };
 
@@ -62,6 +72,7 @@ const FindScreen = ({
       ? '약을 못 찾으셨나요? 보호자에게 도움을 요청할까요? 도와줘, 또는 더 찾아볼게, 라고 말씀해주세요.'
       : medicine.voiceText,
     restartKey,
+    enabled: !isHelpSending,
     commands: isHelpAsking
       ? { HELP: () => void sendHelp(), MORE: handleKeepSearching }
       : isCountdown
@@ -115,7 +126,7 @@ const FindScreen = ({
       </div>
 
       <ConfirmModal
-        open={isHelpAsking}
+        open={isHelpAsking && !isHelpSending}
         message={'약을 못 찾으셨나요?\n보호자에게 도움을 요청할게요.'}
         cancelLabel="더 찾아볼게요"
         confirmLabel="도움 요청"
