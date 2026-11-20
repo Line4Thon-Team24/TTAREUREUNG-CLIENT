@@ -25,6 +25,8 @@ export default function useVoice({
   restartKey = 0,
 }: UseVoiceOptions) {
   const [isMicDenied, setIsMicDenied] = useState(false);
+  // 끝까지 읽은 문장 (읽는 도중 끊기거나 text가 바뀌면 비움)
+  const [spokenText, setSpokenText] = useState<string | null>(null);
   // 렌더마다 바뀌는 핸들러 때문에 듣기가 재시작되지 않도록 ref에 보관
   const commandsRef = useRef(commands);
   useEffect(() => {
@@ -43,7 +45,10 @@ export default function useVoice({
     const run = async () => {
       // 듣기가 필요하면 마이크 허용 팝업은 읽는 동안 미리 띄움 (듣기 시작은 읽기가 끝난 뒤)
       const micPromise = actions ? requestMicPermission() : null;
-      if (text) await speak(text);
+      if (text) {
+        await speak(text);
+        if (!cancelled) setSpokenText(text);
+      }
       if (micPromise && !(await micPromise)) {
         if (!cancelled) setIsMicDenied(true);
         return;
@@ -59,10 +64,13 @@ export default function useVoice({
 
     return () => {
       cancelled = true;
+      setSpokenText(null);
       stopListening();
       cancelSpeech();
     };
   }, [text, actions, enabled, restartKey]);
 
-  return { isMicDenied };
+  // 읽을 문장이 없거나 끝까지 읽었으면 true (읽기가 끝난 뒤에 화면을 넘길 때 사용)
+  const isSpoken = !enabled || !text || spokenText === text;
+  return { isMicDenied, isSpoken };
 }
