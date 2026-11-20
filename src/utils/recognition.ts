@@ -102,5 +102,6 @@ export const toDoseResult = (
           Math.round((Date.parse(nextCall.scheduledAt) - Date.now()) / 60000)
         )
       : 0,
+    voiceText: finish.voiceText,
   };
 };

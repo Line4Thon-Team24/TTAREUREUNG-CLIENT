@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MaskIcon from '@/components/common/MaskIcon';
+import useVoice from '@/hooks/useVoice';
 import type { DoseResult } from '@/types/recognition';
 import { DOSE_RESULT_VIEW, formatMonthDayTime } from '@/utils/recognition';
 import phoneIcon from '@/assets/icons/phone.svg';
@@ -68,6 +69,8 @@ const ProgressRing = ({
 const SeniorDoseResultPage = () => {
   const navigate = useNavigate();
   const result = useLocation().state as DoseResult | null;
+
+  useVoice({ text: result?.voiceText, enabled: result !== null });
 
   // 복용 결과 없이 들어오면 일정 화면으로
   useEffect(() => {

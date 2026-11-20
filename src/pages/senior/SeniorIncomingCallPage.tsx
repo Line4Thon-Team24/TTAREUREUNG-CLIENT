@@ -10,6 +10,7 @@ import { answerSession, reportNoAnswer } from '@/apis/dose';
 import useCurrentSession from '@/hooks/useCurrentSession';
 import useLatestRequest from '@/hooks/useLatestRequest';
 import useSeniors from '@/hooks/useSeniors';
+import { speak } from '@/utils/speech';
 import callIcon from '@/assets/icons/call.svg';
 import {
   formatCallTime,
@@ -90,6 +91,11 @@ const SeniorIncomingCallPage = () => {
       if (!isLatest()) return;
       // 먹을 약이 남아 있지 않으면 일정 화면으로
       const first = answered.medications[0];
+      // 전화 받기 탭 - 소리 허용 → 인사말과 첫 약 안내를 읽어 준 뒤 이동
+      await speak(
+        [answered.voiceText, first?.voiceText].filter(Boolean).join(' ')
+      );
+      if (!isLatest()) return;
       navigate(
         first
           ? `/senior/recognition?sessionId=${answered.sessionId}&order=${first.order}`
