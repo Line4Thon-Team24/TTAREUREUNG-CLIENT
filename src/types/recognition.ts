@@ -32,7 +32,8 @@ export type DoseResult = {
   scheduledAt: string; // 복용 시각 (ISO)
   takenCount: number;
   totalCount: number;
-  nextCallAt: string; // 다음 알림 전화 시각 (ISO)
-  nextCallLabel: string; // 예: 저녁 식후 약 (혈압약 · 소화제)
-  minutesUntilNextCall: number; // 미복용 시 '10분 뒤' 표시
+  extendedCount: number; // 일정이 하루 늘어난 약 수
+  nextCallAt: string | null; // 다음 알림 전화 시각 (ISO, 없으면 null)
+  nextCallLabel: string; // 예: 저녁 식후 약 (혈압약 · 소화제), 다음 알림이 없으면 빈 문자열
+  minutesUntilNextCall: number; // 미복용 시 '10분 뒤' 표시 (다음 알림이 없으면 0)
 };

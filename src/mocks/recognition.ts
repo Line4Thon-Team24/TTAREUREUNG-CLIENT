@@ -1,4 +1,4 @@
-import type { DoseResult, TargetMedicine } from '@/types/recognition';
+import type { TargetMedicine } from '@/types/recognition';
 import prescriptionSampleImage from '@/assets/images/prescription-sample.png';
 import medicineSampleImage from '@/assets/images/medicine-sample.png';
 
@@ -43,34 +43,3 @@ export const mockMedicineByOrder = (order: number) =>
 
 // 인식 성공 문구에 쓰는 현재 복용 시점 안내
 export const mockCurrentDoseLabel = '혈압약 (점심 식후 30분)';
-
-// 복용 결과 목업
-export const mockDoseResults: Record<DoseResult['status'], DoseResult> = {
-  complete: {
-    status: 'complete',
-    scheduledAt: '2026-11-08T15:00:00',
-    takenCount: 5,
-    totalCount: 5,
-    nextCallAt: '2026-11-08T18:00:00',
-    nextCallLabel: '저녁 식후 약 (혈압약 · 소화제)',
-    minutesUntilNextCall: 180,
-  },
-  partial: {
-    status: 'partial',
-    scheduledAt: '2026-11-08T15:00:00',
-    takenCount: 3,
-    totalCount: 5,
-    nextCallAt: '2026-11-08T18:00:00',
-    nextCallLabel: '저녁 식후 약 (혈압약 · 소화제)',
-    minutesUntilNextCall: 180,
-  },
-  missed: {
-    status: 'missed',
-    scheduledAt: '2026-11-08T15:00:00',
-    takenCount: 0,
-    totalCount: 5,
-    nextCallAt: '2026-11-08T15:10:00',
-    nextCallLabel: '점심 식후 약 (혈압약 · 소화제)',
-    minutesUntilNextCall: 10,
-  },
-};

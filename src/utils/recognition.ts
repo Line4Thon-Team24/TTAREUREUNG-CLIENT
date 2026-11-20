@@ -1,32 +1,5 @@
-import type {
-  DoseResult,
-  DoseResultStatus,
-  RecognitionStatus,
-} from '@/types/recognition';
-
-const RECOGNITION_STATUSES: RecognitionStatus[] = [
-  'scanning',
-  'success',
-  'error',
-  'delayed',
-  'wrong',
-];
-
-const DOSE_RESULT_STATUSES: DoseResultStatus[] = [
-  'complete',
-  'partial',
-  'missed',
-];
-
-// 쿼리스트링 값 → 인식 상태 (잘못된 값이면 인식 중)
-export const parseRecognitionStatus = (
-  value: string | null
-): RecognitionStatus =>
-  RECOGNITION_STATUSES.find((status) => status === value) ?? 'scanning';
-
-// 쿼리스트링 값 → 복용 결과 상태 (잘못된 값이면 복용 완료)
-export const parseDoseResultStatus = (value: string | null): DoseResultStatus =>
-  DOSE_RESULT_STATUSES.find((status) => status === value) ?? 'complete';
+import type { FinishResponse } from '@/types/dose';
+import type { DoseResult, DoseResultStatus } from '@/types/recognition';
 
 // 쿼리스트링 값 → 양의 정수 (아니면 fallback)
 export const parsePositiveInt = (value: string | null, fallback = 1) => {
@@ -49,6 +22,10 @@ export const formatClockTime = (date: Date) => {
 export const formatMonthDayTime = (date: Date) =>
   `${date.getMonth() + 1}월 ${date.getDate()}일 ${formatClockTime(date)}`;
 
+// 다음 알림 전화 시각 ('오후 6시', 없으면 빈 문자열)
+const formatNextCallTime = (result: DoseResult) =>
+  result.nextCallAt ? formatClockTime(new Date(result.nextCallAt)) : '';
+
 // 복용 결과 화면 문구 / 색상
 type DoseResultView = {
   title: string;
@@ -62,8 +39,11 @@ type DoseResultView = {
 export const DOSE_RESULT_VIEW: Record<DoseResultStatus, DoseResultView> = {
   complete: {
     title: '모든 약을 다 먹었어요!',
-    message: () => '3시간 뒤에 띠링이가 다시 전화드릴게요!',
-    nextCallTime: (result) => formatClockTime(new Date(result.nextCallAt)),
+    message: (result) =>
+      result.nextCallAt
+        ? `${formatClockTime(new Date(result.nextCallAt))}에 띠링이가 다시 전화드릴게요!`
+        : '오늘 드실 약을 모두 드셨어요!',
+    nextCallTime: formatNextCallTime,
     color: '#138A4B',
     background: '#EFF9F3',
     border: '#C3E3D1',
@@ -71,8 +51,8 @@ export const DOSE_RESULT_VIEW: Record<DoseResultStatus, DoseResultView> = {
   partial: {
     title: '약 중 일부만 드셨어요!',
     message: (result) =>
-      `못 드신 약 ${result.totalCount - result.takenCount}개로 약 복용 일정이 하루 늘어났어요!`,
-    nextCallTime: (result) => formatClockTime(new Date(result.nextCallAt)),
+      `못 드신 약 ${result.extendedCount}개로 약 복용 일정이 하루 늘어났어요!`,
+    nextCallTime: formatNextCallTime,
     color: '#D97706',
     background: '#FFF4E0',
     border: '#D97706',
@@ -80,9 +60,47 @@ export const DOSE_RESULT_VIEW: Record<DoseResultStatus, DoseResultView> = {
   missed: {
     title: '약을 아직 드시지 못했어요',
     message: () => '보호자 분께 미복용 확인 요청을 보냈어요',
-    nextCallTime: (result) => `${result.minutesUntilNextCall}분 뒤`,
+    // 곧 다시 걸려 오면 'N분 뒤', 다음 회차까지 길면 시각
+    nextCallTime: (result) =>
+      result.minutesUntilNextCall < 60
+        ? `${result.minutesUntilNextCall}분 뒤`
+        : formatNextCallTime(result),
     color: '#E5484D',
     background: '#FFEEEE',
     border: '#E5484D',
   },
+};
+
+// 회차 종료 상태 → 복용 결과 상태 (재전화 대기는 아직 못 먹은 것이라 미복용)
+const DOSE_RESULT_STATUS: Record<FinishResponse['status'], DoseResultStatus> = {
+  COMPLETED: 'complete',
+  PARTIAL: 'partial',
+  MISSED: 'missed',
+  SCHEDULED: 'missed',
+  IN_PROGRESS: 'missed',
+};
+
+// 회차 종료 응답 → 복용 결과 화면 데이터 (scheduledAt: 복용 시각)
+export const toDoseResult = (
+  finish: FinishResponse,
+  scheduledAt: string
+): DoseResult => {
+  const { nextCall } = finish;
+  return {
+    status: DOSE_RESULT_STATUS[finish.status],
+    scheduledAt,
+    takenCount: finish.takenCount,
+    totalCount: finish.totalCount,
+    extendedCount: finish.extendedMedicationCount,
+    nextCallAt: nextCall?.scheduledAt ?? null,
+    nextCallLabel: nextCall
+      ? `${nextCall.slotName} 약${nextCall.medicationNames.length ? ` (${nextCall.medicationNames.join(' · ')})` : ''}`
+      : '',
+    minutesUntilNextCall: nextCall
+      ? Math.max(
+          1,
+          Math.round((Date.parse(nextCall.scheduledAt) - Date.now()) / 60000)
+        )
+      : 0,
+  };
 };
