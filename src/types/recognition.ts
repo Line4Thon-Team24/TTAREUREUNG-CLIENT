@@ -9,23 +9,6 @@ export type RecognitionStatus =
 // 복용 결과 화면 상태
 export type DoseResultStatus = 'complete' | 'partial' | 'missed';
 
-// 찾아야 하는 약 (사진 + 보관 위치)
-export type TargetMedicine = {
-  id: number;
-  order: number; // 약 순서(1부터)
-  displayName: string; // 시니어에게 보여줄 이름 (예: 관절약)
-  appearance: string; // 겉모습 설명 (예: 파란색 원기둥)
-  imageUrl: string;
-  remainingCount: number; // 남은 개수
-  storageGuide: {
-    prefix: string;
-    highlight: string;
-    suffix: string;
-  };
-  doseAmount: string; // 복용 수량 (예: 2정)
-  doseGuide: string; // 인식 성공 시 안내 (예: 점심 약 한 봉지를 복용해 주세요)
-};
-
 // 복용 결과 화면 데이터
 export type DoseResult = {
   status: DoseResultStatus;
